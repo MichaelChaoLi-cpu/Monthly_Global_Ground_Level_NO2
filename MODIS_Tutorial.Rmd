@@ -1,0 +1,45 @@
+---
+title: "Tutorial of \"MODIS\" Package"
+author: "Michael Li"
+date: "2021/10/21"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Initialization: MODISoptions()
+
+```{r}
+#devtools::install_github("https://github.com/MatMatt/MODIS")
+library(MODIS)
+```
+First of all, we need to library the "MODIS" package. If that is uninstalled, then run the first sentence.
+
+Guarantee you know every thing about the Products you are going to use, such as PixelSize, outproj, resamplingType <https://gdal.org/programs/gdalwarp.html>. Since we prefer to to use WGS 84 proj, the outproj could be set "EPSG:4326".
+
+```{r}
+?MODISoptions()
+MODISoptions(localArcPath = "D:\\09_Article\\X0_test",
+             outDirPath = "D:\\09_Article\\X0_test\\PROCESSED",
+             resamplingType = "average", outProj = "EPSG:4326",
+             pixelSize = 0.25)
+```
+
+Before that, you need to know SDSstring. So, run getSds(). For example:
+```{r}
+getSds(HdfName = "D:\\09_Article\\05_Moisture\\MOD07_2009\\MOD07_L2.A2009001.0130.061.2017296025029.hdf")
+```
+If we only want to get the Cloud_Mask only, there would only 8th digit 1. "0000000100000000000000000000"  
+However, here we still do not know the information about the product. Therefore, we run getProduct():
+```{r}
+getProduct(x = "MOD11A2")
+```
+
+
+Now, let us try!
+```{r}
+runGdal(product="MOD11A2", extent="austria", begin="2010001", end="2010020", SDSstring="100", overwrite = T)
+```
+Note
