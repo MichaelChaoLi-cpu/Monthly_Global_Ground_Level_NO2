@@ -52,7 +52,7 @@ for raster in rasterFiles:
 #print(yearMonthList)
 
 for aimedDate in yearMonthList:
-    #aimedData = yearMonthList[0] #TestCode
+    #aimedDate = yearMonthList[1] #TestCode
     singleMonthRasterNameList = []
     for raster in rasterFiles:
         if raster[20:27] == aimedDate:
