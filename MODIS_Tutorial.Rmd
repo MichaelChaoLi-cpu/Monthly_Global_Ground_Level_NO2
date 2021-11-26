@@ -43,3 +43,5 @@ Now, let us try!
 runGdal(product="MOD11A2", extent="austria", begin="2010001", end="2010020", SDSstring="100", overwrite = T)
 ```
 Note
+
+We also recommend to use another package "MODIStsp", run MODIStsp(). Then, input the parameter on the web page.
