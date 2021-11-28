@@ -96,14 +96,92 @@ terrainPressureRasterDataset <-
   extractPointDataFromRaster(terrainPressureRasterFolder, filelist, cityLocationSpatialPoint,
                              21, 26, T, "ter_pressure")
 
-#get monthly Daytime temperature from the MOD11C3
+#get monthly Daytime temperature from the MOD11C3 0.25 arc degree
 dayTimeTemperatureRasterFolder <- "D:/10_Article/09_TempOutput/04_MonthlyTemperatureTif/Surf_Temp_Monthly_005dg_v6/LST_Day_CMG/"
 filelist <- list.files(dayTimeTemperatureRasterFolder)
 dayTimeTemperatureRasterDataset <- 
   extractPointDataFromRaster(dayTimeTemperatureRasterFolder, filelist, cityLocationSpatialPoint,
                              21, month_start_location = 26, F,
                              "dayTimeTemperature", month_end_location = 28)
+dayTimeTemperatureRasterDataset <- aggregate(dayTimeTemperatureRasterDataset$dayTimeTemperature,
+                                             by = list(dayTimeTemperatureRasterDataset$Country, 
+                                                       dayTimeTemperatureRasterDataset$City,
+                                                       dayTimeTemperatureRasterDataset$year, 
+                                                       dayTimeTemperatureRasterDataset$month), 
+                                             FUN = "mean", na.rm = T
+                                             )
+colnames(dayTimeTemperatureRasterDataset) <- c("Country", "City", "year", "month", "dayTimeTemperature")
+dayTimeTemperatureRasterDataset$date <- 
+  as.Date((dayTimeTemperatureRasterDataset$month - 1),
+          origin = paste0(dayTimeTemperatureRasterDataset$year,"-01-01")) %>% as.character()
+dayTimeTemperatureRasterDataset$month <- str_sub(dayTimeTemperatureRasterDataset$date, 6, 7) %>% as.numeric()
+dayTimeTemperatureRasterDataset <- dayTimeTemperatureRasterDataset %>% dplyr::select(-date)
+dayTimeTemperatureRasterDataset$dayTimeTemperature <- dayTimeTemperatureRasterDataset$dayTimeTemperature *
+  0.02 - 273.16  #convert into c degree temperature
 
+#get monthly Nighttime temperature from the MOD11C3 0.25 arc degree
+nightTimeTemperatureRasterFolder <- "D:/10_Article/09_TempOutput/04_MonthlyTemperatureTif/Surf_Temp_Monthly_005dg_v6/LST_Night_CMG/"
+filelist <- list.files(nightTimeTemperatureRasterFolder)
+nightTimeTemperatureRasterDataset <- 
+  extractPointDataFromRaster(nightTimeTemperatureRasterFolder, filelist, cityLocationSpatialPoint,
+                             23, month_start_location = 28, F,
+                             "nightTimeTemperature", month_end_location = 30)
+nightTimeTemperatureRasterDataset <- aggregate(nightTimeTemperatureRasterDataset$nightTimeTemperature,
+                                             by = list(nightTimeTemperatureRasterDataset$Country, 
+                                                       nightTimeTemperatureRasterDataset$City,
+                                                       nightTimeTemperatureRasterDataset$year, 
+                                                       nightTimeTemperatureRasterDataset$month), 
+                                             FUN = "mean", na.rm = T
+)
+colnames(nightTimeTemperatureRasterDataset) <- c("Country", "City", "year", "month", "nightTimeTemperature")
+nightTimeTemperatureRasterDataset$date <- 
+  as.Date((nightTimeTemperatureRasterDataset$month - 1),
+          origin = paste0(nightTimeTemperatureRasterDataset$year,"-01-01")) %>% as.character()
+nightTimeTemperatureRasterDataset$month <- str_sub(nightTimeTemperatureRasterDataset$date, 6, 7) %>% as.numeric()
+nightTimeTemperatureRasterDataset <- nightTimeTemperatureRasterDataset %>% dplyr::select(-date)
+nightTimeTemperatureRasterDataset$nightTimeTemperature <- nightTimeTemperatureRasterDataset$nightTimeTemperature *
+  0.02 - 273.16  #convert into c degree temperature
+
+#get monthly NDVI temperature from the MOD13C3 0.25 arc degree
+ndviRasterFolder <- "D:/10_Article/09_TempOutput/05_MonthlyNDVITif/VI_Monthly_005dg_v6/NDVI/"
+filelist <- list.files(ndviRasterFolder)
+ndviRasterDataset <- 
+  extractPointDataFromRaster(ndviRasterFolder, filelist, cityLocationSpatialPoint,
+                             14, month_start_location = 19, F,
+                             "ndvi", month_end_location = 21)
+ndviRasterDataset <- aggregate(ndviRasterDataset$ndvi,
+                                               by = list(ndviRasterDataset$Country, 
+                                                         ndviRasterDataset$City,
+                                                         ndviRasterDataset$year, 
+                                                         ndviRasterDataset$month), 
+                                               FUN = "mean", na.rm = T
+)
+colnames(ndviRasterDataset) <- c("Country", "City", "year", "month", "ndvi")
+ndviRasterDataset$date <- 
+  as.Date((ndviRasterDataset$month - 1),
+          origin = paste0(ndviRasterDataset$year,"-01-01")) %>% as.character()
+ndviRasterDataset$month <- str_sub(ndviRasterDataset$date, 6, 7) %>% as.numeric()
+ndviRasterDataset <- ndviRasterDataset %>% dplyr::select(-date)
+ndviRasterDataset$ndvi <- ndviRasterDataset$ndvi / 10000  #convert into from 1 to -1 
+
+#get monthly water vapor from the GLDAS_NOAH025_M 0.25 arc degree
+humidityRasterFolder <- "D:/10_Article/09_TempOutput/06_MonthlyVaporTif/"
+filelist <- list.files(humidityRasterFolder)
+humidityRasterDataset <- 
+  extractPointDataFromRaster(humidityRasterFolder, filelist, cityLocationSpatialPoint,
+                             17, 21, T, "humidity")
+humidityRasterDataset$humidity <- humidityRasterDataset$humidity * 1000 #convert the unit into g/kg
+# 1 g/kg means 1 gram water in the 1 kg air.
+
+#get monthly precipitation from the GLDAS_NOAH025_M 0.25 arc degree
+precipitationRasterFolder <- "D:/10_Article/09_TempOutput/07_MonthlyPrecipitationTif/"
+filelist <- list.files(precipitationRasterFolder)
+filelist <- filelist[2:length(filelist)]
+precipitationRasterDataset <- 
+  extractPointDataFromRaster(precipitationRasterFolder, filelist, cityLocationSpatialPoint,
+                             23, 27, T, "precipitation")
+precipitationRasterDataset$precipitation <- precipitationRasterDataset$precipitation * 3600 
+# now, the precipitation unit is kg/(m2 * h)  
 
 #break point
 test <- left_join(totalNo2Dataset, totalNo2RasterDataset, by = c("Country", "City", "year", "month"))
@@ -112,13 +190,24 @@ cor.test(test$g_m2_total_no2, test$no2)
 cor.test(test$g_m2_troposphere_no2, test$no2)
 test <- left_join(test, terrainPressureRasterDataset, by = c("Country", "City", "year", "month"))
 cor.test(test$ter_pressure, test$no2)
+test <- left_join(test, dayTimeTemperatureRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(test$dayTimeTemperature, test$no2)
+test <- left_join(test, nightTimeTemperatureRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(test$nightTimeTemperature, test$no2)
+test <- left_join(test, ndviRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(test$ndvi, test$no2)
+test <- left_join(test, humidityRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(test$humidity, test$no2)
+test <- left_join(test, precipitationRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(test$precipitation, test$no2)
 
 test$period <- test$year * 100 + test$month
 
 library(plm)
 
 pdata <- pdata.frame(test, index = c("CityCode", "period"))
-formula <- no2 ~ g_m2_total_no2 + ter_pressure
+formula <- no2 ~ g_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature + ndvi +
+  humidity + precipitation
 ols <- plm(formula, pdata, model = "pooling")
 summary(ols)
 fem <- plm(formula, pdata, model = "within")
