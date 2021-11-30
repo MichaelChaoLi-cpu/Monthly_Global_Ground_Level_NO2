@@ -12,7 +12,7 @@ Resolution: 0.25 arc degree
 
 Created on Thu Nov 25 16:48:36 2021
 
-@author: li.chao.987@s.kyushu-u.ac.jp
+@author: M.L.
 """
 
 import numpy as np

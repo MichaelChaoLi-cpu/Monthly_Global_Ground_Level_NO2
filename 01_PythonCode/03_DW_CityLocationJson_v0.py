@@ -6,7 +6,7 @@ json from: https://aqicn.org/data-platform/covid19/airquality-covid19-cities.jso
 
 Created on Fri Nov 26 13:47:58 2021
 
-@author: li.chao.987@s.kyushu-u.ac.jp
+@author: M.L.
 """
 
 import json
@@ -29,4 +29,5 @@ while i < len(airPollutionMeasurementLocation['data']):
     i = i + 1    
 
 locationTable = pd.DataFrame(locationTable)
-locationTable.to_csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv")
+locationTable.to_csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
+                     encoding = 'utf-8')
