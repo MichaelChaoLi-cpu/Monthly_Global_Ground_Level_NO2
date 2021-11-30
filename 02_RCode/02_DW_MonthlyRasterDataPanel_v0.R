@@ -41,6 +41,40 @@ extractPointDataFromRaster <- function(RasterFolder, filelist, cityLocationSpati
   return(RasterDataset)
 }
 
+extractBufferDataFromRaster <- function(RasterFolder, filelist, cityLocationSpatialPoint,
+                                       year_start_location, month_start_location, flip_reverse = T,
+                                       aimed_column_name = "raw", year_end_location = year_start_location + 3,
+                                       month_end_location = month_start_location + 1
+){
+  RasterDataset <- 
+    data.frame(Doubles=double(),
+               Ints=integer(),
+               Factors=factor(),
+               Logicals=logical(),
+               Characters=character(),
+               stringsAsFactors=FALSE)
+  for (filename in filelist){
+    test_tiff <- raster::raster(paste0(RasterFolder, filename))
+    if(flip_reverse){
+      test_tiff <- flip(test_tiff, direction = 'y')
+    }
+    crs(test_tiff) <- proj
+    Year <- str_sub(filename, year_start_location, year_end_location) %>% as.numeric()
+    Month <- str_sub(filename, month_start_location, month_end_location) %>% as.numeric()
+    
+    data_ext <- raster::extract(test_tiff, cityLocationSpatialPoint, fun = mean, na.rm = TRUE)
+    cityLocationSpatialPoint@data$raw <- data_ext
+    monthly_data <- cityLocationSpatialPoint@data %>%
+      dplyr::select(Country, City, raw)
+    monthly_data <- monthly_data %>%
+      mutate(year = Year,
+             month = Month)
+    RasterDataset <- rbind(RasterDataset, monthly_data)
+  }
+  colnames(RasterDataset) <- c("Country", "City", aimed_column_name, "year", "month")
+  return(RasterDataset)
+}
+
 cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
                      encoding="UTF-8") %>%
   dplyr::select(X0, X1, X2, X3)
@@ -70,7 +104,7 @@ totalNo2RasterDataset <-
 # convert molecular / cm2 to ug / m2
 mol_g = 6.022140857 * 10^23  # mol
 totalNo2RasterDataset$g_cm2 <- totalNo2RasterDataset$raw_no2 / mol_g * 46.0055 # convert mol to g
-totalNo2RasterDataset$g_m2_total_no2 <- totalNo2RasterDataset$g_cm2 * 10000 # conver /cm2 to /m2
+totalNo2RasterDataset$mg_m2_total_no2 <- totalNo2RasterDataset$g_cm2 * 10000 * 1000 # conver /cm2 to /m2 and g to mg
 totalNo2RasterDataset <- totalNo2RasterDataset %>% dplyr::select("Country", "City", "year", "month", "g_m2_total_no2")
 
 
@@ -84,7 +118,7 @@ troposphereNo2RasterDataset <-
 # convert molecular / cm2 to ug / m2
 mol_g = 6.022140857 * 10^23  # mol
 troposphereNo2RasterDataset$g_cm2 <- troposphereNo2RasterDataset$raw_no2 / mol_g * 46.0055 # convert mol to g
-troposphereNo2RasterDataset$g_m2_troposphere_no2 <- troposphereNo2RasterDataset$g_cm2 * 10000 # conver /cm2 to /m2
+troposphereNo2RasterDataset$mg_m2_troposphere_no2 <- troposphereNo2RasterDataset$g_cm2 * 10000 * 1000 # conver /cm2 to /m2 and g to mg
 troposphereNo2RasterDataset <- troposphereNo2RasterDataset %>% dplyr::select("Country", "City", "year", "month", "g_m2_troposphere_no2")
 
 
@@ -165,12 +199,14 @@ ndviRasterDataset <- ndviRasterDataset %>% dplyr::select(-date)
 ndviRasterDataset$ndvi <- ndviRasterDataset$ndvi / 10000  #convert into from 1 to -1 
 
 #get monthly water vapor from the GLDAS_NOAH025_M 0.25 arc degree
+cityLocationSpatialBuffer <- rgeos::gBuffer(cityLocationSpatialPoint, byid = T, width = 0.5)
 humidityRasterFolder <- "D:/10_Article/09_TempOutput/06_MonthlyVaporTif/"
 filelist <- list.files(humidityRasterFolder)
 humidityRasterDataset <- 
-  extractPointDataFromRaster(humidityRasterFolder, filelist, cityLocationSpatialPoint,
+  extractBufferDataFromRaster(humidityRasterFolder, filelist, cityLocationSpatialBuffer,
                              17, 21, T, "humidity")
 humidityRasterDataset$humidity <- humidityRasterDataset$humidity * 1000 #convert the unit into g/kg
+humidityRasterDataset <- humidityRasterDataset %>% as.data.frame()
 # 1 g/kg means 1 gram water in the 1 kg air.
 
 #get monthly precipitation from the GLDAS_NOAH025_M 0.25 arc degree
@@ -178,9 +214,10 @@ precipitationRasterFolder <- "D:/10_Article/09_TempOutput/07_MonthlyPrecipitatio
 filelist <- list.files(precipitationRasterFolder)
 filelist <- filelist[2:length(filelist)]
 precipitationRasterDataset <- 
-  extractPointDataFromRaster(precipitationRasterFolder, filelist, cityLocationSpatialPoint,
+  extractBufferDataFromRaster(precipitationRasterFolder, filelist, cityLocationSpatialBuffer,
                              23, 27, T, "precipitation")
 precipitationRasterDataset$precipitation <- precipitationRasterDataset$precipitation * 3600 
+precipitationRasterDataset <- precipitationRasterDataset %>% as.data.frame()
 # now, the precipitation unit is kg/(m2 * h)  
 
 #break point
@@ -201,12 +238,22 @@ cor.test(test$humidity, test$no2)
 test <- left_join(test, precipitationRasterDataset, by = c("Country", "City", "year", "month"))
 cor.test(test$precipitation, test$no2)
 
+test %>% summary()
+
+test$mg_m2_total_no2 <- test$g_m2_total_no2 * 1000
+
 test$period <- test$year * 100 + test$month
+
+na.test <- test %>% na.omit()
+
+na.test$count <- 1
+na.test <- aggregate(na.test$count, by = list(na.test$City, na.test$Country), FUN=sum)
+
 
 library(plm)
 
 pdata <- pdata.frame(test, index = c("CityCode", "period"))
-formula <- no2 ~ g_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature + ndvi +
+formula <- no2 ~ mg_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature + ndvi +
   humidity + precipitation
 ols <- plm(formula, pdata, model = "pooling")
 summary(ols)
@@ -214,3 +261,6 @@ fem <- plm(formula, pdata, model = "within")
 summary(fem)
 rem <- plm(formula, pdata, model = "random")
 summary(rem)
+
+na.test <- test %>% dplyr::select("Country", "City", "year", "month", "humidity") %>%
+  filter(is.na(humidity))
