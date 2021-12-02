@@ -19,29 +19,29 @@ import pandas as pd
 
 driver = webdriver.Chrome(ChromeDriverManager(version="95.0.4638.69").install())
 
-year = 2020
+year = 2015
 month = ['01', '02', '03', '04', '05', '06',
          '07', '08', '09', '10', '11', '12']
-i = 0
+i = 5
 while i < 12:
     locationService = 'https://eogdata.mines.edu/nighttime_light/monthly/v10/' + str(year) + '/' + str(year) + month[i] + '/vcmcfg/'
     print(locationService)
     driver.get(locationService)
     driver.find_element_by_xpath(r'//*[@id="indexlist"]/tbody/tr[2]/td[2]/a').click()
-    time.sleep(20)
+    time.sleep(30)
     driver.get(locationService)
     driver.find_element_by_xpath(r'//*[@id="indexlist"]/tbody/tr[3]/td[2]/a').click()
-    time.sleep(20)
+    time.sleep(30)
     driver.get(locationService)
     driver.find_element_by_xpath(r'//*[@id="indexlist"]/tbody/tr[4]/td[2]/a').click()
-    time.sleep(20)
+    time.sleep(30)
     driver.get(locationService)
     driver.find_element_by_xpath(r'//*[@id="indexlist"]/tbody/tr[5]/td[2]/a').click()
-    time.sleep(20)
+    time.sleep(30)
     driver.get(locationService)
     driver.find_element_by_xpath(r'//*[@id="indexlist"]/tbody/tr[6]/td[2]/a').click()
-    time.sleep(20)
+    time.sleep(30)
     driver.get(locationService)
     driver.find_element_by_xpath(r'//*[@id="indexlist"]/tbody/tr[7]/td[2]/a').click()
-    time.sleep(20)
+    time.sleep(30)
     i = i + 1

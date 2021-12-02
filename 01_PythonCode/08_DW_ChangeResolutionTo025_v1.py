@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+Change the resolution from 5 arc seconds to 0.25 arc degree
+
 Created on Tue Nov 30 13:58:30 2021
 
 @author: li.chao.987@s.kyushu-u.ac.jp
