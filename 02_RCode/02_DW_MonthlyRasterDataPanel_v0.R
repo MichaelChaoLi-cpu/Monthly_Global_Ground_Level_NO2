@@ -1,9 +1,9 @@
 # Author: M.L.
 
 # input: PanelNo2Dataset.Rdata
-# input: CityLocationOfficial.csv
-
 # PanelNo2Dataset.Rdata: "no2" monthly average no2 concentration ppm.
+
+# input: CityLocationOfficial.csv
 # CityLocationOfficial.csv: "Country", "City", "Latitude", "Longitude"
 
 # output: mergedDataset.Rdata
