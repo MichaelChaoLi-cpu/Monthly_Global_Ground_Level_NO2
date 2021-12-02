@@ -1,4 +1,26 @@
+# Author: M.L.
 
+# input: PanelNo2Dataset.Rdata
+# input: CityLocationOfficial.csv
+
+# PanelNo2Dataset.Rdata: "no2" monthly average no2 concentration ppm.
+# CityLocationOfficial.csv: "Country", "City", "Latitude", "Longitude"
+
+# output: mergedDataset.Rdata
+# mergedDataset.Rdata "no2" monthly average no2 concentration ppm.
+# mergedDataset.Rdata "mg_m2_total_no2" monthly average total column amount of no2 (mg/m2)
+# mergedDataset.Rdata "mg_m2_troposphere_no2" monthly average tropospheric column amount of no2 (mg/m2)
+# mergedDataset.Rdata "ter_pressure" monthly average terrain surface pressure (hpa)
+# mergedDataset.Rdata "dayTimeTemperature" monthly average day time temperature (C)
+# mergedDataset.Rdata "nightTimeTemperature" monthly average night time temperature (C)
+# mergedDataset.Rdata "ndvi" NDVI -1 to 1
+# mergedDataset.Rdata "humidity" g/kg means 1 gram water in the 1 kg air.
+# mergedDataset.Rdata "precipitation" the precipitation unit is kg/(m2 * h)
+# mergedDataset.Rdata "NTL" nighttime light
+# mergedDataset.Rdata "CityCode" identity index.
+# mergedDataset.Rdata "period" year * 100 + month, time index. 
+
+# end
 
 library(tidyverse)
 library(dplyr)
@@ -220,47 +242,42 @@ precipitationRasterDataset$precipitation <- precipitationRasterDataset$precipita
 precipitationRasterDataset <- precipitationRasterDataset %>% as.data.frame()
 # now, the precipitation unit is kg/(m2 * h)  
 
+#get monthly NTL 0.25 arc degree
+NTLRasterFolder <- "D:/10_Article/09_TempOutput/08_MonthlyNighttimeLightTif/MergeTif/"
+filelist <- list.files(NTLRasterFolder)
+NTLRasterDataset <- 
+  extractPointDataFromRaster(NTLRasterFolder, filelist, cityLocationSpatialPoint,
+                             4, 8, F, "NTL")
+#get monthly NTL 0.25 arc degree
+
+
 #break point
-test <- left_join(totalNo2Dataset, totalNo2RasterDataset, by = c("Country", "City", "year", "month"))
-test <- left_join(test, troposphereNo2RasterDataset, by = c("Country", "City", "year", "month"))
-cor.test(test$g_m2_total_no2, test$no2)
-cor.test(test$g_m2_troposphere_no2, test$no2)
-test <- left_join(test, terrainPressureRasterDataset, by = c("Country", "City", "year", "month"))
-cor.test(test$ter_pressure, test$no2)
-test <- left_join(test, dayTimeTemperatureRasterDataset, by = c("Country", "City", "year", "month"))
-cor.test(test$dayTimeTemperature, test$no2)
-test <- left_join(test, nightTimeTemperatureRasterDataset, by = c("Country", "City", "year", "month"))
-cor.test(test$nightTimeTemperature, test$no2)
-test <- left_join(test, ndviRasterDataset, by = c("Country", "City", "year", "month"))
-cor.test(test$ndvi, test$no2)
-test <- left_join(test, humidityRasterDataset, by = c("Country", "City", "year", "month"))
-cor.test(test$humidity, test$no2)
-test <- left_join(test, precipitationRasterDataset, by = c("Country", "City", "year", "month"))
-cor.test(test$precipitation, test$no2)
+mergedDataset <- left_join(totalNo2Dataset, totalNo2RasterDataset, by = c("Country", "City", "year", "month"))
+mergedDataset <- left_join(mergedDataset, troposphereNo2RasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$mg_m2_total_no2, mergedDataset$no2)
+cor.test(mergedDataset$mg_m2_troposphere_no2, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, terrainPressureRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$ter_pressure, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, dayTimeTemperatureRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$dayTimeTemperature, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, nightTimeTemperatureRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$nightTimeTemperature, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, ndviRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$ndvi, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, humidityRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$humidity, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, precipitationRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$precipitation, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, NTLRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$NTL, mergedDataset$no2)
 
-test %>% summary()
 
-test$mg_m2_total_no2 <- test$g_m2_total_no2 * 1000
+mergedDataset %>% summary()
 
-test$period <- test$year * 100 + test$month
+mergedDataset$period <- mergedDataset$year * 100 + mergedDataset$month
 
-na.test <- test %>% na.omit()
-
+na.test <- mergedDataset %>% na.omit()
 na.test$count <- 1
 na.test <- aggregate(na.test$count, by = list(na.test$City, na.test$Country), FUN=sum)
 
-
-library(plm)
-
-pdata <- pdata.frame(test, index = c("CityCode", "period"))
-formula <- no2 ~ mg_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature + ndvi +
-  humidity + precipitation
-ols <- plm(formula, pdata, model = "pooling")
-summary(ols)
-fem <- plm(formula, pdata, model = "within")
-summary(fem)
-rem <- plm(formula, pdata, model = "random")
-summary(rem)
-
-na.test <- test %>% dplyr::select("Country", "City", "year", "month", "humidity") %>%
-  filter(is.na(humidity))
+save(mergedDataset, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/mergedDataset.Rdata")
