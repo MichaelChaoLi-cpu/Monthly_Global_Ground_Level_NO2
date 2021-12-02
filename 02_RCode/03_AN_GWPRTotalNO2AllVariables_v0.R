@@ -24,6 +24,7 @@ library(dplyr)
 library(plm)
 library(GWPR.light)
 library(tmap)
+library(sp)
 
 load("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/mergedDataset.Rdata")
 
@@ -75,9 +76,9 @@ plmtest(ols, type = c("bp"))
 
 # we exiamine from the GWPR based on fem 
 GWPR.FEM.bandwidth <- bw.GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
-                              SDF = cityLocationSpatialPoint, adaptive = F, p = 2, bigdata = T,
+                              SDF = cityLocationSpatialPoint, adaptive = F, p = 2, bigdata = F,
                               upperratio = 0.10, effect = "individual", model = "within", approach = "CV",
-                              kernel = "bisquare")
+                              kernel = "bisquare",doParallel = T, cluster.number = 4)
 
 GWPR.plmtest.Fixed.result <-
   GWPR.plmtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),
