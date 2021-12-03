@@ -32,7 +32,7 @@ na.test <- mergedDataset %>% na.omit()
 na.test$count <- 1
 na.test <- aggregate(na.test$count, by = list(na.test$City, na.test$Country), FUN=sum)
 colnames(na.test) <- c("City", "Country", "RecordCount")
-na.test <- na.test %>% filter(RecordCount > 2)
+na.test <- na.test %>% filter(RecordCount > 8) #freedom is 8
 
 usedDataset <- left_join(mergedDataset, na.test, by = c("City", "Country"))
 usedDataset <- usedDataset %>% filter(!is.na(RecordCount))
@@ -62,6 +62,8 @@ rm(xy)
 pdata <- pdata.frame(usedDataset, index = c("CityCode", "period"))
 formula <- no2 ~ mg_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature + ndvi +
   humidity + precipitation + NTL
+#formula <- no2 ~ mg_m2_total_no2 + dayTimeTemperature + nightTimeTemperature + ndvi +
+#  humidity + precipitation
 ols <- plm(formula, pdata, model = "pooling")
 summary(ols)
 fem <- plm(formula, pdata, model = "within")
@@ -78,7 +80,8 @@ plmtest(ols, type = c("bp"))
 GWPR.FEM.bandwidth <- bw.GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
                               SDF = cityLocationSpatialPoint, adaptive = F, p = 2, bigdata = F,
                               upperratio = 0.10, effect = "individual", model = "within", approach = "CV",
-                              kernel = "bisquare",doParallel = T, cluster.number = 4)
+                              kernel = "bisquare",doParallel = T, cluster.number = 4, gradientIncrecement = T,
+                              GI.step = 0.25, GI.upper = 30, GI.lower = 0.25)
 
 GWPR.plmtest.Fixed.result <-
   GWPR.plmtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),
@@ -86,7 +89,7 @@ GWPR.plmtest.Fixed.result <-
                p = 2, kernel = "bisquare", longlat = F)
 tm_shape(GWPR.plmtest.Fixed.result$SDF) +
   tm_dots(col = "p.value", breaks = c(0, 0.05, 1))
-  ### this indicate that OLS is better than REM in most samples
+### this indicate that OLS is better than REM in most samples
 
 GWPR.pFtest.Fixed.result <- 
   GWPR.pFtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),
@@ -94,7 +97,7 @@ GWPR.pFtest.Fixed.result <-
               p = 2, effect = "individual", kernel = "bisquare", longlat = F)
 tm_shape(GWPR.pFtest.Fixed.result$SDF) +
   tm_dots(col = "p.value", breaks = c(0, 0.05, 1))
-  ### this indicate that FEM is better than OLS in most samples
+### this indicate that FEM is better than OLS in most samples
 
 GWPR.phtest.Fixed.result <- 
   GWPR.phtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),
@@ -103,12 +106,12 @@ GWPR.phtest.Fixed.result <-
               random.method = "amemiya")
 tm_shape(GWPR.phtest.Fixed.result$SDF) +
   tm_dots(col = "p.value", breaks = c(0, 0.05, 1))
-  ### this indicate that FEM is better than REM in most samples
+### this indicate that FEM is better than REM in most samples
 
-GWPR.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
-                         SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
-                         p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
-                         model = "within")
+GWPR.FEM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+                             SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
+                             p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                             model = "within")
 
 
 # let us test pooled regression
@@ -117,12 +120,17 @@ GWPR.OLS.bandwidth <- bw.GWPR(formula = formula, data = usedDataset, index = c("
                               upperratio = 0.10, effect = "individual", model = "pooling", approach = "CV",
                               kernel = "bisquare")
 GWPR.OLS.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
-                         SDF = cityLocationSpatialPoint, bw = GWPR.OLS.bandwidth, adaptive = F,
-                         p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
-                         model = "pooling")
+                             SDF = cityLocationSpatialPoint, bw = GWPR.OLS.bandwidth, adaptive = F,
+                             p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                             model = "pooling")
 
 # let us test REM
 GWPR.REM.bandwidth <- bw.GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
                               SDF = cityLocationSpatialPoint, adaptive = F, p = 2, bigdata = T,
                               upperratio = 0.40, effect = "individual", model = "random", approach = "CV",
-                              kernel = "bisquare", random.method = "swar")
+                              kernel = "bisquare", random.method = "swar", doParallel = T,
+                              cluster.number = 4)
+GWPR.REM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+                             SDF = cityLocationSpatialPoint, bw = GWPR.REM.bandwidth, adaptive = F,
+                             p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                             model = "random", random.method = "swar")
