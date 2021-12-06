@@ -27,6 +27,8 @@ library(tmap)
 library(sp)
 
 load("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/mergedDataset.Rdata")
+usedDataset$humidity <- usedDataset$humidity %>% as.numeric()
+usedDataset$precipitation <- usedDataset$precipitation %>% as.numeric()
 
 na.test <- mergedDataset %>% na.omit()
 na.test$count <- 1
@@ -37,9 +39,16 @@ na.test <- na.test %>% filter(RecordCount > 8) #freedom is 8
 usedDataset <- left_join(mergedDataset, na.test, by = c("City", "Country"))
 usedDataset <- usedDataset %>% filter(!is.na(RecordCount))
 usedDataset <- usedDataset %>% dplyr::select(
-  no2, mg_m2_total_no2, ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
-  humidity, precipitation, NTL, CityCode, period, City, Country
+  no2, mg_m2_total_no2, mg_m2_troposphere_no2,
+  ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
+  humidity, precipitation, NTL, CityCode, period, City, Country,
+  month, year
 ) %>% na.omit()
+Pcoef = 0.00750061683
+MW = 46.0055
+usedDataset$no2_measured_mg.m3 <-
+  Pcoef * usedDataset$ter_pressure * MW * usedDataset$no2 /
+  (62.4 * (273.2 + usedDataset$dayTimeTemperature/2 + usedDataset$nightTimeTemperature/2))
 # preprocessing of the panel data set not we take the total column as the dependent variable
 
 cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
@@ -62,8 +71,8 @@ rm(xy)
 pdata <- pdata.frame(usedDataset, index = c("CityCode", "period"))
 formula <- no2 ~ mg_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature + ndvi +
   humidity + precipitation + NTL
-#formula <- no2 ~ mg_m2_total_no2 + dayTimeTemperature + nightTimeTemperature + ndvi +
-#  humidity + precipitation
+formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + dayTimeTemperature + 
+  nightTimeTemperature + ndvi + humidity + precipitation + NTL
 ols <- plm(formula, pdata, model = "pooling")
 summary(ols)
 fem <- plm(formula, pdata, model = "within")
@@ -80,8 +89,8 @@ plmtest(ols, type = c("bp"))
 GWPR.FEM.bandwidth <- bw.GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
                               SDF = cityLocationSpatialPoint, adaptive = F, p = 2, bigdata = F,
                               upperratio = 0.10, effect = "individual", model = "within", approach = "CV",
-                              kernel = "bisquare",doParallel = T, cluster.number = 4, gradientIncrecement = T,
-                              GI.step = 0.25, GI.upper = 30, GI.lower = 0.25)
+                              kernel = "bisquare",doParallel = T, cluster.number = 6, gradientIncrecement = T,
+                              GI.step = 0.25, GI.upper = 20, GI.lower = 0.25)
 
 GWPR.plmtest.Fixed.result <-
   GWPR.plmtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),

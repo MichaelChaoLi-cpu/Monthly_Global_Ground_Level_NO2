@@ -28,6 +28,7 @@ library(raster)
 library(sp)
 library(stringr)
 library(rgdal)
+library(lubridate)
 
 extractPointDataFromRaster <- function(RasterFolder, filelist, cityLocationSpatialPoint,
                                        year_start_location, month_start_location, flip_reverse = T,
@@ -127,9 +128,19 @@ totalNo2RasterDataset <-
 mol_g = 6.022140857 * 10^23  # mol
 totalNo2RasterDataset$g_cm2 <- totalNo2RasterDataset$raw_no2 / mol_g * 46.0055 # convert mol to g
 totalNo2RasterDataset$mg_m2_total_no2 <- totalNo2RasterDataset$g_cm2 * 10000 * 1000 # conver /cm2 to /m2 and g to mg
-totalNo2RasterDataset <- totalNo2RasterDataset %>% dplyr::select("Country", "City", "year", "month", "g_m2_total_no2")
-
-
+totalNo2RasterDataset <- totalNo2RasterDataset %>% dplyr::select("Country", "City", "year", "month", "mg_m2_total_no2")
+totalNo2RasterDataset$Date <- as.Date(
+  paste0(as.character(totalNo2RasterDataset$year),"-",as.character(totalNo2RasterDataset$month),"-01")
+  )
+totalNo2RasterDataset.lag <- totalNo2RasterDataset
+totalNo2RasterDataset.lag$Date <- totalNo2RasterDataset.lag$Date %m+% months(1)
+totalNo2RasterDataset.lag <- totalNo2RasterDataset.lag %>% 
+  dplyr::select(Country, City, mg_m2_total_no2, Date) %>%
+  rename(mg_m2_total_no2_lag = mg_m2_total_no2)
+totalNo2RasterDataset <- left_join(totalNo2RasterDataset, totalNo2RasterDataset.lag,
+                                   by = c("Country", "City", "Date"))
+totalNo2RasterDataset <- totalNo2RasterDataset %>%
+  dplyr::select(-raw_no2, -g_cm2, -Date)
 
 #get monthly troposphere no2 from the OMNO2G, band 9(troposphere no2)
 troposphereNo2RasterFolder <- "D:/10_Article/09_TempOutput/02_MonthlyTroposphericNo2Tif/"
@@ -141,9 +152,19 @@ troposphereNo2RasterDataset <-
 mol_g = 6.022140857 * 10^23  # mol
 troposphereNo2RasterDataset$g_cm2 <- troposphereNo2RasterDataset$raw_no2 / mol_g * 46.0055 # convert mol to g
 troposphereNo2RasterDataset$mg_m2_troposphere_no2 <- troposphereNo2RasterDataset$g_cm2 * 10000 * 1000 # conver /cm2 to /m2 and g to mg
-troposphereNo2RasterDataset <- troposphereNo2RasterDataset %>% dplyr::select("Country", "City", "year", "month", "g_m2_troposphere_no2")
-
-
+troposphereNo2RasterDataset <- troposphereNo2RasterDataset %>% dplyr::select("Country", "City", "year", "month", "mg_m2_troposphere_no2")
+troposphereNo2RasterDataset$Date <- as.Date(
+  paste0(as.character(troposphereNo2RasterDataset$year),"-",as.character(troposphereNo2RasterDataset$month),"-01")
+)
+troposphereNo2RasterDataset.lag <- troposphereNo2RasterDataset
+troposphereNo2RasterDataset.lag$Date <- troposphereNo2RasterDataset.lag$Date %m+% months(1)
+troposphereNo2RasterDataset.lag <- troposphereNo2RasterDataset.lag %>% 
+  dplyr::select(Country, City, mg_m2_troposphere_no2, Date) %>%
+  rename(mg_m2_troposphere_no2_lag = mg_m2_troposphere_no2)
+troposphereNo2RasterDataset <- left_join(troposphereNo2RasterDataset, troposphereNo2RasterDataset.lag,
+                                   by = c("Country", "City", "Date"))
+troposphereNo2RasterDataset <- troposphereNo2RasterDataset %>%
+  dplyr::select(-Date)
 
 #get monthly terrain pressure from the OMNO2G, band 29 (terrain pressure)
 terrainPressureRasterFolder <- "D:/10_Article/09_TempOutput/03_MonthlyTerrainPressureTif/"
