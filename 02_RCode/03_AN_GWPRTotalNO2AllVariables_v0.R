@@ -39,16 +39,13 @@ na.test <- na.test %>% filter(RecordCount > 8) #freedom is 8
 usedDataset <- left_join(mergedDataset, na.test, by = c("City", "Country"))
 usedDataset <- usedDataset %>% filter(!is.na(RecordCount))
 usedDataset <- usedDataset %>% dplyr::select(
+  no2_measured_mg.m3,
   no2, mg_m2_total_no2, mg_m2_troposphere_no2,
+  #mg_m2_total_no2_lag, mg_m2_troposphere_no2_lag,
   ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
-  humidity, precipitation, NTL, CityCode, period, City, Country,
-  month, year
+  humidity, precipitation, NTL, CityCode, City, Country,
+  month, year, Date, Y2016, Y2017, Y2018, Y2019, Y2020, Y2021
 ) %>% na.omit()
-Pcoef = 0.00750061683
-MW = 46.0055
-usedDataset$no2_measured_mg.m3 <-
-  Pcoef * usedDataset$ter_pressure * MW * usedDataset$no2 /
-  (62.4 * (273.2 + usedDataset$dayTimeTemperature/2 + usedDataset$nightTimeTemperature/2))
 # preprocessing of the panel data set not we take the total column as the dependent variable
 
 cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
@@ -68,11 +65,14 @@ cityLocationSpatialPoint <- SpatialPointsDataFrame(coords = xy, data = cityLocat
 rm(xy)
 # get the city points 
 
-pdata <- pdata.frame(usedDataset, index = c("CityCode", "period"))
-formula <- no2 ~ mg_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature + ndvi +
-  humidity + precipitation + NTL
-formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + dayTimeTemperature + 
-  nightTimeTemperature + ndvi + humidity + precipitation + NTL
+pdata <- pdata.frame(usedDataset, index = c("CityCode", "Date"))
+formula <- no2_measured_mg.m3 ~ mg_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature +
+  ndvi + humidity + precipitation + NTL + Y2016 +
+  Y2017 + Y2018 + Y2019 + Y2020 + Y2021
+#formula <- no2_measured_mg.m3 ~ mg_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature +
+#  ndvi + humidity + precipitation + NTL + mg_m2_total_no2_lag 
+#formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + dayTimeTemperature + 
+#  nightTimeTemperature + ndvi + humidity + precipitation + NTL
 ols <- plm(formula, pdata, model = "pooling")
 summary(ols)
 fem <- plm(formula, pdata, model = "within")
@@ -117,8 +117,8 @@ tm_shape(GWPR.phtest.Fixed.result$SDF) +
   tm_dots(col = "p.value", breaks = c(0, 0.05, 1))
 ### this indicate that FEM is better than REM in most samples
 
-GWPR.FEM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
-                             SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
+GWPR.FEM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "Date"),
+                             SDF = cityLocationSpatialPoint, bw = 2.25, adaptive = F,
                              p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
                              model = "within")
 

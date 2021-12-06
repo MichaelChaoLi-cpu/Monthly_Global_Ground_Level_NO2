@@ -292,10 +292,26 @@ cor.test(mergedDataset$precipitation, mergedDataset$no2)
 mergedDataset <- left_join(mergedDataset, NTLRasterDataset, by = c("Country", "City", "year", "month"))
 cor.test(mergedDataset$NTL, mergedDataset$no2)
 
+# convert into ug/m3
+Pcoef = 0.00750061683
+MW = 46.0055
+mergedDataset$no2_measured_mg.m3 <-
+  Pcoef * mergedDataset$ter_pressure * MW * mergedDataset$no2 /
+  (62.4 * (273.2 + mergedDataset$dayTimeTemperature/2 + mergedDataset$nightTimeTemperature/2))
+
+mergedDataset$month <- mergedDataset$month %>% as.factor()
+mergedDataset$year <- mergedDataset$year %>% as.factor()
+mergedDataset <- mergedDataset %>%
+  mutate(
+    Y2016 = ifelse(year == "2016", 1, 0),
+    Y2017 = ifelse(year == "2017", 1, 0),
+    Y2018 = ifelse(year == "2018", 1, 0),
+    Y2019 = ifelse(year == "2019", 1, 0),
+    Y2020 = ifelse(year == "2020", 1, 0),
+    Y2021 = ifelse(year == "2021", 1, 0)
+  )
 
 mergedDataset %>% summary()
-
-mergedDataset$period <- mergedDataset$year * 100 + mergedDataset$month
 
 na.test <- mergedDataset %>% na.omit()
 na.test$count <- 1
