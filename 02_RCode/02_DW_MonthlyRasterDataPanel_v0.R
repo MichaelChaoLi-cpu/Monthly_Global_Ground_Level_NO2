@@ -16,7 +16,9 @@
 # mergedDataset.Rdata "ndvi" NDVI -1 to 1
 # mergedDataset.Rdata "humidity" g/kg means 1 gram water in the 1 kg air.
 # mergedDataset.Rdata "precipitation" the precipitation unit is kg/(m2 * h)
+# mergedDataset.Rdata "speedwind" the wind speed unit is m/s
 # mergedDataset.Rdata "NTL" nighttime light
+# mergedDataset.Rdata "PBLR" planetary boundary layer height unit is m.
 # mergedDataset.Rdata "CityCode" identity index.
 # mergedDataset.Rdata "period" year * 100 + month, time index. 
 
@@ -280,6 +282,29 @@ NTLRasterDataset <-
                              4, 8, F, "NTL")
 #get monthly NTL 0.25 arc degree
 
+#get monthly planetary boundary layer height, 0.25 * 0.25 
+PBLHRasterLayer <- "D:/10_Article/09_TempOutput/10_PlanetaryBoundaryLayerHeight/Resample/"
+filelist <- list.files(PBLHRasterLayer)
+PBLHRasterDataset <- 
+  extractPointDataFromRaster(PBLHRasterLayer, filelist, cityLocationSpatialPoint,
+                             1, 5, F, "PBLH")
+#get monthly planetary boundary layer height, 0.25 * 0.25 
+
+# get monthly cloud fraction, 0.25 * 0.25
+cloudFractionRasterLayer <- "D:/10_Article/09_TempOutput/11_MonthlyCloudFraction/"
+filelist <- list.files(cloudFractionRasterLayer)
+cloudFractionRasterDataset <- 
+  extractPointDataFromRaster(cloudFractionRasterLayer, filelist, cityLocationSpatialPoint,
+                             1, 5, T, "cloudfraction")
+# get monthly cloud fraction, 0.25 * 0.25
+
+# get monthly cloud pressure, 0.25 * 0.25
+cloudPressureRasterLayer <- "D:/10_Article/09_TempOutput/12_MonthlyCloudPressure/"
+filelist <- list.files(cloudPressureRasterLayer)
+cloudPressureRasterDataset <- 
+  extractPointDataFromRaster(cloudPressureRasterLayer, filelist, cityLocationSpatialPoint,
+                             1, 5, T, "cloudpressure")
+# get monthly cloud pressure, 0.25 * 0.25
 
 #break point
 mergedDataset <- left_join(totalNo2Dataset, totalNo2RasterDataset, by = c("Country", "City", "year", "month"))
@@ -300,6 +325,10 @@ mergedDataset <- left_join(mergedDataset, precipitationRasterDataset, by = c("Co
 cor.test(mergedDataset$precipitation, mergedDataset$no2)
 mergedDataset <- left_join(mergedDataset, NTLRasterDataset, by = c("Country", "City", "year", "month"))
 cor.test(mergedDataset$NTL, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, speedWindRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$speedwind, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, PBLHRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$PBLH, mergedDataset$no2)
 
 # convert into ug/m3
 Pcoef = 0.00750061683

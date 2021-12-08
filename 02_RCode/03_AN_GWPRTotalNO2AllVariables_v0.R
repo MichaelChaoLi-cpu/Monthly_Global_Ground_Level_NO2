@@ -10,7 +10,9 @@
 # mergedDataset.Rdata "ndvi" NDVI -1 to 1
 # mergedDataset.Rdata "humidity" g/kg means 1 gram water in the 1 kg air.
 # mergedDataset.Rdata "precipitation" the precipitation unit is kg/(m2 * h)
+# mergedDataset.Rdata "speedwind" the wind speed unit is m/s
 # mergedDataset.Rdata "NTL" nighttime light
+# mergedDataset.Rdata "PBLR" planetary boundary layer height unit is m.
 # mergedDataset.Rdata "CityCode" identity index.
 # mergedDataset.Rdata "period" year * 100 + month, time index. 
 
@@ -27,8 +29,6 @@ library(tmap)
 library(sp)
 
 load("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/mergedDataset.Rdata")
-usedDataset$humidity <- usedDataset$humidity %>% as.numeric()
-usedDataset$precipitation <- usedDataset$precipitation %>% as.numeric()
 
 na.test <- mergedDataset %>% na.omit()
 na.test$count <- 1
@@ -43,9 +43,11 @@ usedDataset <- usedDataset %>% dplyr::select(
   no2, mg_m2_total_no2, mg_m2_troposphere_no2,
   #mg_m2_total_no2_lag, mg_m2_troposphere_no2_lag,
   ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
-  humidity, precipitation, NTL, CityCode, City, Country,
+  humidity, precipitation, NTL, speedwind, PBLH, CityCode, City, Country, 
   month, year, Date, Y2016, Y2017, Y2018, Y2019, Y2020, Y2021
 ) %>% na.omit()
+usedDataset$humidity <- usedDataset$humidity %>% as.numeric()
+usedDataset$precipitation <- usedDataset$precipitation %>% as.numeric()
 # preprocessing of the panel data set not we take the total column as the dependent variable
 
 cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
@@ -67,7 +69,7 @@ rm(xy)
 
 pdata <- pdata.frame(usedDataset, index = c("CityCode", "Date"))
 formula <- no2_measured_mg.m3 ~ mg_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature +
-  ndvi + humidity + precipitation + NTL + Y2016 +
+  ndvi + humidity + precipitation + NTL + speedwind + PBLH + Y2016 +
   Y2017 + Y2018 + Y2019 + Y2020 + Y2021
 #formula <- no2_measured_mg.m3 ~ mg_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature +
 #  ndvi + humidity + precipitation + NTL + mg_m2_total_no2_lag 

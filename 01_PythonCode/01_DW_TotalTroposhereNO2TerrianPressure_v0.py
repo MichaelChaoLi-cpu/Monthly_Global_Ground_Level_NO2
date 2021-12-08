@@ -61,6 +61,7 @@ for aimedDate in yearMonthList:
     troposphericNo2SingleMonthRasterList = []
     terrainPressureSingleMonthRasterList = []
     for raster in singleMonthRasterNameList:
+        #raster = singleMonthRasterNameList[1]
         hdflayer = gdal.Open(raster, gdal.GA_ReadOnly)
         subhdflayer = hdflayer.GetSubDatasets()[5][0]
         rlayer = gdal.Open(subhdflayer, gdal.GA_ReadOnly)
