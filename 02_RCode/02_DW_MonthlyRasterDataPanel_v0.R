@@ -263,6 +263,15 @@ precipitationRasterDataset$precipitation <- precipitationRasterDataset$precipita
 precipitationRasterDataset <- precipitationRasterDataset %>% as.data.frame()
 # now, the precipitation unit is kg/(m2 * h)  
 
+#get monthly speed wind from the GLDAS_NOAH025_M 0.25 arc degree
+speedWindRasterFolder <- "D:/10_Article/09_TempOutput/09_WindSpeed/"
+filelist <- list.files(speedWindRasterFolder)
+speedWindRasterDataset <- 
+  extractBufferDataFromRaster(speedWindRasterFolder, filelist, cityLocationSpatialBuffer,
+                              15, 19, T, "speedwind")
+speedWindRasterDataset <- speedWindRasterDataset %>% as.data.frame()
+# now, the speed wind unit is m/s  
+
 #get monthly NTL 0.25 arc degree
 NTLRasterFolder <- "D:/10_Article/09_TempOutput/08_MonthlyNighttimeLightTif/MergeTif/"
 filelist <- list.files(NTLRasterFolder)
