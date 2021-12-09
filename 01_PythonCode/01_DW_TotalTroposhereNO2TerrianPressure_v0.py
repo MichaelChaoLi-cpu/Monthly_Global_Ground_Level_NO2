@@ -4,7 +4,7 @@ Convert h4 to GeoTiff
 
 For DP_10 OMI/Aura NO2 Total and Tropospheric Column Daily L2 from OMNO2G
 
-Band: 0(CloudFraction) 2(CloudPressure) 29(terrian pressure) 
+Band: 0(totalNo2) 2(troposphericNo2) 29(terrainPressure) 
 
 Resolution: 0.25 arc degree
 

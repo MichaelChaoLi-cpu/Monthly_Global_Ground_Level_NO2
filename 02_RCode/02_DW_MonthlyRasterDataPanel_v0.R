@@ -21,6 +21,9 @@
 # mergedDataset.Rdata "PBLR" planetary boundary layer height unit is m.
 # mergedDataset.Rdata "CityCode" identity index.
 # mergedDataset.Rdata "period" year * 100 + month, time index. 
+# mergedDataset.Rdata "no2_measured_mg.m3" convert based on the "no2", 
+#                     "ter_pressure", "dayTimeTemperature", and "nightTimeTemperature"
+#                     the unit is mg/m3. equation listed in the code
 
 # end
 

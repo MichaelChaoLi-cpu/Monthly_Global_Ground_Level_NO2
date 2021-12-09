@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Change the resolution from 5 arc seconds to 0.25 arc degree
+from MERRA-2 tavgM_2d_flx_Nx: 2d,Monthly mean,Time-Averaged,Single-Level,Assimilation,Surface Flux Diagnostics V5.12.4 (M2TMNXFLX)
+
+Band: "PBLH"
+
+Change the resolution from 0.5 * 0.625 to 0.25 arc degree
 
 Created on Wed Dec  8 13:16:42 2021
 
