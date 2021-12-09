@@ -44,7 +44,8 @@ usedDataset <- usedDataset %>% dplyr::select(
   #mg_m2_total_no2_lag, mg_m2_troposphere_no2_lag,
   ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
   humidity, precipitation, NTL, speedwind, PBLH, 
-  cloudfraction, cloudpressure, CityCode, City, Country, 
+  #UVAerosolIndex, ozone, cloudfraction, cloudpressure,
+  CityCode, City, Country, 
   month, year, Date, Y2016, Y2017, Y2018, Y2019, Y2020, Y2021
 ) %>% na.omit()
 usedDataset$humidity <- usedDataset$humidity %>% as.numeric()
@@ -69,8 +70,9 @@ rm(xy)
 # get the city points 
 
 pdata <- pdata.frame(usedDataset, index = c("CityCode", "Date"))
-formula <- no2_measured_mg.m3 ~ mg_m2_total_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature +
+formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature +
   ndvi + humidity + precipitation + NTL + speedwind + PBLH + 
+  #UVAerosolIndex + ozone +
   #cloudfraction + cloudpressure + # add this two variables effect are limited, only increase 0.2% R2
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
 ols <- plm(formula, pdata, model = "pooling")

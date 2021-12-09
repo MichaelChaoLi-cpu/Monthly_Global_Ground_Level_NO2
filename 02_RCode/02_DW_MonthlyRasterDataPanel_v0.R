@@ -306,6 +306,23 @@ cloudPressureRasterDataset <-
                              21, 26, T, "cloudpressure")
 # get monthly cloud pressure, 0.25 * 0.25
 
+# get monthly Ozone, 0.25 * 0.25
+ozoneRasterLayer <- "D:/10_Article/09_TempOutput/14_MonthlyOzone/"
+filelist <- list.files(ozoneRasterLayer)
+filelist <- filelist[1:77]
+ozoneRasterDataset <- 
+  extractPointDataFromRaster(ozoneRasterLayer, filelist, cityLocationSpatialPoint,
+                             21, 26, T, "ozone")
+# get monthly cloud pressure, 0.25 * 0.25
+
+# get monthly UV Aerosol Index, 0.25 * 0.25
+UVAerosolIndexRasterLayer <- "D:/10_Article/09_TempOutput/15_MonthlyUVAerosolIndex/"
+filelist <- list.files(UVAerosolIndexRasterLayer)
+UVAerosolIndexRasterDataset <- 
+  extractPointDataFromRaster(UVAerosolIndexRasterLayer, filelist, cityLocationSpatialPoint,
+                             21, 26, T, "UVAerosolIndex")
+# get monthly UV Aerosol Index, 0.25 * 0.25
+
 #break point
 mergedDataset <- left_join(totalNo2Dataset, totalNo2RasterDataset, by = c("Country", "City", "year", "month"))
 mergedDataset <- left_join(mergedDataset, troposphereNo2RasterDataset, by = c("Country", "City", "year", "month"))
@@ -333,6 +350,10 @@ mergedDataset <- left_join(mergedDataset, cloudFractionRasterDataset, by = c("Co
 cor.test(mergedDataset$cloudfraction, mergedDataset$no2)
 mergedDataset <- left_join(mergedDataset, cloudPressureRasterDataset, by = c("Country", "City", "year", "month"))
 cor.test(mergedDataset$cloudpressure, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, ozoneRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$ozone, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, UVAerosolIndexRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$UVAerosolIndex, mergedDataset$no2)
 
 # convert into ug/m3
 Pcoef = 0.00750061683
