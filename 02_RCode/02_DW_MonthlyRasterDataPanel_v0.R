@@ -295,7 +295,7 @@ cloudFractionRasterLayer <- "D:/10_Article/09_TempOutput/11_MonthlyCloudFraction
 filelist <- list.files(cloudFractionRasterLayer)
 cloudFractionRasterDataset <- 
   extractPointDataFromRaster(cloudFractionRasterLayer, filelist, cityLocationSpatialPoint,
-                             1, 5, T, "cloudfraction")
+                             21, 26, T, "cloudfraction")
 # get monthly cloud fraction, 0.25 * 0.25
 
 # get monthly cloud pressure, 0.25 * 0.25
@@ -303,7 +303,7 @@ cloudPressureRasterLayer <- "D:/10_Article/09_TempOutput/12_MonthlyCloudPressure
 filelist <- list.files(cloudPressureRasterLayer)
 cloudPressureRasterDataset <- 
   extractPointDataFromRaster(cloudPressureRasterLayer, filelist, cityLocationSpatialPoint,
-                             1, 5, T, "cloudpressure")
+                             21, 26, T, "cloudpressure")
 # get monthly cloud pressure, 0.25 * 0.25
 
 #break point
@@ -329,6 +329,10 @@ mergedDataset <- left_join(mergedDataset, speedWindRasterDataset, by = c("Countr
 cor.test(mergedDataset$speedwind, mergedDataset$no2)
 mergedDataset <- left_join(mergedDataset, PBLHRasterDataset, by = c("Country", "City", "year", "month"))
 cor.test(mergedDataset$PBLH, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, cloudFractionRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$cloudfraction, mergedDataset$no2)
+mergedDataset <- left_join(mergedDataset, cloudPressureRasterDataset, by = c("Country", "City", "year", "month"))
+cor.test(mergedDataset$cloudpressure, mergedDataset$no2)
 
 # convert into ug/m3
 Pcoef = 0.00750061683

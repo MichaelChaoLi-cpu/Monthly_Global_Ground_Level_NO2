@@ -20,14 +20,14 @@ import os
 import netCDF4
 from osgeo import gdal
 
-src_dataset = gdal.Open("D:/10_Article/08_MonthlyRaster/IDW_REM/200702.tif")
-geotransform = (-180.0, 0.25, 0.0, -60.0, 0.0, 0.25)
+inputNc4FileFolder = 'D:/10_Article/09_TempOutput/07_MonthlyPrecipitationTif/Temp'
+
+src_dataset = gdal.Open("D:/10_Article/09_TempOutput/07_MonthlyPrecipitationTif/totalPrecipitationRate201501.tif", gdal.GA_ReadOnly)
+geotransform = src_dataset.GetGeoTransform()
 spatialreference = src_dataset.GetProjection()
 ncol = 1440
 nrow = 600
 nband = 1
-
-inputNc4FileFolder = 'D:/10_Article/09_TempOutput/07_MonthlyPrecipitationTif/Temp'
 
 outputWindSpeedGeoTiffFileFolder = 'D:/10_Article/09_TempOutput/09_WindSpeed/'
 
