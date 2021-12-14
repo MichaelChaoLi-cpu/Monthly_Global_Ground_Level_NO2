@@ -106,6 +106,7 @@ CV.result.table <- data.frame(Doubles=double(),
                               stringsAsFactors=FALSE)
 
 while (foldNumberth < 11){
+  meanValueOfVariables.use <- meanValueOfVariables
   if (foldNumberth == 10){
     rows.test <- rows[((foldNumberth-1)*singleFoldNumber+1):nrow(femTransformationDataset)]
   } else {
@@ -130,16 +131,38 @@ while (foldNumberth < 11){
                                SDF = trainCityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
                                p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
                                model = "pooling")
-  CVtrain.R2 <- GWPR.FEM.CV.F.result.CV1$R2
+  #CVtrain.R2 <- GWPR.FEM.CV.F.result.CV1$R2
   coef.CV1 <- GWPR.FEM.CV.F.result.CV1$SDF@data
   coef.CV1 <- coef.CV1[,1:17]
   colnames(coef.CV1) <- paste0(colnames(coef.CV1), "_Coef")
   colnames(coef.CV1)[1] <- "CityCode"
-  colnames(meanValueOfVariablesCity) <- paste0(colnames(meanValueOfVariablesCity), "_mean")
-  colnames(meanValueOfVariablesCity)[1] <- "CityCode"
+  colnames(meanValueOfVariables.use) <- paste0(colnames(meanValueOfVariables.use), "_mean")
+  colnames(meanValueOfVariables.use)[1] <- "CityCode"
+  
+  train.predict <- left_join(train, coef.CV1, by = "CityCode")
+  train.predict <- left_join(train.predict, meanValueOfVariables.use, by = "CityCode")
+  train.predict <- train.predict %>%
+    mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
+             ter_pressure_Coef * (ter_pressure) + 
+             dayTimeTemperature_Coef * (dayTimeTemperature) +
+             nightTimeTemperature_Coef * (nightTimeTemperature) +
+             ndvi_Coef * (ndvi) +
+             humidity_Coef * (humidity) +
+             precipitation_Coef * (precipitation) +
+             NTL_Coef * (NTL) + speedwind_Coef * (speedwind) +
+             PBLH_Coef * (PBLH) +
+             Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
+             Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
+             Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_mg.m3_mean
+    )
+  train.predict$no2_measured_mg.m3.ori <- train.predict$no2_measured_mg.m3 + train.predict$no2_measured_mg.m3_mean
+  #ss.tot <- sum((train.predict$no2_measured_mg.m3.ori - mean(train.predict$no2_measured_mg.m3.ori))^2)
+  ss.tot <- sum((train.predict$no2_measured_mg.m3.ori)^2)
+  ss.res <- sum((train.predict$no2_measured_mg.m3.ori - train.predict$predictNo2)^2)
+  CVtrain.R2 <- 1 - ss.res/ss.tot
   
   test.predict <- left_join(test, coef.CV1, by = "CityCode")
-  test.predict <- left_join(test.predict, meanValueOfVariablesCity, by = "CityCode")
+  test.predict <- left_join(test.predict, meanValueOfVariables.use, by = "CityCode")
   test.predict <- test.predict %>%
     mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
              ter_pressure_Coef * (ter_pressure) + 
@@ -152,7 +175,7 @@ while (foldNumberth < 11){
              PBLH_Coef * (PBLH) +
              Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
              Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
-             Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + test.predict$no2_measured_mg.m3_mean
+             Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_mg.m3_mean
            )
   test.predict$no2_measured_mg.m3.ori <- test.predict$no2_measured_mg.m3 + test.predict$no2_measured_mg.m3_mean
   #ss.tot <- sum((test.predict$no2_measured_mg.m3.ori - mean(test.predict$no2_measured_mg.m3.ori))^2)
@@ -164,5 +187,82 @@ while (foldNumberth < 11){
   CV.result.table <- rbind(CV.result.table, result)
   foldNumberth <- foldNumberth + 1
 }
-
 colnames(CV.result.table) <- c("foldNumber", "CVtrain.R2", "CVtest.R2")
+save(CV.result.table, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/femCrossValidation.Rdata")
+
+#PoM Cross Validation, fixed bw 2.25 
+formula.CV.PoM <-
+  no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature +
+  ndvi + humidity + precipitation + NTL + speedwind + PBLH + 
+  Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
+rawCrossValidationDataset <- usedDataset %>% 
+  dplyr::select("CityCode", "period", all.vars(formula.CV.PoM))
+rawCrossValidationDataset <- rawCrossValidationDataset %>% arrange("CityCode", "period")
+pomTransformationDataset <- rawCrossValidationDataset
+pomTransformationDataset <- pomTransformationDataset[rows,]
+
+singleFoldNumber <- floor(nrow(pomTransformationDataset)/10)
+foldNumberth <- 1
+
+CV.result.pom.table <- data.frame(Doubles=double(),
+                                  Ints=integer(),
+                                  Factors=factor(),
+                                  Logicals=logical(),
+                                  Characters=character(),
+                                  stringsAsFactors=FALSE)
+while (foldNumberth < 11){
+  if (foldNumberth == 10){
+    rows.test <- rows[((foldNumberth-1)*singleFoldNumber+1):nrow(pomTransformationDataset)]
+  } else {
+    rows.test <- rows[((foldNumberth-1)*singleFoldNumber+1):(foldNumberth*singleFoldNumber)]
+  }
+  
+  test <- pomTransformationDataset[rows.test,]
+  train <- pomTransformationDataset[-rows.test,]
+  
+  trainCode <- train %>%
+    dplyr::select(CityCode) %>% distinct()
+  
+  trainCityLocation <- left_join(trainCode, cityLocation, by = "CityCode")
+  xy <- trainCityLocation %>% dplyr::select(Longitude, Latitude)
+  trainCityLocationSpatialPoint <- SpatialPointsDataFrame(coords = xy, data = cityLocation[,c(1, 2, 3, 4, 5)],
+                                                          proj4string = CRS(proj))
+  rm(xy)
+  # get the train city points 
+  
+  GWPR.PoM.bandwidth = 2.25 ###
+  GWPR.PoM.CV.F.result.CV1 <- GWPR(formula = formula.CV.PoM, data = train, index = c("CityCode", "period"),
+                                   SDF = trainCityLocationSpatialPoint, bw = GWPR.PoM.bandwidth, adaptive = F,
+                                   p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                                   model = "pooling")
+  CVtrain.R2 <- GWPR.PoM.CV.F.result.CV1$R2
+  coef.CV1 <- GWPR.PoM.CV.F.result.CV1$SDF@data
+  coef.CV1 <- coef.CV1[,1:18]
+  colnames(coef.CV1) <- paste0(colnames(coef.CV1), "_Coef")
+  colnames(coef.CV1)[1] <- "CityCode"
+  
+  test.predict <- left_join(test, coef.CV1, by = "CityCode")
+  test.predict <- test.predict %>%
+    mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
+             ter_pressure_Coef * (ter_pressure) + 
+             dayTimeTemperature_Coef * (dayTimeTemperature) +
+             nightTimeTemperature_Coef * (nightTimeTemperature) +
+             ndvi_Coef * (ndvi) +
+             humidity_Coef * (humidity) +
+             precipitation_Coef * (precipitation) +
+             NTL_Coef * (NTL) + speedwind_Coef * (speedwind) +
+             PBLH_Coef * (PBLH) +
+             Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
+             Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
+             Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + Intercept_Coef
+    )
+  ss.tot <- sum((test.predict$no2_measured_mg.m3 - mean(test.predict$no2_measured_mg.m3))^2)
+  ss.res <- sum((test.predict$no2_measured_mg.m3 - test.predict$predictNo2)^2)
+  CVtest.R2 <- 1 - ss.res/ss.tot
+  result <- c(foldNumberth, CVtrain.R2, CVtest.R2)
+  print(result)
+  CV.result.pom.table <- rbind(CV.result.pom.table, result)
+  foldNumberth <- foldNumberth + 1
+}
+colnames(CV.result.pom.table) <- c("foldNumber", "CVtrain.R2", "CVtest.R2")
+save(CV.result.pom.table, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/pomCrossValidation.Rdata")
