@@ -16,8 +16,11 @@
 # mergedDataset.Rdata "CityCode" identity index.
 # mergedDataset.Rdata "period" year * 100 + month, time index. 
 
-# input CityLocationOfficial.csv
+# input: CityLocationOfficial.csv
 # CityLocationOfficial.csv: "Country", "City", "Latitude", "Longitude"
+
+# output: femCrossValidation.Rdata
+# femCrossValidation.Rdata: "foldNumber", "CVtrain.R2", "CVtest.R2" 
 
 # end
 

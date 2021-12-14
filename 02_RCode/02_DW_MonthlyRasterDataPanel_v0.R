@@ -246,34 +246,60 @@ ndviRasterDataset$month <- str_sub(ndviRasterDataset$date, 6, 7) %>% as.numeric(
 ndviRasterDataset <- ndviRasterDataset %>% dplyr::select(-date)
 ndviRasterDataset$ndvi <- ndviRasterDataset$ndvi / 10000  #convert into from 1 to -1 
 
-#get monthly water vapor from the GLDAS_NOAH025_M 0.25 arc degree
-cityLocationSpatialBuffer <- rgeos::gBuffer(cityLocationSpatialPoint, byid = T, width = 0.5)
-humidityRasterFolder <- "D:/10_Article/09_TempOutput/06_MonthlyVaporTif/"
+#get monthly water vapor from the GLDAS_NOAH025_M 0.25 arc degree 
+# Buffer based
+###cityLocationSpatialBuffer <- rgeos::gBuffer(cityLocationSpatialPoint, byid = T, width = 0.5)
+###humidityRasterFolder <- "D:/10_Article/09_TempOutput/06_MonthlyVaporTif/"
+###filelist <- list.files(humidityRasterFolder)
+###humidityRasterDataset <- 
+###  extractBufferDataFromRaster(humidityRasterFolder, filelist, cityLocationSpatialBuffer,
+###                             17, 21, T, "humidity")
+###humidityRasterDataset$humidity <- humidityRasterDataset$humidity * 1000 #convert the unit into g/kg
+###humidityRasterDataset <- humidityRasterDataset %>% as.data.frame()
+# Point based
+humidityRasterFolder <- "D:/10_Article/09_TempOutput/06_MonthlyVaporTif/Add025Outline/"
 filelist <- list.files(humidityRasterFolder)
 humidityRasterDataset <- 
-  extractBufferDataFromRaster(humidityRasterFolder, filelist, cityLocationSpatialBuffer,
-                             17, 21, T, "humidity")
+  extractPointDataFromRaster(humidityRasterFolder, filelist, cityLocationSpatialPoint,
+                              21, 25, T, "humidity")
 humidityRasterDataset$humidity <- humidityRasterDataset$humidity * 1000 #convert the unit into g/kg
 humidityRasterDataset <- humidityRasterDataset %>% as.data.frame()
 # 1 g/kg means 1 gram water in the 1 kg air.
 
 #get monthly precipitation from the GLDAS_NOAH025_M 0.25 arc degree
-precipitationRasterFolder <- "D:/10_Article/09_TempOutput/07_MonthlyPrecipitationTif/"
+# Buffer based
+###precipitationRasterFolder <- "D:/10_Article/09_TempOutput/07_MonthlyPrecipitationTif/"
+###filelist <- list.files(precipitationRasterFolder)
+###filelist <- filelist[2:length(filelist)]
+###precipitationRasterDataset <- 
+###  extractBufferDataFromRaster(precipitationRasterFolder, filelist, cityLocationSpatialBuffer,
+###                             23, 27, T, "precipitation")
+###precipitationRasterDataset$precipitation <- precipitationRasterDataset$precipitation * 3600 
+###precipitationRasterDataset <- precipitationRasterDataset %>% as.data.frame()
+# Point Based
+precipitationRasterFolder <- "D:/10_Article/09_TempOutput/07_MonthlyPrecipitationTif/Add025Outline/"
 filelist <- list.files(precipitationRasterFolder)
-filelist <- filelist[2:length(filelist)]
 precipitationRasterDataset <- 
-  extractBufferDataFromRaster(precipitationRasterFolder, filelist, cityLocationSpatialBuffer,
-                             23, 27, T, "precipitation")
+  extractPointDataFromRaster(precipitationRasterFolder, filelist, cityLocationSpatialPoint,
+                              27, 31, T, "precipitation")
 precipitationRasterDataset$precipitation <- precipitationRasterDataset$precipitation * 3600 
 precipitationRasterDataset <- precipitationRasterDataset %>% as.data.frame()
 # now, the precipitation unit is kg/(m2 * h)  
 
 #get monthly speed wind from the GLDAS_NOAH025_M 0.25 arc degree
-speedWindRasterFolder <- "D:/10_Article/09_TempOutput/09_WindSpeed/"
+# Buffer based
+###speedWindRasterFolder <- "D:/10_Article/09_TempOutput/09_WindSpeed/"
+###filelist <- list.files(speedWindRasterFolder)
+###speedWindRasterDataset <- 
+###  extractBufferDataFromRaster(speedWindRasterFolder, filelist, cityLocationSpatialBuffer,
+###                              15, 19, T, "speedwind")
+###speedWindRasterDataset <- speedWindRasterDataset %>% as.data.frame()
+# point based
+speedWindRasterFolder <- "D:/10_Article/09_TempOutput/09_WindSpeed/Add025Outline/"
 filelist <- list.files(speedWindRasterFolder)
 speedWindRasterDataset <- 
-  extractBufferDataFromRaster(speedWindRasterFolder, filelist, cityLocationSpatialBuffer,
-                              15, 19, T, "speedwind")
+  extractPointDataFromRaster(speedWindRasterFolder, filelist, cityLocationSpatialPoint,
+                              19, 23, T, "speedwind")
 speedWindRasterDataset <- speedWindRasterDataset %>% as.data.frame()
 # now, the speed wind unit is m/s  
 

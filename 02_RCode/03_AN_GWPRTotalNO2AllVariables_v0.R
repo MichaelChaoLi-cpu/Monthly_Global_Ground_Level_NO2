@@ -19,6 +19,12 @@
 # input CityLocationOfficial.csv
 # CityLocationOfficial.csv: "Country", "City", "Latitude", "Longitude"
 
+# output: GWPR_FEM_CV_F_result.Rdata
+# note: this is the result of GWPR based on FEM. R2 is 0.8501. Fixed bandwidth is 2.25 arc degrees.
+
+# output: GWPR_OLS_CV_F_result.Rdata
+# note: this is the result of GWPR based on OLS. R2 is 0.8124. Fixed bandwidth is 2.25 arc degrees.
+
 # end
 
 library(tidyverse)
@@ -27,6 +33,8 @@ library(plm)
 library(GWPR.light)
 library(tmap)
 library(sp)
+library(doParallel)
+library(foreach)
 
 load("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/mergedDataset.Rdata")
 
@@ -91,11 +99,15 @@ plmtest(ols, type = c("bp"))
 # test linear model 
 
 # we exiamine from the GWPR based on fem 
-GWPR.FEM.bandwidth <- bw.GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+GWPR.FEM.bandwidth <- 
+  bw.GWPR.step.selection(formula = formula, data = usedDataset, index = c("CityCode", "period"),
                               SDF = cityLocationSpatialPoint, adaptive = F, p = 2, bigdata = F,
                               upperratio = 0.10, effect = "individual", model = "within", approach = "CV",
                               kernel = "bisquare",doParallel = T, cluster.number = 6, gradientIncrecement = T,
-                              GI.step = 0.25, GI.upper = 20, GI.lower = 0.25)
+                              GI.step = 0.25, GI.upper = 50, GI.lower = 0.25)
+GWPR.FEM.bandwidth.step.list <- GWPR.FEM.bandwidth
+save(GWPR.FEM.bandwidth.step.list,
+     file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/GWPR_BW_setp_list.Rdata")
 
 GWPR.FEM.bandwidth = 2.25 ###
 
@@ -128,17 +140,19 @@ GWPR.FEM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("C
                              SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
                              p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
                              model = "within")
-
+save(GWPR.FEM.CV.F.result, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/GWPR_FEM_CV_F_result.Rdata")
 
 # let us test pooled regression
 GWPR.OLS.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
                              SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
                              p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
                              model = "pooling")
+save(GWPR.OLS.CV.F.result, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/GWPR_OLS_CV_F_result.Rdata")
 
 # let us test REM #### random effect fail
 GWPR.REM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
                              SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
                              p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
                              model = "random", random.method = "amemiya")
-
+#note: the REM requires very high freedom. therefore, the bandwidth should be super large, since the points are
+#      not evenly distributed.

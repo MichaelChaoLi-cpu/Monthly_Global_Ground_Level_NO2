@@ -2,6 +2,7 @@
 
 # note: these two function are from GWPR.light v0.1.1. Since the creator did not take the pooled
 #       regression without intercept into account. Therefore, we here revise the code
+# output: "GWPR.user", a function used in Cross Validation, R 06_AN
 
 # end
 
@@ -172,3 +173,4 @@ gwpr_F.user <- function(bw = bw, data, SDF, ID_list,
                       raw.data = data, GWPR.residuals = y_yhat_resid, SDF = SDF)
   return(result_list)
 }
+
