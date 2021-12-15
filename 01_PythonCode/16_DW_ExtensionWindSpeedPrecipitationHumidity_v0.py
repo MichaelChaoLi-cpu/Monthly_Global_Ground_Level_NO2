@@ -12,7 +12,6 @@ Created on Tue Dec 14 15:27:50 2021
 import numpy as np
 from osgeo import gdal
 import glob
-import warnings
 
 src_dataset = gdal.Open("D:/10_Article/09_TempOutput/09_WindSpeed/totalWindSpeed201501.tif", gdal.GA_ReadOnly)
 geotransform = src_dataset.GetGeoTransform()

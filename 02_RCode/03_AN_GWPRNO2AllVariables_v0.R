@@ -19,11 +19,17 @@
 # input CityLocationOfficial.csv
 # CityLocationOfficial.csv: "Country", "City", "Latitude", "Longitude"
 
+# output: GWPR_BW_setp_list.Rdata
+# GWPR_BW_setp_list.Rdata: "BandwidthVector" from 0.25 to 50, step length is 0.25.
+# GWPR_BW_setp_list.Rdata: "ScoreVector" CV score.
+
 # output: GWPR_FEM_CV_F_result.Rdata
 # note: this is the result of GWPR based on FEM. R2 is 0.8501. Fixed bandwidth is 2.25 arc degrees.
 
 # output: GWPR_OLS_CV_F_result.Rdata
 # note: this is the result of GWPR based on OLS. R2 is 0.8124. Fixed bandwidth is 2.25 arc degrees.
+
+# Note: "mg_m2_troposphere_no2" is with high accuracy.
 
 # end
 
@@ -98,6 +104,7 @@ plmtest(ols, type = c("bp"))
 # base f test and hausman test fem is preferred global model.
 # test linear model 
 
+source("\02_RCode\07_AF_GWPRBandwidthStepSelection_v1.R")
 # we exiamine from the GWPR based on fem 
 GWPR.FEM.bandwidth <- 
   bw.GWPR.step.selection(formula = formula, data = usedDataset, index = c("CityCode", "period"),
@@ -156,3 +163,15 @@ GWPR.REM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("C
                              model = "random", random.method = "amemiya")
 #note: the REM requires very high freedom. therefore, the bandwidth should be super large, since the points are
 #      not evenly distributed.
+
+formula.total <- no2_measured_mg.m3 ~ mg_m2_total_no2 + 
+  ter_pressure + 
+  dayTimeTemperature + nightTimeTemperature +
+  ndvi + humidity + precipitation + NTL + speedwind + PBLH +
+  #UVAerosolIndex + ozone +
+  #cloudfraction + cloudpressure + # add this two variables effect are limited, only increase 0.2% R2
+  Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
+GWPR.FEM.CV.F.result <- GWPR(formula = formula.total, data = usedDataset, index = c("CityCode", "period"),
+                             SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
+                             p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                             model = "within")
