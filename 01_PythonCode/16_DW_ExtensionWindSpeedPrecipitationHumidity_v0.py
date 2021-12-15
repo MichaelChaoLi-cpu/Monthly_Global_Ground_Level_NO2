@@ -12,6 +12,7 @@ Created on Tue Dec 14 15:27:50 2021
 import numpy as np
 from osgeo import gdal
 import glob
+import warnings
 
 src_dataset = gdal.Open("D:/10_Article/09_TempOutput/09_WindSpeed/totalWindSpeed201501.tif", gdal.GA_ReadOnly)
 geotransform = src_dataset.GetGeoTransform()
@@ -30,18 +31,20 @@ for file in fileList:
     raster = gdal.Open(file, gdal.GA_ReadOnly)
     rasterArray = raster.ReadAsArray()
     
-    addRasterLayer = np.full((600, 1440), np.nan)
-    i = 50 #row
-    j = 1 #column
-    while i < 598:
-        while j < 1438:
-            if np.isnan(rasterArray[i, j]): #rasterArray[316, 96] is number
-                addRasterLayer[i, j] = np.nanmean(rasterArray[i-1:i+2,j-1:j+2])
-            j = j + 1
-        i = i + 1
-            
-    rasterArray = np.array([rasterArray, addRasterLayer])
-    rasterArray = np.nanmean(rasterArray, axis = 0)
+    addTimes = 0
+    while addTimes < 2:
+        addRasterLayer = np.full((600, 1440), np.nan)
+        for i  in np.linspace(1,598,598, dtype = int):
+            for j  in np.linspace(1,1438,1438, dtype = int):
+                if np.isnan(rasterArray[i, j]): #addRasterLayer[316, 95] is number
+                    grid = np.nanmean(rasterArray[i-1:i+2,j-1:j+2])
+                    if np.isnan(grid):
+                        pass
+                    else:
+                        addRasterLayer[i, j] = grid
+        rasterArray = np.array([rasterArray, addRasterLayer])
+        rasterArray = np.nanmean(rasterArray, axis = 0)
+        addTimes = addTimes + 1         
     
     outputFileName = "add_" + file[41:-4] + ".tif"
     finalOutputName = outputFileLocation + outputFileName
@@ -64,18 +67,20 @@ for file in fileList:
     raster = gdal.Open(file, gdal.GA_ReadOnly)
     rasterArray = raster.ReadAsArray()
     
-    addRasterLayer = np.full((600, 1440), np.nan)
-    i = 50 #row
-    j = 1 #column
-    while i < 598:
-        while j < 1438:
-            if np.isnan(rasterArray[i, j]): #rasterArray[316, 96] is number
-                addRasterLayer[i, j] = np.nanmean(rasterArray[i-1:i+2,j-1:j+2])
-            j = j + 1
-        i = i + 1
-            
-    rasterArray = np.array([rasterArray, addRasterLayer])
-    rasterArray = np.nanmean(rasterArray, axis = 0)
+    addTimes = 0
+    while addTimes < 2:
+        addRasterLayer = np.full((600, 1440), np.nan)
+        for i  in np.linspace(1,598,598, dtype = int):
+            for j  in np.linspace(1,1438,1438, dtype = int):
+                if np.isnan(rasterArray[i, j]): #addRasterLayer[316, 95] is number
+                    grid = np.nanmean(rasterArray[i-1:i+2,j-1:j+2])
+                    if np.isnan(grid):
+                        pass
+                    else:
+                        addRasterLayer[i, j] = grid
+        rasterArray = np.array([rasterArray, addRasterLayer])
+        rasterArray = np.nanmean(rasterArray, axis = 0)
+        addTimes = addTimes + 1 
     
     outputFileName = "add_" + file[55:-4] + ".tif"
     finalOutputName = outputFileLocation + outputFileName
@@ -102,18 +107,17 @@ for file in fileList:
     addTimes = 0
     while addTimes < 2:
         addRasterLayer = np.full((600, 1440), np.nan)
-        i = 50 #row
-        j = 1 #column
-        while i < 598:
-            while j < 1438:
-                if np.isnan(rasterArray[i, j]): #rasterArray[316, 96] is number
-                    addRasterLayer[i, j] = np.nanmean(rasterArray[i-1:i+2,j-1:j+2])
-                j = j + 1
-            i = i + 1
-                
+        for i  in np.linspace(1,598,598, dtype = int):
+            for j  in np.linspace(1,1438,1438, dtype = int):
+                if np.isnan(rasterArray[i, j]): #addRasterLayer[316, 95] is number
+                    grid = np.nanmean(rasterArray[i-1:i+2,j-1:j+2])
+                    if np.isnan(grid):
+                        pass
+                    else:
+                        addRasterLayer[i, j] = grid
         rasterArray = np.array([rasterArray, addRasterLayer])
-        rasterArrayMerge = np.nanmean(rasterArray, axis = 0)
-        addTimes = addTimes + 1
+        rasterArray = np.nanmean(rasterArray, axis = 0)
+        addTimes = addTimes + 1 
     
     outputFileName = "add_" + file[47:-4] + ".tif"
     finalOutputName = outputFileLocation + outputFileName
