@@ -53,6 +53,8 @@ usedDataset <- usedDataset %>% dplyr::select(
 ) %>% na.omit()
 usedDataset$humidity <- usedDataset$humidity %>% as.numeric()
 usedDataset$precipitation <- usedDataset$precipitation %>% as.numeric()
+usedDataset$year <- usedDataset$year %>% as.character() %>% as.numeric()
+usedDataset$month <- usedDataset$month %>% as.character() %>% as.numeric()
 usedDataset$period <- usedDataset$year * 100 + usedDataset$month
 # preprocessing of the panel data set not we take the total column as the dependent variable
 

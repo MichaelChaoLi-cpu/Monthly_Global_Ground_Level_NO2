@@ -99,7 +99,6 @@ outputFileLocation = "D:/10_Article/09_TempOutput/06_MonthlyVaporTif/Add025Outli
 fileList = glob.glob(originalFileLocation + "/*.tif")
 
 for file in fileList:
-    file = fileList[1]
     raster = gdal.Open(file, gdal.GA_ReadOnly)
     rasterArray = raster.ReadAsArray()
     
