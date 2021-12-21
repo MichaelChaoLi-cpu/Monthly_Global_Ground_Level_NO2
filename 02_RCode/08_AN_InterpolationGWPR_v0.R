@@ -2,6 +2,7 @@
 
 # end
 
+library(tidyverse)
 library(gstat)
 library(sp) 
 library(raster)
@@ -85,13 +86,13 @@ sqrt( sum((IDW.out - GWPR.point.dataset$mg_m2_troposphere_no2)^2) / length(GWPR.
 #-------------------------------------------kriging----------------------------------
 ## https://swilke-geoscience.net/post/2020-09-10-kriging_with_r/kriging/
 mg_m2_troposphere_no2_emp_OK <- gstat::variogram(
-  mg_m2_troposphere_no2 ~ 1, GWPR.point.dataset, cutoff = 30, width = 0.25
+  mg_m2_troposphere_no2 ~ 1, GWPR.point.dataset
 )
 
 # Compute the variogram model by passing the nugget, sill and range values
 # to fit.variogram() via the vgm() function.
 dat.fit  <- fit.variogram(mg_m2_troposphere_no2_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
-                          vgm(psill = 2.25, model="Sph", range = 10, nugget = 0))
+                          vgm(model="Sph")
 
 plot(mg_m2_troposphere_no2_emp_OK$dist, mg_m2_troposphere_no2_emp_OK$gamma, 
      main="mg_m2_troposphere_no2_emp_OK Variogram",xlab="  Lag Distance (Degree) ",

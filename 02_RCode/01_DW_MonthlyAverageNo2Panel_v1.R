@@ -32,7 +32,12 @@ for (singlefile in filelist){
 totalNo2Dataset <- totalAirPollutionDataset %>%
   filter(Specie == "no2") %>% 
   filter(median < 500) %>% 
-  dplyr::select(Country, City, median, year, month) 
+  dplyr::select(Country, City, median, year, month, count) 
+totalNo2Dataset.count <- aggregate(totalNo2Dataset$count, 
+                             by = list(totalNo2Dataset$Country, totalNo2Dataset$City,
+                                       totalNo2Dataset$year, totalNo2Dataset$month), 
+                             FUN = "sum", na.rm = T)
+####^^^^^^^^  not low count
 totalNo2Dataset <- aggregate(totalNo2Dataset$median, 
                              by = list(totalNo2Dataset$Country, totalNo2Dataset$City,
                                        totalNo2Dataset$year, totalNo2Dataset$month), 
