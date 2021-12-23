@@ -7,7 +7,9 @@ library(gstat)
 library(sp) 
 library(raster)
 library(dplyr)
+library(tmap)
 
+setwd("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub")
 load("04_Results/GWPR_FEM_CV_F_result.Rdata")
 # make the result into point
 GWPR.point.dataset <- GWPR.FEM.CV.F.result$SDF
@@ -86,18 +88,39 @@ sqrt( sum((IDW.out - GWPR.point.dataset$mg_m2_troposphere_no2)^2) / length(GWPR.
 #-------------------------------------------kriging----------------------------------
 ## https://swilke-geoscience.net/post/2020-09-10-kriging_with_r/kriging/
 mg_m2_troposphere_no2_emp_OK <- gstat::variogram(
-  mg_m2_troposphere_no2 ~ 1, GWPR.point.dataset
+  mg_m2_troposphere_no2 ~ 1, GWPR.point.dataset, cutoff = 2000
 )
+
+plot(mg_m2_troposphere_no2_emp_OK)
 
 # Compute the variogram model by passing the nugget, sill and range values
 # to fit.variogram() via the vgm() function.
 dat.fit  <- fit.variogram(mg_m2_troposphere_no2_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
-                          vgm(model="Sph")
-
-plot(mg_m2_troposphere_no2_emp_OK$dist, mg_m2_troposphere_no2_emp_OK$gamma, 
-     main="mg_m2_troposphere_no2_emp_OK Variogram",xlab="  Lag Distance (Degree) ",
-     ylab=" Semivariogram ", pch=16, col = "red", ylim=c(0,max(mg_m2_troposphere_no2_emp_OK$gamma)*1.1))
+                          vgm(model = "Gau"))
 
 mg_m2_troposphere_no2.kriged <- 
   krige(mg_m2_troposphere_no2~1, GWPR.point.dataset, coords, 
         model = dat.fit)
+
+mg_m2_troposphere_no2.kriged@data$Ttest <- mg_m2_troposphere_no2.kriged@data$var1.pred / 
+  mg_m2_troposphere_no2.kriged@data$var1.var
+
+mg_m2_troposphere_no2.kriged.raster <- as(mg_m2_troposphere_no2.kriged, 'SpatialPixelsDataFrame')
+mg_m2_troposphere_no2.kriged.raster <- as(mg_m2_troposphere_no2.kriged.raster, "SpatialGridDataFrame")
+
+#check 90% ci
+breaks = c(-6, -1.645, 1.645, 6)
+mg_m2_troposphere_no2.kriged.raster.90ci.1 <- 
+  tm_shape(mg_m2_troposphere_no2.kriged.raster) + 
+  tm_raster(col = "Ttest", breaks = breaks, palette ="RdBu",
+            title="Variance map") +
+  tm_legend(legend.outside=TRUE)
+
+mg_m2_troposphere_no2.kriged.raster.90ci.1
+
+mg_m2_troposphere_no2.kriged.raster.1 <- 
+  tm_shape(mg_m2_troposphere_no2.kriged.raster) + 
+  tm_raster(col = "var1.pred", palette ="RdBu",
+            title="Variance map") +
+  tm_legend(legend.outside=TRUE)
+mg_m2_troposphere_no2.kriged.raster.1
