@@ -67,6 +67,8 @@ usedDataset$precipitation <- usedDataset$precipitation %>% as.numeric()
 usedDataset$year <- usedDataset$year %>% as.character() %>% as.numeric()
 usedDataset$month <- usedDataset$month %>% as.character() %>% as.numeric()
 usedDataset$period <- usedDataset$year * 100 + usedDataset$month
+##### this is a strange value
+usedDataset <- usedDataset %>% filter(CityCode != 499)
 # preprocessing of the panel data set not we take the total column as the dependent variable
 
 cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
@@ -145,6 +147,7 @@ tm_shape(GWPR.phtest.Fixed.result$SDF) +
   tm_dots(col = "p.value", breaks = c(0, 0.05, 1))
 ### this indicate that FEM is better than REM in most samples
 
+################################ this is GWPR based on FEM
 GWPR.FEM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
                              SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
                              p = 2, effect = "individual", kernel = "bisquare", longlat = F, 

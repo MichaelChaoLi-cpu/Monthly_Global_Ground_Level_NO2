@@ -95,6 +95,7 @@ femTransformationDataset$CityCode <- rawCrossValidationDataset$CityCode
 femTransformationDataset$period <- rawCrossValidationDataset$period
 
 # Randomly order dataset
+source("\02_RCode\05_AF_GWPRRevisedForCrossValidation_v1.R")
 set.seed(42)
 
 rows <- sample(nrow(femTransformationDataset))
