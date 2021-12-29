@@ -1,5 +1,32 @@
 # Author: M.L.
 
+# input: GWPR_FEM_CV_F_result.Rdata
+# GWPR_FEM_CV_F_result.Rdata: "GWPR.FEM.CV.F.result" GWPR result with 2.25 fixed distance bandwidth 
+#                                                    based on the FEM
+
+# output: COEF_raster.RData
+# COEF_raster.RData: "CO_dayTimeTemperature.kriged.raster" interpolation of day time temperature coefficient
+#                                                          based on ordinary kriging 
+# COEF_raster.RData: "CO_humidity.kriged.raster" interpolation of humidity coefficient
+#                                                based on ordinary kriging
+# COEF_raster.RData: "CO_mg_m2_troposphere_no2.kriged.raster" interpolation of troposheric no2 coefficient
+#                                                             based on ordinary kriging
+# COEF_raster.RData: "CO_ndvi.kriged.raster" interpolation of ndvi coefficient based on ordinary kriging (OK)
+# COEF_raster.RData: "CO_nightTimeTemperature.kriged.raster" interpolation of night temperature coefficient (OK)
+# COEF_raster.RData: "CO_NTL.kriged.raster" interpolation of night time light coefficient (OK)
+# COEF_raster.RData: "CO_PBLH.kriged.raster" interpolation of PBLH coefficient (OK)
+# COEF_raster.RData: "CO_precipitation.kriged.raster" interpolation of precipitation coefficient (OK)
+# COEF_raster.RData: "CO_speedwind.kriged.raster" interpolation of wind speed coefficient (OK)
+# COEF_raster.RData: "CO_ter_pressure.kriged.raster" interpolation of air pressure coefficient (OK)
+# COEF_raster.RData: "CO_Y2016.kriged.raster" interpolation of 2016 dummy variable coefficient (OK)
+# COEF_raster.RData: "CO_Y2017.kriged.raster" interpolation of 2017 dummy variable coefficient (OK)
+# COEF_raster.RData: "CO_Y2018.kriged.raster" interpolation of 2018 dummy variable coefficient (OK)
+# COEF_raster.RData: "CO_Y2019.kriged.raster" interpolation of 2019 dummy variable coefficient (OK)
+# COEF_raster.RData: "CO_Y2020.kriged.raster" interpolation of 2020 dummy variable coefficient (OK)
+# COEF_raster.RData: "CO_Y2021.kriged.raster" interpolation of 2021 dummy variable coefficient (OK)
+
+
+
 # end
 
 library(tidyverse)
@@ -470,3 +497,10 @@ Y2021.kriged.raster@data <- Y2021.kriged.raster@data %>% dplyr::select(var1.pred
 CO_Y2021.kriged.raster <- raster(Y2021.kriged.raster)
 rm(Y2021_emp_OK, dat.fit, Y2021.kriged, 
    Y2021.kriged.raster)
+
+save(CO_dayTimeTemperature.kriged.raster, CO_humidity.kriged.raster, CO_mg_m2_troposphere_no2.kriged.raster,
+     CO_ndvi.kriged.raster, CO_nightTimeTemperature.kriged.raster, CO_NTL.kriged.raster,
+     CO_PBLH.kriged.raster, CO_precipitation.kriged.raster, CO_speedwind.kriged.raster,
+     CO_ter_pressure.kriged.raster, CO_Y2016.kriged.raster, CO_Y2017.kriged.raster,
+     CO_Y2018.kriged.raster, CO_Y2019.kriged.raster, CO_Y2020.kriged.raster,
+     CO_Y2021.kriged.raster, file = "05_CoefficientRaster/COEF_raster.RData")
