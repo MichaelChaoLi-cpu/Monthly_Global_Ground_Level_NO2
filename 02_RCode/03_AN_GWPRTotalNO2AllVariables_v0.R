@@ -19,6 +19,14 @@
 # input CityLocationOfficial.csv
 # CityLocationOfficial.csv: "Country", "City", "Latitude", "Longitude"
 
+# output: usedDataset.RData
+# usedDataset.RData: "no2_measured_mg.m3", "no2", "mg_m2_total_no2", "mg_m2_troposphere_no2",
+#                    "ter_pressure", "dayTimeTemperature", "nightTimeTemperature", "ndvi",
+#                    "precipitation", "NTL", "PBLH", "CityCode", "City", "Country","month",
+#                    "year", "Date", "Y2016", "Y2017", "Y2018", "Y2019", "Y2020", "Y2021",
+#                    "period"
+# usedDataset.RData: "temp" the average temperature of "dayTimeTemperature" and "nightTimeTemperature"
+
 # output: GWPR_BW_setp_list.Rdata
 # GWPR_BW_setp_list.Rdata: "BandwidthVector" from 0.25 to 50, step length is 0.25.
 # GWPR_BW_setp_list.Rdata: "ScoreVector" CV score.
@@ -48,7 +56,7 @@ na.test <- mergedDataset %>% na.omit()
 na.test$count <- 1
 na.test <- aggregate(na.test$count, by = list(na.test$City, na.test$Country), FUN=sum)
 colnames(na.test) <- c("City", "Country", "RecordCount")
-na.test <- na.test %>% filter(RecordCount > 17) #freedom is 8
+na.test <- na.test %>% filter(RecordCount > 15) #freedom 
 
 usedDataset <- left_join(mergedDataset, na.test, by = c("City", "Country"))
 usedDataset <- usedDataset %>% filter(!is.na(RecordCount))
@@ -57,18 +65,21 @@ usedDataset <- usedDataset %>% dplyr::select(
   no2, mg_m2_total_no2, mg_m2_troposphere_no2,
   #mg_m2_total_no2_lag, mg_m2_troposphere_no2_lag,
   ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
-  humidity, precipitation, NTL, speedwind, PBLH, 
+  precipitation, NTL, PBLH, #speedwind, humidity,
   #UVAerosolIndex, ozone, cloudfraction, cloudpressure,
   CityCode, City, Country, 
   month, year, Date, Y2016, Y2017, Y2018, Y2019, Y2020, Y2021
 ) %>% na.omit()
-usedDataset$humidity <- usedDataset$humidity %>% as.numeric()
+#usedDataset$humidity <- usedDataset$humidity %>% as.numeric()
 usedDataset$precipitation <- usedDataset$precipitation %>% as.numeric()
 usedDataset$year <- usedDataset$year %>% as.character() %>% as.numeric()
 usedDataset$month <- usedDataset$month %>% as.character() %>% as.numeric()
 usedDataset$period <- usedDataset$year * 100 + usedDataset$month
-##### this is a strange value
-usedDataset <- usedDataset %>% filter(CityCode != 499)
+usedDataset$temp <- (usedDataset$dayTimeTemperature + usedDataset$nightTimeTemperature) / 2
+usedDataset.ori <- usedDataset
+#this is a strange city, island
+usedDataset <- usedDataset %>% 
+  filter(CityCode != 499, CityCode != 291, CityCode != 163)
 # preprocessing of the panel data set not we take the total column as the dependent variable
 
 cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
@@ -88,12 +99,54 @@ cityLocationSpatialPoint <- SpatialPointsDataFrame(coords = xy, data = cityLocat
 rm(xy)
 # get the city points 
 
+# distance matrix
+drop_island <- T
+if (drop_island) {
+  coord.point <- coordinates(cityLocationSpatialPoint)
+  dist.matrix <- GWmodel::gw.dist(dp.locat = coord.point, focus=0, p=2, theta=0, longlat=F)
+  dist.matrix <- dist.matrix %>% as.data.frame()
+  for (i in 1:nrow(dist.matrix)){
+    dist.matrix[i, i] <- Inf
+  }
+  dist.matrix$min <- rje::rowMins(dist.matrix) 
+  dist.matrix$CityCode <- cityLocationSpatialPoint$CityCode
+  dist.matrix <- dist.matrix %>%
+    dplyr::select(min, CityCode)
+  dist.matrix <- dist.matrix %>%
+    filter(min < 10)
+}
+# distance matrix
+
+##### this is a strange value
+usedDataset <- left_join(usedDataset, dist.matrix, by = "CityCode")
+usedDataset <- usedDataset %>%
+  filter(!is.na(min))
+
+##### re-obtain the point
+cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
+                         encoding="UTF-8") %>%
+  dplyr::select(X0, X1, X2, X3)
+colnames(cityLocation) <- c("Latitude", "Longitude", "City", "Country")
+cityLocation <- cityLocation %>% 
+  mutate(City = ifelse(City == "Washington, D.C.", "Washington D.C.", City))
+cityNameCode <- usedDataset %>% dplyr::select(CityCode, City, Country) %>% distinct()
+cityLocation <- left_join(cityNameCode, cityLocation, by = c("City", "Country"))
+rm(cityNameCode)
+
+proj <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" 
+xy <- cityLocation %>% dplyr::select(Longitude, Latitude)
+cityLocationSpatialPoint <- SpatialPointsDataFrame(coords = xy, data = cityLocation[,c(1, 2, 3, 4, 5)],
+                                                   proj4string = CRS(proj))
+rm(xy)
+# get the city points 
+save(usedDataset, file = "03_Rawdata/usedDataset.RData")
+
 pdata <- pdata.frame(usedDataset, index = c("CityCode", "Date"))
 formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + 
   ter_pressure + 
-  dayTimeTemperature + nightTimeTemperature +
-  ndvi + humidity + precipitation + NTL + speedwind + PBLH +
-  #UVAerosolIndex + ozone +
+  temp +
+  ndvi + precipitation + NTL +  PBLH +
+  #humidity + UVAerosolIndex + ozone + speedwind +
   #cloudfraction + cloudpressure + # add this two variables effect are limited, only increase 0.2% R2
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
 ols <- plm(formula, pdata, model = "pooling")
@@ -108,7 +161,9 @@ plmtest(ols, type = c("bp"))
 # base f test and hausman test fem is preferred global model.
 # test linear model 
 
-source("\02_RCode\07_AF_GWPRBandwidthStepSelection_v1.R")
+
+setwd("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/")
+source("02_RCode/07_AF_GWPRBandwidthStepSelection_v1.R")
 # we exiamine from the GWPR based on fem 
 GWPR.FEM.bandwidth <- 
   bw.GWPR.step.selection(formula = formula, data = usedDataset, index = c("CityCode", "period"),
@@ -117,10 +172,17 @@ GWPR.FEM.bandwidth <-
                               kernel = "bisquare",doParallel = T, cluster.number = 6, gradientIncrecement = T,
                               GI.step = 0.25, GI.upper = 50, GI.lower = 0.25)
 GWPR.FEM.bandwidth.step.list <- GWPR.FEM.bandwidth
+plot(GWPR.FEM.bandwidth.step.list[,1], GWPR.FEM.bandwidth.step.list[,2])
 save(GWPR.FEM.bandwidth.step.list,
      file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/GWPR_BW_setp_list.Rdata")
 
-GWPR.FEM.bandwidth = 2.25 ###
+GWPR.FEM.bandwidth.golden <- 
+  bw.GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+          SDF = cityLocationSpatialPoint, adaptive = F, p = 2, bigdata = T,
+          upperratio = 0.15, effect = "individual", model = "within", approach = "CV",
+          kernel = "bisquare",doParallel = T, cluster.number = 6)
+
+GWPR.FEM.bandwidth = 10 ###
 
 GWPR.plmtest.Fixed.result <-
   GWPR.plmtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),
@@ -152,6 +214,7 @@ GWPR.FEM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("C
                              SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
                              p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
                              model = "within")
+GWPR.FEM.CV.F.result$SDF@data %>% view()
 save(GWPR.FEM.CV.F.result, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/GWPR_FEM_CV_F_result.Rdata")
 
 # let us test pooled regression

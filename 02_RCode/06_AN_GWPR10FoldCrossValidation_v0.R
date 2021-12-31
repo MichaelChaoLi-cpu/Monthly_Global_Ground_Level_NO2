@@ -31,32 +31,7 @@ library(GWPR.light)
 library(tmap)
 library(sp)
 
-load("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/mergedDataset.Rdata")
-
-na.test <- mergedDataset %>% na.omit()
-na.test$count <- 1
-na.test <- aggregate(na.test$count, by = list(na.test$City, na.test$Country), FUN=sum)
-colnames(na.test) <- c("City", "Country", "RecordCount")
-na.test <- na.test %>% filter(RecordCount > 17) #freedom is 8
-
-usedDataset <- left_join(mergedDataset, na.test, by = c("City", "Country"))
-usedDataset <- usedDataset %>% filter(!is.na(RecordCount))
-usedDataset <- usedDataset %>% dplyr::select(
-  no2_measured_mg.m3,
-  no2, mg_m2_total_no2, mg_m2_troposphere_no2,
-  #mg_m2_total_no2_lag, mg_m2_troposphere_no2_lag,
-  ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
-  humidity, precipitation, NTL, speedwind, PBLH, 
-  #UVAerosolIndex, ozone, cloudfraction, cloudpressure,
-  CityCode, City, Country, 
-  month, year, Date, Y2016, Y2017, Y2018, Y2019, Y2020, Y2021
-) %>% na.omit()
-usedDataset$humidity <- usedDataset$humidity %>% as.numeric()
-usedDataset$precipitation <- usedDataset$precipitation %>% as.numeric()
-usedDataset$year <- usedDataset$year %>% as.character() %>% as.numeric()
-usedDataset$month <- usedDataset$month %>% as.character() %>% as.numeric()
-usedDataset$period <- usedDataset$year * 100 + usedDataset$month
-# preprocessing of the panel data set not we take the total column as the dependent variable
+load("03_Rawdata/usedDataset.Rdata")
 
 cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
                          encoding="UTF-8") %>%
