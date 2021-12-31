@@ -46,10 +46,10 @@ rm(cityNameCode)
 proj <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" 
 # get the city points 
 
-#FEM Cross Validation, fixed bw 2.25 
+#FEM Cross Validation, fixed bw 10
 formula.CV.FEM <-
-  no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature +
-  ndvi + humidity + precipitation + NTL + speedwind + PBLH + 
+  no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + temp +
+  ndvi + precipitation + NTL +  PBLH +
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021 + 0
 
 rawCrossValidationDataset <- usedDataset %>% 
@@ -70,7 +70,7 @@ femTransformationDataset$CityCode <- rawCrossValidationDataset$CityCode
 femTransformationDataset$period <- rawCrossValidationDataset$period
 
 # Randomly order dataset
-source("\02_RCode\05_AF_GWPRRevisedForCrossValidation_v1.R")
+source("02_RCode/05_AF_GWPRRevisedForCrossValidation_v1.R")
 set.seed(42)
 
 rows <- sample(nrow(femTransformationDataset))
@@ -107,7 +107,7 @@ while (foldNumberth < 11){
   rm(xy)
   # get the train city points 
   
-  GWPR.FEM.bandwidth = 2.25 ###
+  GWPR.FEM.bandwidth = 10 ###
   GWPR.FEM.CV.F.result.CV1 <- GWPR.user(formula = formula.CV.FEM, data = train, index = c("CityCode", "period"),
                                SDF = trainCityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
                                p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
@@ -125,12 +125,10 @@ while (foldNumberth < 11){
   train.predict <- train.predict %>%
     mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
              ter_pressure_Coef * (ter_pressure) + 
-             dayTimeTemperature_Coef * (dayTimeTemperature) +
-             nightTimeTemperature_Coef * (nightTimeTemperature) +
+             temp_Coef * temp +
              ndvi_Coef * (ndvi) +
-             humidity_Coef * (humidity) +
              precipitation_Coef * (precipitation) +
-             NTL_Coef * (NTL) + speedwind_Coef * (speedwind) +
+             NTL_Coef * (NTL) +
              PBLH_Coef * (PBLH) +
              Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
              Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
@@ -147,12 +145,10 @@ while (foldNumberth < 11){
   test.predict <- test.predict %>%
     mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
              ter_pressure_Coef * (ter_pressure) + 
-             dayTimeTemperature_Coef * (dayTimeTemperature) +
-             nightTimeTemperature_Coef * (nightTimeTemperature) +
+             temp_Coef * temp +
              ndvi_Coef * (ndvi) +
-             humidity_Coef * (humidity) +
              precipitation_Coef * (precipitation) +
-             NTL_Coef * (NTL) + speedwind_Coef * (speedwind) +
+             NTL_Coef * (NTL) +
              PBLH_Coef * (PBLH) +
              Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
              Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
@@ -169,12 +165,12 @@ while (foldNumberth < 11){
   foldNumberth <- foldNumberth + 1
 }
 colnames(CV.result.table) <- c("foldNumber", "CVtrain.R2", "CVtest.R2")
-save(CV.result.table, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/femCrossValidation.Rdata")
+save(CV.result.table, file = "04_Results/femCrossValidation.Rdata")
 
 #PoM Cross Validation, fixed bw 2.25 
 formula.CV.PoM <-
-  no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature +
-  ndvi + humidity + precipitation + NTL + speedwind + PBLH + 
+  no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + temp +
+  ndvi + precipitation + NTL +  PBLH +
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
 rawCrossValidationDataset <- usedDataset %>% 
   dplyr::select("CityCode", "period", all.vars(formula.CV.PoM))
@@ -226,16 +222,15 @@ while (foldNumberth < 11){
   test.predict <- test.predict %>%
     mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
              ter_pressure_Coef * (ter_pressure) + 
-             dayTimeTemperature_Coef * (dayTimeTemperature) +
-             nightTimeTemperature_Coef * (nightTimeTemperature) +
+             temp_Coef * temp +
              ndvi_Coef * (ndvi) +
-             humidity_Coef * (humidity) +
              precipitation_Coef * (precipitation) +
-             NTL_Coef * (NTL) + speedwind_Coef * (speedwind) +
+             NTL_Coef * (NTL) +
              PBLH_Coef * (PBLH) +
              Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
              Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
-             Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + Intercept_Coef
+             Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) +
+             Intercept_Coef
     )
   ss.tot <- sum((test.predict$no2_measured_mg.m3 - mean(test.predict$no2_measured_mg.m3))^2)
   ss.res <- sum((test.predict$no2_measured_mg.m3 - test.predict$predictNo2)^2)
@@ -246,4 +241,4 @@ while (foldNumberth < 11){
   foldNumberth <- foldNumberth + 1
 }
 colnames(CV.result.pom.table) <- c("foldNumber", "CVtrain.R2", "CVtest.R2")
-save(CV.result.pom.table, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/pomCrossValidation.Rdata")
+save(CV.result.pom.table, file = "04_Results/pomCrossValidation.Rdata")
