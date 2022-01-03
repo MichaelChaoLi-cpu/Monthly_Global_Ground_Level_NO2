@@ -81,7 +81,7 @@ usedDataset$temp <- (usedDataset$dayTimeTemperature + usedDataset$nightTimeTempe
 usedDataset.ori <- usedDataset
 #this is a strange city, island
 usedDataset <- usedDataset %>% 
-  filter(CityCode != 499, CityCode != 291, CityCode != 163)
+  filter(CityCode != 499, CityCode != 291, CityCode != 163, CityCode != 4)
 # preprocessing of the panel data set not we take the total column as the dependent variable
 
 cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",

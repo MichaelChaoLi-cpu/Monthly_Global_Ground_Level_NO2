@@ -614,7 +614,7 @@ colnames(kriging.cv.result.dataset) <- c("Variable", "mean_error", "MSPE", "MSNE
                                          "CoOP", "CoPR", "R2")
 
 save(CO_mg_m2_troposphere_no2.kriged.raster,
-     CO_ndvi.kriged.raster, CO_temp.kriged.raster, CO_NTL.kriged.raster,
+     CO_ndvi.kriged.raster, CO_temp.kriged.raster, 
      CO_PBLH.kriged.raster, CO_precipitation.kriged.raster, 
      CO_ter_pressure.kriged.raster, CO_Y2016.kriged.raster, CO_Y2017.kriged.raster,
      CO_Y2018.kriged.raster, CO_Y2019.kriged.raster, CO_Y2020.kriged.raster,
