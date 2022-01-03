@@ -12,7 +12,7 @@
 # mergedDataset.Rdata "precipitation" the precipitation unit is kg/(m2 * h)
 # mergedDataset.Rdata "speedwind" the wind speed unit is m/s
 # mergedDataset.Rdata "NTL" nighttime light
-# mergedDataset.Rdata "PBLR" planetary boundary layer height unit is m.
+# mergedDataset.Rdata "PBLH" planetary boundary layer height unit is m.
 # mergedDataset.Rdata "CityCode" identity index.
 # mergedDataset.Rdata "period" year * 100 + month, time index. 
 
@@ -38,6 +38,8 @@
 # note: this is the result of GWPR based on OLS. R2 is 0.8124. Fixed bandwidth is 2.25 arc degrees.
 
 # Note: "mg_m2_troposphere_no2" is with high accuracy.
+# Note: in this version, we drop "NTL", because low accuary of interpolation in both coefficient and 
+#       mean value. After dropping this variable the R2 only reduces 0.1%. So, we decide to do so.
 
 # end
 
@@ -145,8 +147,8 @@ pdata <- pdata.frame(usedDataset, index = c("CityCode", "Date"))
 formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + 
   ter_pressure + 
   temp +
-  ndvi + precipitation + NTL +  PBLH +
-  #humidity + UVAerosolIndex + ozone + speedwind +
+  ndvi + precipitation + PBLH + 
+  #humidity + UVAerosolIndex + ozone + speedwind + NTL +
   #cloudfraction + cloudpressure + # add this two variables effect are limited, only increase 0.2% R2
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
 ols <- plm(formula, pdata, model = "pooling")
@@ -189,7 +191,7 @@ GWPR.plmtest.Fixed.result <-
                SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
                p = 2, kernel = "bisquare", longlat = F)
 tm_shape(GWPR.plmtest.Fixed.result$SDF) +
-  tm_dots(col = "p.value", breaks = c(0, 0.05, 1))
+  tm_dots(col = "p.value", breaks = c(0, 0.1, 1))
 ### this indicate that OLS is better than REM in most samples
 
 GWPR.pFtest.Fixed.result <- 
@@ -233,10 +235,8 @@ GWPR.REM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("C
 #      not evenly distributed.
 
 formula.total <- no2_measured_mg.m3 ~ mg_m2_total_no2 + 
-  ter_pressure + 
-  dayTimeTemperature + nightTimeTemperature +
-  ndvi + humidity + precipitation + NTL + speedwind + PBLH +
-  #UVAerosolIndex + ozone +
+  ter_pressure + ndvi +  precipitation + NTL + PBLH +
+  #UVAerosolIndex + ozone + dayTimeTemperature + nightTimeTemperature + humidity + speedwind +
   #cloudfraction + cloudpressure + # add this two variables effect are limited, only increase 0.2% R2
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
 GWPR.FEM.CV.F.result <- GWPR(formula = formula.total, data = usedDataset, index = c("CityCode", "period"),

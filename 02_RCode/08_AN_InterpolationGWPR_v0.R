@@ -9,7 +9,6 @@
 #                                                             based on ordinary kriging
 # COEF_raster.RData: "CO_ndvi.kriged.raster" interpolation of ndvi coefficient based on ordinary kriging (OK)
 # COEF_raster.RData: "CO_temp.kriged.raster" interpolation of night temperature coefficient (OK)
-# COEF_raster.RData: "CO_NTL.kriged.raster" interpolation of night time light coefficient (OK)
 # COEF_raster.RData: "CO_PBLH.kriged.raster" interpolation of PBLH coefficient (OK)
 # COEF_raster.RData: "CO_precipitation.kriged.raster" interpolation of precipitation coefficient (OK)
 # COEF_raster.RData: "CO_ter_pressure.kriged.raster" interpolation of air pressure coefficient (OK)
@@ -19,6 +18,17 @@
 # COEF_raster.RData: "CO_Y2019.kriged.raster" interpolation of 2019 dummy variable coefficient (OK)
 # COEF_raster.RData: "CO_Y2020.kriged.raster" interpolation of 2020 dummy variable coefficient (OK)
 # COEF_raster.RData: "CO_Y2021.kriged.raster" interpolation of 2021 dummy variable coefficient (OK)
+
+# output: krigingCVResult.RData
+# krigingCVResult.RData: "mean_error" mean error
+# krigingCVResult.RData: "MSPE" mean square error
+# krigingCVResult.RData: "MSNE" Mean square normalized error
+# krigingCVResult.RData: "CoOP" correlation observed and predicted
+# krigingCVResult.RData: "CoPR" correlation predicted and residual
+# krigingCVResult.RData: "R2" centered R2
+
+# Note: in this version, "NTL" is dropped. (COEF_raster.RData: "CO_NTL.kriged.raster" 
+#                                           interpolation of night time light coefficient (OK))
 
 # end
 
@@ -141,6 +151,7 @@ correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("mg_m2_troposphere_no2", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 mg_m2_troposphere_no2.kriged@data$Ttest <- mg_m2_troposphere_no2.kriged@data$var1.pred / 
   mg_m2_troposphere_no2.kriged@data$var1.var
@@ -175,6 +186,7 @@ correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("ter_pressure", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 ter_pressure.kriged@data$Ttest <- ter_pressure.kriged@data$var1.pred / 
   ter_pressure.kriged@data$var1.var
@@ -209,6 +221,7 @@ correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("temp", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 temp.kriged@data$Ttest <- temp.kriged@data$var1.pred / 
   temp.kriged@data$var1.var
@@ -245,6 +258,7 @@ correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("ndvi", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 ndvi.kriged@data$Ttest <- ndvi.kriged@data$var1.pred / 
   ndvi.kriged@data$var1.var
@@ -281,6 +295,7 @@ correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("precipitation", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 precipitation.kriged@data$Ttest <- precipitation.kriged@data$var1.pred / 
   precipitation.kriged@data$var1.var
@@ -296,41 +311,44 @@ CO_precipitation.kriged.raster <- raster(precipitation.kriged.raster)
 rm(precipitation_emp_OK, dat.fit, precipitation.kriged, 
    precipitation.kriged.raster)
 
-### NTL
-NTL_emp_OK <- gstat::variogram(
-  NTL ~ 1, GWPR.point.dataset
-)
-plot(NTL_emp_OK)
-dat.fit  <- fit.variogram(NTL_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
-                          vgm(model = "Sph"))
-NTL.kriged <- 
-  krige(NTL~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
-out <- 
-  krige.cv(NTL~1, GWPR.point.dataset, GWPR.point.dataset@data, 
-           model = dat.fit)
-mean_error <- mean(out$residual)
-MSPE <- mean(out$residual^2)
-Mean_square_normalized_error <- mean(out$zscore^2)
-correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("NTL", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
-NTL.kriged@data$Ttest <- NTL.kriged@data$var1.pred / 
-  NTL.kriged@data$var1.var
-NTL.kriged.raster <- as(NTL.kriged, 'SpatialPixelsDataFrame')
-NTL.kriged.raster <- as(NTL.kriged.raster, "SpatialGridDataFrame")
-predict.value <- over(GWPR.point.dataset, NTL.kriged.raster)
-GWPR.point.dataset$predict.value <- predict.value$var1.pred
-# R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$NTL)^2) / 
-  sum( ( GWPR.point.dataset$NTL - mean(GWPR.point.dataset$NTL) )^2 )
-NTL.kriged.raster@data <- NTL.kriged.raster@data %>% dplyr::select(var1.pred)
-CO_NTL.kriged.raster <- raster(NTL.kriged.raster)
-rm(NTL_emp_OK, dat.fit, NTL.kriged, 
-   NTL.kriged.raster)
+run <- F
+if(run){
+  ### NTL low accuracy of interpolation. R2 is rough 0.20 
+  NTL_emp_OK <- gstat::variogram(
+    NTL ~ 1, GWPR.point.dataset
+  )
+  plot(NTL_emp_OK)
+  dat.fit  <- fit.variogram(NTL_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
+                            vgm(model = "Sph"))
+  NTL.kriged <- 
+    krige(NTL~1, GWPR.point.dataset, coords, 
+          model = dat.fit)
+  out <- 
+    krige.cv(NTL~1, GWPR.point.dataset, GWPR.point.dataset@data, 
+             model = dat.fit)
+  mean_error <- mean(out$residual)
+  MSPE <- mean(out$residual^2)
+  Mean_square_normalized_error <- mean(out$zscore^2)
+  correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+  correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+  R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+  cv.line <- c("NTL", mean_error, MSPE, Mean_square_normalized_error,
+               correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+  kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+  NTL.kriged@data$Ttest <- NTL.kriged@data$var1.pred / 
+    NTL.kriged@data$var1.var
+  NTL.kriged.raster <- as(NTL.kriged, 'SpatialPixelsDataFrame')
+  NTL.kriged.raster <- as(NTL.kriged.raster, "SpatialGridDataFrame")
+  predict.value <- over(GWPR.point.dataset, NTL.kriged.raster)
+  GWPR.point.dataset$predict.value <- predict.value$var1.pred
+  # R2
+  1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$NTL)^2) / 
+    sum( ( GWPR.point.dataset$NTL - mean(GWPR.point.dataset$NTL) )^2 )
+  NTL.kriged.raster@data <- NTL.kriged.raster@data %>% dplyr::select(var1.pred)
+  CO_NTL.kriged.raster <- raster(NTL.kriged.raster)
+  rm(NTL_emp_OK, dat.fit, NTL.kriged, 
+     NTL.kriged.raster)
+}
 
 ### PBLH
 PBLH_emp_OK <- gstat::variogram(
@@ -353,6 +371,7 @@ correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("PBLH", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 PBLH.kriged@data$Ttest <- PBLH.kriged@data$var1.pred / 
   PBLH.kriged@data$var1.var
@@ -389,6 +408,7 @@ correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("Y2016", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2016.kriged@data$Ttest <- Y2016.kriged@data$var1.pred / 
   Y2016.kriged@data$var1.var
@@ -425,6 +445,7 @@ correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("Y2017", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2017.kriged@data$Ttest <- Y2017.kriged@data$var1.pred / 
   Y2017.kriged@data$var1.var
@@ -461,6 +482,7 @@ correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("Y2018", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2018.kriged@data$Ttest <- Y2018.kriged@data$var1.pred / 
   Y2018.kriged@data$var1.var
@@ -498,6 +520,7 @@ kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("Y2019", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 Y2019.kriged@data$Ttest <- Y2019.kriged@data$var1.pred / 
   Y2019.kriged@data$var1.var
 Y2019.kriged.raster <- as(Y2019.kriged, 'SpatialPixelsDataFrame')
@@ -533,6 +556,7 @@ correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("Y2020", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2020.kriged@data$Ttest <- Y2020.kriged@data$var1.pred / 
   Y2020.kriged@data$var1.var
@@ -569,6 +593,7 @@ correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
 cv.line <- c("Y2021", mean_error, MSPE, Mean_square_normalized_error,
              correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2021.kriged@data$Ttest <- Y2021.kriged@data$var1.pred / 
   Y2021.kriged@data$var1.var

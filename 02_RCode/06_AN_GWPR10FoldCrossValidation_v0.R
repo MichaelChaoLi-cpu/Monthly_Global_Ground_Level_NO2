@@ -49,7 +49,7 @@ proj <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 #FEM Cross Validation, fixed bw 10
 formula.CV.FEM <-
   no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + temp +
-  ndvi + precipitation + NTL +  PBLH +
+  ndvi + precipitation +  PBLH +
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021 + 0
 
 rawCrossValidationDataset <- usedDataset %>% 
@@ -128,7 +128,6 @@ while (foldNumberth < 11){
              temp_Coef * temp +
              ndvi_Coef * (ndvi) +
              precipitation_Coef * (precipitation) +
-             NTL_Coef * (NTL) +
              PBLH_Coef * (PBLH) +
              Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
              Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
@@ -148,7 +147,6 @@ while (foldNumberth < 11){
              temp_Coef * temp +
              ndvi_Coef * (ndvi) +
              precipitation_Coef * (precipitation) +
-             NTL_Coef * (NTL) +
              PBLH_Coef * (PBLH) +
              Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
              Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
@@ -170,7 +168,7 @@ save(CV.result.table, file = "04_Results/femCrossValidation.Rdata")
 #PoM Cross Validation, fixed bw 2.25 
 formula.CV.PoM <-
   no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + temp +
-  ndvi + precipitation + NTL +  PBLH +
+  ndvi + precipitation +  PBLH +
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
 rawCrossValidationDataset <- usedDataset %>% 
   dplyr::select("CityCode", "period", all.vars(formula.CV.PoM))
@@ -225,14 +223,13 @@ while (foldNumberth < 11){
              temp_Coef * temp +
              ndvi_Coef * (ndvi) +
              precipitation_Coef * (precipitation) +
-             NTL_Coef * (NTL) +
              PBLH_Coef * (PBLH) +
              Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
              Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
              Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) +
              Intercept_Coef
     )
-  ss.tot <- sum((test.predict$no2_measured_mg.m3 - mean(test.predict$no2_measured_mg.m3))^2)
+  ss.tot <- sum((test.predict$no2_measured_mg.m3)^2)
   ss.res <- sum((test.predict$no2_measured_mg.m3 - test.predict$predictNo2)^2)
   CVtest.R2 <- 1 - ss.res/ss.tot
   result <- c(foldNumberth, CVtrain.R2, CVtest.R2)

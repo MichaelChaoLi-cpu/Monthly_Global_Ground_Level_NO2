@@ -1,3 +1,34 @@
+# Author: M.L.
+
+# input: usedDataset.Rdata
+# usedDataset.Rdata "no2" monthly average no2 concentration ppm.
+# usedDataset.Rdata "mg_m2_total_no2" monthly average total column amount of no2 (mg/m2)
+# usedDataset.Rdata "mg_m2_troposphere_no2" monthly average tropospheric column amount of no2 (mg/m2)
+# usedDataset.Rdata "ter_pressure" monthly average terrain surface pressure (hpa)
+# usedDataset.Rdata "temp" monthly average daily temperature (C)
+# usedDataset.Rdata "ndvi" NDVI -1 to 1
+# usedDataset.Rdata "precipitation" the precipitation unit is kg/(m2 * h)
+# usedDataset.Rdata "NTL" nighttime light
+# usedDataset.Rdata "PBLH" planetary boundary layer height unit is m.
+
+# ourput: MEAN_raster.RData
+# MEAN_raster.RData: "MEAN_mg_m2_troposphere_no2.kriged.raster" interpolation of troposheric no2 mean value
+#                                                               in the usedDataset based on ordinary kriging (OK)
+# MEAN_raster.RData: "MEAN_ndvi.kriged.raster" interpolation of ndvi mean value (OK)
+# MEAN_raster.RData: "MEAN_temp.kriged.raster" interpolation of temperature mean value (OK)
+# MEAN_raster.RData: "MEAN_NTL.kriged.raster" interpolation of night time light mean value (OK)
+# MEAN_raster.RData: "MEAN_PBLH.kriged.raster" interpolation of PBLH mean value (OK)
+# MEAN_raster.RData: "MEAN_precipitation.kriged.raster" interpolation of precipitation mean value (OK)
+# MEAN_raster.RData: "MEAN_ter_pressure.kriged.raster" interpolation of air pressure mean value (OK)
+
+# output: krigingMeanResult.RData
+# krigingMeanResult.RData: "mean_error" mean error
+# krigingMeanResult.RData: "MSPE" mean square error
+# krigingMeanResult.RData: "MSNE" Mean square normalized error
+# krigingMeanResult.RData: "CoOP" correlation observed and predicted
+# krigingMeanResult.RData: "CoPR" correlation predicted and residual
+# krigingMeanResult.RData: "R2" centered R2
+
 # end
 
 library(tidyverse)
@@ -37,40 +68,13 @@ addcoord <- function(nx,xmin,xsize,ny,ymin,ysize) { # Michael Pyrcz, March, 2018
 coords <- addcoord(nx,xmin,xsize,ny,ymin,ysize)
 coords@proj4string <- CRS(proj)
 
-### make the mean raster
-load("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/mergedDataset.Rdata")
-
-na.test <- mergedDataset %>% na.omit()
-na.test$count <- 1
-na.test <- aggregate(na.test$count, by = list(na.test$City, na.test$Country), FUN=sum)
-colnames(na.test) <- c("City", "Country", "RecordCount")
-na.test <- na.test %>% filter(RecordCount > 17) #freedom is 8
-
-usedDataset <- left_join(mergedDataset, na.test, by = c("City", "Country"))
-usedDataset <- usedDataset %>% filter(!is.na(RecordCount))
-usedDataset <- usedDataset %>% dplyr::select(
-  no2_measured_mg.m3,
-  no2, mg_m2_total_no2, mg_m2_troposphere_no2,
-  #mg_m2_total_no2_lag, mg_m2_troposphere_no2_lag,
-  ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
-  humidity, precipitation, NTL, speedwind, PBLH, 
-  #UVAerosolIndex, ozone, cloudfraction, cloudpressure,
-  CityCode, City, Country, 
-  month, year, Date, Y2016, Y2017, Y2018, Y2019, Y2020, Y2021
-) %>% na.omit()
-usedDataset$humidity <- usedDataset$humidity %>% as.numeric()
-usedDataset$precipitation <- usedDataset$precipitation %>% as.numeric()
-usedDataset$year <- usedDataset$year %>% as.character() %>% as.numeric()
-usedDataset$month <- usedDataset$month %>% as.character() %>% as.numeric()
-usedDataset$period <- usedDataset$year * 100 + usedDataset$month
-##### this is a strange value
-usedDataset <- usedDataset %>% filter(CityCode != 499)
-# preprocessing of the panel data set not we take the total column as the dependent variable
+load("03_Rawdata/usedDataset.Rdata")
 
 formula.CV.FEM <-
-  no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + dayTimeTemperature + nightTimeTemperature +
-  ndvi + humidity + precipitation + NTL + speedwind + PBLH + 
+  no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + temp +
+  ndvi +  precipitation + NTL + PBLH + 
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
+
 rawCrossValidationDataset <- usedDataset %>% 
   dplyr::select("CityCode", "period", all.vars(formula.CV.FEM))
 meanValueOfVariables <- stats::aggregate(rawCrossValidationDataset[,all.vars(formula.CV.FEM)],
@@ -98,6 +102,10 @@ meanValueSpatialDataFrame <- cityLocationSpatialPoint
 meanValueSpatialDataFrame@data <- left_join(meanValueSpatialDataFrame@data, meanValueOfVariables,
                                             by = "CityCode")
 
+kriging.cv.mean.dataset <- data.frame(Doubles = double(), Ints = integer(),
+                                        Factors = factor(), Logicals = logical(),
+                                        Characters = character(), stringsAsFactors = FALSE)
+
 ### no2_measured_mg.m3
 no2_measured_mg.m3_emp_OK <- gstat::variogram(
   no2_measured_mg.m3 ~ 1, meanValueSpatialDataFrame
@@ -105,6 +113,19 @@ no2_measured_mg.m3_emp_OK <- gstat::variogram(
 plot(no2_measured_mg.m3_emp_OK)
 dat.fit  <- fit.variogram(no2_measured_mg.m3_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
+out <- 
+  krige.cv(no2_measured_mg.m3~1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MSPE <- mean(out$residual^2)
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+cv.line <- c("no2_measured_mg.m3.mean", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 no2_measured_mg.m3.kriged <- 
   krige(no2_measured_mg.m3~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -131,6 +152,18 @@ mg_m2_troposphere_no2_emp_OK <- gstat::variogram(
 plot(mg_m2_troposphere_no2_emp_OK)
 dat.fit  <- fit.variogram(mg_m2_troposphere_no2_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
+out <- 
+  krige.cv(mg_m2_troposphere_no2~1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MSPE <- mean(out$residual^2)
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+cv.line <- c("mg_m2_troposphere_no2.mean", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
 mg_m2_troposphere_no2.kriged <- 
   krige(mg_m2_troposphere_no2~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -156,6 +189,19 @@ ter_pressure_emp_OK <- gstat::variogram(
 plot(ter_pressure_emp_OK)
 dat.fit  <- fit.variogram(ter_pressure_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
+out <- 
+  krige.cv(ter_pressure~1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MSPE <- mean(out$residual^2)
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+cv.line <- c("ter_pressure.mean", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 ter_pressure.kriged <- 
   krige(ter_pressure~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -174,55 +220,44 @@ MEAN_ter_pressure.kriged.raster <- raster(ter_pressure.kriged.raster)
 rm(ter_pressure_emp_OK, dat.fit, ter_pressure.kriged, 
    ter_pressure.kriged.raster)
 
-### dayTimeTemperature
-dayTimeTemperature_emp_OK <- gstat::variogram(
-  dayTimeTemperature ~ 1, meanValueSpatialDataFrame
+### temp
+temp_emp_OK <- gstat::variogram(
+  temp ~ 1, meanValueSpatialDataFrame
 )
-plot(dayTimeTemperature_emp_OK)
-dat.fit  <- fit.variogram(dayTimeTemperature_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
+plot(temp_emp_OK)
+dat.fit  <- fit.variogram(temp_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
-dayTimeTemperature.kriged <- 
-  krige(dayTimeTemperature~1, meanValueSpatialDataFrame, coords, 
+out <- 
+  krige.cv(temp~1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MSPE <- mean(out$residual^2)
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+cv.line <- c("temp.mean", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
+temp.kriged <- 
+  krige(temp~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
-dayTimeTemperature.kriged@data$Ttest <- dayTimeTemperature.kriged@data$var1.pred / 
-  dayTimeTemperature.kriged@data$var1.var
-dayTimeTemperature.kriged.raster <- as(dayTimeTemperature.kriged, 'SpatialPixelsDataFrame')
-dayTimeTemperature.kriged.raster <- as(dayTimeTemperature.kriged.raster, "SpatialGridDataFrame")
-predict.value <- over(meanValueSpatialDataFrame, dayTimeTemperature.kriged.raster)
+temp.kriged@data$Ttest <- temp.kriged@data$var1.pred / 
+  temp.kriged@data$var1.var
+temp.kriged.raster <- as(temp.kriged, 'SpatialPixelsDataFrame')
+temp.kriged.raster <- as(temp.kriged.raster, "SpatialGridDataFrame")
+predict.value <- over(meanValueSpatialDataFrame, temp.kriged.raster)
 meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$dayTimeTemperature)^2) / 
-  sum( ( meanValueSpatialDataFrame$dayTimeTemperature - mean(meanValueSpatialDataFrame$dayTimeTemperature) )^2 )
-cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$dayTimeTemperature)
-dayTimeTemperature.kriged.raster@data <- dayTimeTemperature.kriged.raster@data %>% dplyr::select(var1.pred)
-MEAN_dayTimeTemperature.kriged.raster <- raster(dayTimeTemperature.kriged.raster)
-rm(dayTimeTemperature_emp_OK, dat.fit, dayTimeTemperature.kriged, 
-   dayTimeTemperature.kriged.raster)
+1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$temp)^2) / 
+  sum( ( meanValueSpatialDataFrame$temp - mean(meanValueSpatialDataFrame$temp) )^2 )
+cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$temp)
+temp.kriged.raster@data <- temp.kriged.raster@data %>% dplyr::select(var1.pred)
+MEAN_temp.kriged.raster <- raster(temp.kriged.raster)
+rm(temp_emp_OK, dat.fit, temp.kriged, 
+   temp.kriged.raster)
 
-### nightTimeTemperature
-nightTimeTemperature_emp_OK <- gstat::variogram(
-  nightTimeTemperature ~ 1, meanValueSpatialDataFrame
-)
-plot(nightTimeTemperature_emp_OK)
-dat.fit  <- fit.variogram(nightTimeTemperature_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
-                          vgm(model = "Sph"))
-nightTimeTemperature.kriged <- 
-  krige(nightTimeTemperature~1, meanValueSpatialDataFrame, coords, 
-        model = dat.fit)
-nightTimeTemperature.kriged@data$Ttest <- nightTimeTemperature.kriged@data$var1.pred / 
-  nightTimeTemperature.kriged@data$var1.var
-nightTimeTemperature.kriged.raster <- as(nightTimeTemperature.kriged, 'SpatialPixelsDataFrame')
-nightTimeTemperature.kriged.raster <- as(nightTimeTemperature.kriged.raster, "SpatialGridDataFrame")
-predict.value <- over(meanValueSpatialDataFrame, nightTimeTemperature.kriged.raster)
-meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
-# R2
-1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$nightTimeTemperature)^2) / 
-  sum( ( meanValueSpatialDataFrame$nightTimeTemperature - mean(meanValueSpatialDataFrame$nightTimeTemperature) )^2 )
-cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$nightTimeTemperature)
-nightTimeTemperature.kriged.raster@data <- nightTimeTemperature.kriged.raster@data %>% dplyr::select(var1.pred)
-MEAN_nightTimeTemperature.kriged.raster <- raster(nightTimeTemperature.kriged.raster)
-rm(nightTimeTemperature_emp_OK, dat.fit, nightTimeTemperature.kriged, 
-   nightTimeTemperature.kriged.raster)
 
 ### ndvi
 ndvi_emp_OK <- gstat::variogram(
@@ -231,6 +266,19 @@ ndvi_emp_OK <- gstat::variogram(
 plot(ndvi_emp_OK)
 dat.fit  <- fit.variogram(ndvi_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
+out <- 
+  krige.cv(ndvi ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MSPE <- mean(out$residual^2)
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+cv.line <- c("ndvi.mean", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 ndvi.kriged <- 
   krige(ndvi~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -248,3 +296,128 @@ ndvi.kriged.raster@data <- ndvi.kriged.raster@data %>% dplyr::select(var1.pred)
 MEAN_ndvi.kriged.raster <- raster(ndvi.kriged.raster)
 rm(ndvi_emp_OK, dat.fit, ndvi.kriged, 
    ndvi.kriged.raster)
+
+### precipitation
+precipitation_emp_OK <- gstat::variogram(
+  precipitation ~ 1, meanValueSpatialDataFrame
+)
+plot(precipitation_emp_OK)
+dat.fit  <- fit.variogram(precipitation_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
+                          vgm(model = "Sph"))
+out <- 
+  krige.cv(precipitation ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MSPE <- mean(out$residual^2)
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+cv.line <- c("precipitation.mean", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
+precipitation.kriged <- 
+  krige(precipitation~1, meanValueSpatialDataFrame, coords, 
+        model = dat.fit)
+precipitation.kriged@data$Ttest <- precipitation.kriged@data$var1.pred / 
+  precipitation.kriged@data$var1.var
+precipitation.kriged.raster <- as(precipitation.kriged, 'SpatialPixelsDataFrame')
+precipitation.kriged.raster <- as(precipitation.kriged.raster, "SpatialGridDataFrame")
+predict.value <- over(meanValueSpatialDataFrame, precipitation.kriged.raster)
+meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
+# R2
+1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$precipitation)^2) / 
+  sum( ( meanValueSpatialDataFrame$precipitation - mean(meanValueSpatialDataFrame$precipitation) )^2 )
+cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$precipitation)
+precipitation.kriged.raster@data <- precipitation.kriged.raster@data %>% dplyr::select(var1.pred)
+MEAN_precipitation.kriged.raster <- raster(precipitation.kriged.raster)
+rm(precipitation_emp_OK, dat.fit, precipitation.kriged, 
+   precipitation.kriged.raster)
+
+### NTL
+NTL_emp_OK <- gstat::variogram(
+  NTL ~ 1, meanValueSpatialDataFrame
+)
+plot(NTL_emp_OK)
+dat.fit  <- fit.variogram(NTL_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
+                          vgm(model = "Sph"))
+out <- 
+  krige.cv(NTL ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MSPE <- mean(out$residual^2)
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+cv.line <- c("NTL.mean", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
+NTL.kriged <- 
+  krige(NTL~1, meanValueSpatialDataFrame, coords, 
+        model = dat.fit)
+NTL.kriged@data$Ttest <- NTL.kriged@data$var1.pred / 
+  NTL.kriged@data$var1.var
+NTL.kriged.raster <- as(NTL.kriged, 'SpatialPixelsDataFrame')
+NTL.kriged.raster <- as(NTL.kriged.raster, "SpatialGridDataFrame")
+predict.value <- over(meanValueSpatialDataFrame, NTL.kriged.raster)
+meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
+# R2
+1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$NTL)^2) / 
+  sum( ( meanValueSpatialDataFrame$NTL - mean(meanValueSpatialDataFrame$NTL) )^2 )
+cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$NTL)
+NTL.kriged.raster@data <- NTL.kriged.raster@data %>% dplyr::select(var1.pred)
+MEAN_NTL.kriged.raster <- raster(NTL.kriged.raster)
+rm(NTL_emp_OK, dat.fit, NTL.kriged, 
+   NTL.kriged.raster)
+
+### PBLH
+PBLH_emp_OK <- gstat::variogram(
+  PBLH ~ 1, meanValueSpatialDataFrame
+)
+plot(PBLH_emp_OK)
+dat.fit  <- fit.variogram(PBLH_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
+                          vgm(model = "Sph"))
+out <- 
+  krige.cv(PBLH ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MSPE <- mean(out$residual^2)
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+cv.line <- c("PBLH.mean", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
+PBLH.kriged <- 
+  krige(PBLH~1, meanValueSpatialDataFrame, coords, 
+        model = dat.fit)
+PBLH.kriged@data$Ttest <- PBLH.kriged@data$var1.pred / 
+  PBLH.kriged@data$var1.var
+PBLH.kriged.raster <- as(PBLH.kriged, 'SpatialPixelsDataFrame')
+PBLH.kriged.raster <- as(PBLH.kriged.raster, "SpatialGridDataFrame")
+predict.value <- over(meanValueSpatialDataFrame, PBLH.kriged.raster)
+meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
+# R2
+1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$PBLH)^2) / 
+  sum( ( meanValueSpatialDataFrame$PBLH - mean(meanValueSpatialDataFrame$PBLH) )^2 )
+cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$PBLH)
+PBLH.kriged.raster@data <- PBLH.kriged.raster@data %>% dplyr::select(var1.pred)
+MEAN_PBLH.kriged.raster <- raster(PBLH.kriged.raster)
+rm(PBLH_emp_OK, dat.fit, PBLH.kriged, 
+   PBLH.kriged.raster)
+
+colnames(kriging.cv.mean.dataset) <- c("Variable", "mean_error", "MSPE", "MSNE",
+                                         "CoOP", "CoPR", "R2")
+
+save(MEAN_no2_measured_mg.m3.kriged.raster,
+     MEAN_mg_m2_troposphere_no2.kriged.raster,
+     MEAN_ndvi.kriged.raster, MEAN_temp.kriged.raster, MEAN_NTL.kriged.raster,
+     MEAN_PBLH.kriged.raster, MEAN_precipitation.kriged.raster, 
+     MEAN_ter_pressure.kriged.raster, file = "05_CoefficientRaster/MEAN_raster.RData")
+
+save(kriging.cv.mean.dataset, file = "04_Results/krigingMeanResult.RData")
