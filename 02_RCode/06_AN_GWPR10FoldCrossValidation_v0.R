@@ -135,7 +135,7 @@ while (foldNumberth < 11){
     )
   train.predict$no2_measured_mg.m3.ori <- train.predict$no2_measured_mg.m3 + train.predict$no2_measured_mg.m3_mean
   #ss.tot <- sum((train.predict$no2_measured_mg.m3.ori - mean(train.predict$no2_measured_mg.m3.ori))^2)
-  ss.tot <- sum((train.predict$no2_measured_mg.m3.ori)^2)
+  ss.tot <- sum((train.predict$no2_measured_mg.m3.ori - mean(test.predict$no2_measured_mg.m3))^2)
   ss.res <- sum((train.predict$no2_measured_mg.m3.ori - train.predict$predictNo2)^2)
   CVtrain.R2 <- 1 - ss.res/ss.tot
   
@@ -154,7 +154,7 @@ while (foldNumberth < 11){
            )
   test.predict$no2_measured_mg.m3.ori <- test.predict$no2_measured_mg.m3 + test.predict$no2_measured_mg.m3_mean
   #ss.tot <- sum((test.predict$no2_measured_mg.m3.ori - mean(test.predict$no2_measured_mg.m3.ori))^2)
-  ss.tot <- sum((test.predict$no2_measured_mg.m3.ori)^2)
+  ss.tot <- sum((test.predict$no2_measured_mg.m3.ori - mean(test.predict$no2_measured_mg.m3))^2)
   ss.res <- sum((test.predict$no2_measured_mg.m3.ori - test.predict$predictNo2)^2)
   CVtest.R2 <- 1 - ss.res/ss.tot
   result <- c(foldNumberth, CVtrain.R2, CVtest.R2)
@@ -229,7 +229,7 @@ while (foldNumberth < 11){
              Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) +
              Intercept_Coef
     )
-  ss.tot <- sum((test.predict$no2_measured_mg.m3)^2)
+  ss.tot <- sum((test.predict$no2_measured_mg.m3 - mean(test.predict$no2_measured_mg.m3))^2)
   ss.res <- sum((test.predict$no2_measured_mg.m3 - test.predict$predictNo2)^2)
   CVtest.R2 <- 1 - ss.res/ss.tot
   result <- c(foldNumberth, CVtrain.R2, CVtest.R2)

@@ -11,7 +11,7 @@
 # usedDataset.Rdata "NTL" nighttime light
 # usedDataset.Rdata "PBLH" planetary boundary layer height unit is m.
 
-# ourput: MEAN_raster.RData
+# output: MEAN_raster.RData
 # MEAN_raster.RData: "MEAN_mg_m2_troposphere_no2.kriged.raster" interpolation of troposheric no2 mean value
 #                                                               in the usedDataset based on ordinary kriging (OK)
 # MEAN_raster.RData: "MEAN_ndvi.kriged.raster" interpolation of ndvi mean value (OK)
