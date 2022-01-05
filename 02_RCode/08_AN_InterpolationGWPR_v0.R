@@ -29,6 +29,7 @@
 
 # Note: in this version, "NTL" is dropped. (COEF_raster.RData: "CO_NTL.kriged.raster" 
 #                                           interpolation of night time light coefficient (OK))
+# Note: we begin to test the results with adaptive bw, now we set 7
 
 # end
 
@@ -41,9 +42,9 @@ library(tmap)
 library(automap)
 
 setwd("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub")
-load("04_Results/GWPR_FEM_CV_F_result.Rdata")
+load("04_Results/GWPR_FEM_CV_A_result.Rdata")
 # make the result into point
-GWPR.point.dataset <- GWPR.FEM.CV.F.result$SDF
+GWPR.point.dataset <- GWPR.FEM.CV.A.result$SDF
 
 # make the raster -180 -60 180 90
 nx = 600                                       # number of cells in the x direction
@@ -137,9 +138,6 @@ dat.fit  <- fit.variogram(mg_m2_troposphere_no2_emp_OK, fit.ranges = FALSE, fit.
                           vgm(model = "Sph"))
 #v_mod_ok = autofitVariogram(mg_m2_troposphere_no2 ~ 1, GWPR.point.dataset)
 #plot(v_mod_ok)
-mg_m2_troposphere_no2.kriged <- 
-  krige(mg_m2_troposphere_no2~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
 out <- 
   krige.cv(mg_m2_troposphere_no2~1, GWPR.point.dataset, GWPR.point.dataset@data, 
         model = dat.fit)
@@ -149,10 +147,9 @@ Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("mg_m2_troposphere_no2", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+mg_m2_troposphere_no2.kriged <- 
+  krige(mg_m2_troposphere_no2~1, GWPR.point.dataset, coords, 
+        model = dat.fit)
 mg_m2_troposphere_no2.kriged@data$Ttest <- mg_m2_troposphere_no2.kriged@data$var1.pred / 
   mg_m2_troposphere_no2.kriged@data$var1.var
 mg_m2_troposphere_no2.kriged.raster <- as(mg_m2_troposphere_no2.kriged, 'SpatialPixelsDataFrame')
@@ -160,8 +157,13 @@ mg_m2_troposphere_no2.kriged.raster <- as(mg_m2_troposphere_no2.kriged.raster, "
 predict.value <- over(GWPR.point.dataset, mg_m2_troposphere_no2.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$mg_m2_troposphere_no2)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$mg_m2_troposphere_no2)^2) / 
   sum( ( GWPR.point.dataset$mg_m2_troposphere_no2 - mean(GWPR.point.dataset$mg_m2_troposphere_no2) )^2 )
+cv.line <- c("mg_m2_troposphere_no2", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 mg_m2_troposphere_no2.kriged.raster@data <- mg_m2_troposphere_no2.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_mg_m2_troposphere_no2.kriged.raster <- raster(mg_m2_troposphere_no2.kriged.raster)
 
@@ -172,9 +174,6 @@ ter_pressure_emp_OK <- gstat::variogram(
 plot(ter_pressure_emp_OK)
 dat.fit  <- fit.variogram(ter_pressure_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
-ter_pressure.kriged <- 
-  krige(ter_pressure~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
 out <- 
   krige.cv(ter_pressure~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
@@ -184,10 +183,9 @@ Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("ter_pressure", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+ter_pressure.kriged <- 
+  krige(ter_pressure~1, GWPR.point.dataset, coords, 
+        model = dat.fit)
 ter_pressure.kriged@data$Ttest <- ter_pressure.kriged@data$var1.pred / 
   ter_pressure.kriged@data$var1.var
 ter_pressure.kriged.raster <- as(ter_pressure.kriged, 'SpatialPixelsDataFrame')
@@ -195,8 +193,13 @@ ter_pressure.kriged.raster <- as(ter_pressure.kriged.raster, "SpatialGridDataFra
 predict.value <- over(GWPR.point.dataset, ter_pressure.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$ter_pressure)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$ter_pressure)^2) / 
   sum( ( GWPR.point.dataset$ter_pressure - mean(GWPR.point.dataset$ter_pressure) )^2 )
+cv.line <- c("ter_pressure", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 ter_pressure.kriged.raster@data <- ter_pressure.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_ter_pressure.kriged.raster <- raster(ter_pressure.kriged.raster)
 
@@ -207,9 +210,6 @@ temp_emp_OK <- gstat::variogram(
 plot(temp_emp_OK)
 dat.fit  <- fit.variogram(temp_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
-temp.kriged <- 
-  krige(temp~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
 out <- 
   krige.cv(temp~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
@@ -219,10 +219,9 @@ Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("temp", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+temp.kriged <- 
+  krige(temp~1, GWPR.point.dataset, coords, 
+        model = dat.fit)
 temp.kriged@data$Ttest <- temp.kriged@data$var1.pred / 
   temp.kriged@data$var1.var
 temp.kriged.raster <- as(temp.kriged, 'SpatialPixelsDataFrame')
@@ -230,8 +229,13 @@ temp.kriged.raster <- as(temp.kriged.raster, "SpatialGridDataFrame")
 predict.value <- over(GWPR.point.dataset, temp.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$temp)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$temp)^2) / 
   sum( ( GWPR.point.dataset$temp - mean(GWPR.point.dataset$temp) )^2 )
+cv.line <- c("temp", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 temp.kriged.raster@data <- temp.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_temp.kriged.raster <- raster(temp.kriged.raster)
 rm(temp_emp_OK, dat.fit, temp.kriged, 
@@ -244,9 +248,6 @@ ndvi_emp_OK <- gstat::variogram(
 plot(ndvi_emp_OK)
 dat.fit  <- fit.variogram(ndvi_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
-ndvi.kriged <- 
-  krige(ndvi~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
 out <- 
   krige.cv(ndvi~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
@@ -256,10 +257,9 @@ Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("ndvi", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+ndvi.kriged <- 
+  krige(ndvi~1, GWPR.point.dataset, coords, 
+        model = dat.fit)
 ndvi.kriged@data$Ttest <- ndvi.kriged@data$var1.pred / 
   ndvi.kriged@data$var1.var
 ndvi.kriged.raster <- as(ndvi.kriged, 'SpatialPixelsDataFrame')
@@ -267,8 +267,13 @@ ndvi.kriged.raster <- as(ndvi.kriged.raster, "SpatialGridDataFrame")
 predict.value <- over(GWPR.point.dataset, ndvi.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$ndvi)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$ndvi)^2) / 
   sum( ( GWPR.point.dataset$ndvi - mean(GWPR.point.dataset$ndvi) )^2 )
+cv.line <- c("ndvi", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 ndvi.kriged.raster@data <- ndvi.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_ndvi.kriged.raster <- raster(ndvi.kriged.raster)
 rm(ndvi_emp_OK, dat.fit, ndvi.kriged, 
@@ -281,9 +286,6 @@ precipitation_emp_OK <- gstat::variogram(
 plot(precipitation_emp_OK)
 dat.fit  <- fit.variogram(precipitation_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
-precipitation.kriged <- 
-  krige(precipitation~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
 out <- 
   krige.cv(precipitation~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
@@ -293,10 +295,9 @@ Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("precipitation", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+precipitation.kriged <- 
+  krige(precipitation~1, GWPR.point.dataset, coords, 
+        model = dat.fit)
 precipitation.kriged@data$Ttest <- precipitation.kriged@data$var1.pred / 
   precipitation.kriged@data$var1.var
 precipitation.kriged.raster <- as(precipitation.kriged, 'SpatialPixelsDataFrame')
@@ -304,8 +305,13 @@ precipitation.kriged.raster <- as(precipitation.kriged.raster, "SpatialGridDataF
 predict.value <- over(GWPR.point.dataset, precipitation.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$precipitation)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$precipitation)^2) / 
   sum( ( GWPR.point.dataset$precipitation - mean(GWPR.point.dataset$precipitation) )^2 )
+cv.line <- c("precipitation", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 precipitation.kriged.raster@data <- precipitation.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_precipitation.kriged.raster <- raster(precipitation.kriged.raster)
 rm(precipitation_emp_OK, dat.fit, precipitation.kriged, 
@@ -357,9 +363,6 @@ PBLH_emp_OK <- gstat::variogram(
 plot(PBLH_emp_OK)
 dat.fit  <- fit.variogram(PBLH_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
-PBLH.kriged <- 
-  krige(PBLH~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
 out <- 
   krige.cv(PBLH~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
@@ -369,10 +372,9 @@ Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("PBLH", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+PBLH.kriged <- 
+  krige(PBLH~1, GWPR.point.dataset, coords, 
+        model = dat.fit)
 PBLH.kriged@data$Ttest <- PBLH.kriged@data$var1.pred / 
   PBLH.kriged@data$var1.var
 PBLH.kriged.raster <- as(PBLH.kriged, 'SpatialPixelsDataFrame')
@@ -380,8 +382,13 @@ PBLH.kriged.raster <- as(PBLH.kriged.raster, "SpatialGridDataFrame")
 predict.value <- over(GWPR.point.dataset, PBLH.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$PBLH)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$PBLH)^2) / 
   sum( ( GWPR.point.dataset$PBLH - mean(GWPR.point.dataset$PBLH) )^2 )
+cv.line <- c("PBLH", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation, 
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 PBLH.kriged.raster@data <- PBLH.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_PBLH.kriged.raster <- raster(PBLH.kriged.raster)
 rm(PBLH_emp_OK, dat.fit, PBLH.kriged, 
@@ -397,19 +404,15 @@ dat.fit  <- fit.variogram(Y2016_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 Y2016.kriged <- 
   krige(Y2016~1, GWPR.point.dataset, coords, 
         model = dat.fit)
-out <- 
-  krige.cv(Y2016~1, GWPR.point.dataset, GWPR.point.dataset@data, 
-           model = dat.fit)
 mean_error <- mean(out$residual)
 MSPE <- mean(out$residual^2)
 Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("Y2016", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+out <- 
+  krige.cv(Y2016~1, GWPR.point.dataset, GWPR.point.dataset@data, 
+           model = dat.fit)
 Y2016.kriged@data$Ttest <- Y2016.kriged@data$var1.pred / 
   Y2016.kriged@data$var1.var
 Y2016.kriged.raster <- as(Y2016.kriged, 'SpatialPixelsDataFrame')
@@ -417,8 +420,13 @@ Y2016.kriged.raster <- as(Y2016.kriged.raster, "SpatialGridDataFrame")
 predict.value <- over(GWPR.point.dataset, Y2016.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2016)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2016)^2) / 
   sum( ( GWPR.point.dataset$Y2016 - mean(GWPR.point.dataset$Y2016) )^2 )
+cv.line <- c("Y2016", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2016.kriged.raster@data <- Y2016.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_Y2016.kriged.raster <- raster(Y2016.kriged.raster)
 rm(Y2016_emp_OK, dat.fit, Y2016.kriged, 
@@ -431,9 +439,6 @@ Y2017_emp_OK <- gstat::variogram(
 plot(Y2017_emp_OK)
 dat.fit  <- fit.variogram(Y2017_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
-Y2017.kriged <- 
-  krige(Y2017~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
 out <- 
   krige.cv(Y2017~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
@@ -443,10 +448,9 @@ Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("Y2017", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+Y2017.kriged <- 
+  krige(Y2017~1, GWPR.point.dataset, coords, 
+        model = dat.fit)
 Y2017.kriged@data$Ttest <- Y2017.kriged@data$var1.pred / 
   Y2017.kriged@data$var1.var
 Y2017.kriged.raster <- as(Y2017.kriged, 'SpatialPixelsDataFrame')
@@ -454,8 +458,13 @@ Y2017.kriged.raster <- as(Y2017.kriged.raster, "SpatialGridDataFrame")
 predict.value <- over(GWPR.point.dataset, Y2017.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2017)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2017)^2) / 
   sum( ( GWPR.point.dataset$Y2017 - mean(GWPR.point.dataset$Y2017) )^2 )
+cv.line <- c("Y2017", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2017.kriged.raster@data <- Y2017.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_Y2017.kriged.raster <- raster(Y2017.kriged.raster)
 rm(Y2017_emp_OK, dat.fit, Y2017.kriged, 
@@ -468,9 +477,6 @@ Y2018_emp_OK <- gstat::variogram(
 plot(Y2018_emp_OK)
 dat.fit  <- fit.variogram(Y2018_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
-Y2018.kriged <- 
-  krige(Y2018~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
 out <- 
   krige.cv(Y2018~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
@@ -480,10 +486,9 @@ Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("Y2018", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+Y2018.kriged <- 
+  krige(Y2018~1, GWPR.point.dataset, coords, 
+        model = dat.fit)
 Y2018.kriged@data$Ttest <- Y2018.kriged@data$var1.pred / 
   Y2018.kriged@data$var1.var
 Y2018.kriged.raster <- as(Y2018.kriged, 'SpatialPixelsDataFrame')
@@ -491,8 +496,13 @@ Y2018.kriged.raster <- as(Y2018.kriged.raster, "SpatialGridDataFrame")
 predict.value <- over(GWPR.point.dataset, Y2018.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2018)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2018)^2) / 
   sum( ( GWPR.point.dataset$Y2018 - mean(GWPR.point.dataset$Y2018) )^2 )
+cv.line <- c("Y2018", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2018.kriged.raster@data <- Y2018.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_Y2018.kriged.raster <- raster(Y2018.kriged.raster)
 rm(Y2018_emp_OK, dat.fit, Y2018.kriged, 
@@ -505,9 +515,6 @@ Y2019_emp_OK <- gstat::variogram(
 plot(Y2019_emp_OK)
 dat.fit  <- fit.variogram(Y2019_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
-Y2019.kriged <- 
-  krige(Y2019~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
 out <- 
   krige.cv(Y2019~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
@@ -516,11 +523,10 @@ MSPE <- mean(out$residual^2)
 Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("Y2019", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
+Y2019.kriged <- 
+  krige(Y2019~1, GWPR.point.dataset, coords, 
+        model = dat.fit)
 Y2019.kriged@data$Ttest <- Y2019.kriged@data$var1.pred / 
   Y2019.kriged@data$var1.var
 Y2019.kriged.raster <- as(Y2019.kriged, 'SpatialPixelsDataFrame')
@@ -528,8 +534,13 @@ Y2019.kriged.raster <- as(Y2019.kriged.raster, "SpatialGridDataFrame")
 predict.value <- over(GWPR.point.dataset, Y2019.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2019)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2019)^2) / 
   sum( ( GWPR.point.dataset$Y2019 - mean(GWPR.point.dataset$Y2019) )^2 )
+cv.line <- c("Y2019", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2019.kriged.raster@data <- Y2019.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_Y2019.kriged.raster <- raster(Y2019.kriged.raster)
 rm(Y2019_emp_OK, dat.fit, Y2019.kriged, 
@@ -542,9 +553,6 @@ Y2020_emp_OK <- gstat::variogram(
 plot(Y2020_emp_OK)
 dat.fit  <- fit.variogram(Y2020_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
-Y2020.kriged <- 
-  krige(Y2020~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
 out <- 
   krige.cv(Y2020~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
@@ -554,10 +562,9 @@ Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("Y2020", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+Y2020.kriged <- 
+  krige(Y2020~1, GWPR.point.dataset, coords, 
+        model = dat.fit)
 Y2020.kriged@data$Ttest <- Y2020.kriged@data$var1.pred / 
   Y2020.kriged@data$var1.var
 Y2020.kriged.raster <- as(Y2020.kriged, 'SpatialPixelsDataFrame')
@@ -565,8 +572,13 @@ Y2020.kriged.raster <- as(Y2020.kriged.raster, "SpatialGridDataFrame")
 predict.value <- over(GWPR.point.dataset, Y2020.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2020)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2020)^2) / 
   sum( ( GWPR.point.dataset$Y2020 - mean(GWPR.point.dataset$Y2020) )^2 )
+cv.line <- c("Y2020", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2020.kriged.raster@data <- Y2020.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_Y2020.kriged.raster <- raster(Y2020.kriged.raster)
 rm(Y2020_emp_OK, dat.fit, Y2020.kriged, 
@@ -579,9 +591,6 @@ Y2021_emp_OK <- gstat::variogram(
 plot(Y2021_emp_OK)
 dat.fit  <- fit.variogram(Y2021_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
                           vgm(model = "Sph"))
-Y2021.kriged <- 
-  krige(Y2021~1, GWPR.point.dataset, coords, 
-        model = dat.fit)
 out <- 
   krige.cv(Y2021~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
@@ -591,10 +600,9 @@ Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
 correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
 R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-cv.line <- c("Y2021", mean_error, MSPE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
-print(cv.line)
-kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
+Y2021.kriged <- 
+  krige(Y2021~1, GWPR.point.dataset, coords, 
+        model = dat.fit)
 Y2021.kriged@data$Ttest <- Y2021.kriged@data$var1.pred / 
   Y2021.kriged@data$var1.var
 Y2021.kriged.raster <- as(Y2021.kriged, 'SpatialPixelsDataFrame')
@@ -602,8 +610,13 @@ Y2021.kriged.raster <- as(Y2021.kriged.raster, "SpatialGridDataFrame")
 predict.value <- over(GWPR.point.dataset, Y2021.kriged.raster)
 GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
-1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2021)^2) / 
+onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2021)^2) / 
   sum( ( GWPR.point.dataset$Y2021 - mean(GWPR.point.dataset$Y2021) )^2 )
+cv.line <- c("Y2021", mean_error, MSPE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2021.kriged.raster@data <- Y2021.kriged.raster@data %>% dplyr::select(var1.pred)
 CO_Y2021.kriged.raster <- raster(Y2021.kriged.raster)
 rm(Y2021_emp_OK, dat.fit, Y2021.kriged, 
@@ -611,7 +624,7 @@ rm(Y2021_emp_OK, dat.fit, Y2021.kriged,
 
 
 colnames(kriging.cv.result.dataset) <- c("Variable", "mean_error", "MSPE", "MSNE",
-                                         "CoOP", "CoPR", "R2")
+                                         "CoOP", "CoPR", "R2", "Onpoint_R2")
 
 save(CO_mg_m2_troposphere_no2.kriged.raster,
      CO_ndvi.kriged.raster, CO_temp.kriged.raster, 

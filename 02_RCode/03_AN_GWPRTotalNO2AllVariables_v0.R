@@ -83,7 +83,7 @@ usedDataset$temp <- (usedDataset$dayTimeTemperature + usedDataset$nightTimeTempe
 usedDataset.ori <- usedDataset
 #this is a strange city, island
 usedDataset <- usedDataset %>% 
-  filter(CityCode != 499, CityCode != 291, CityCode != 163, CityCode != 4)
+  filter(CityCode != 499, CityCode != 4) ###CityCode != 291, CityCode != 163,
 # preprocessing of the panel data set not we take the total column as the dependent variable
 
 cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
@@ -189,7 +189,6 @@ GWPR.FEM.bandwidth.golden <-
 GWPR.FEM.bandwidth = 2.25 ###
 
 ################################ this is GWPR based on FEM
-GWPR.FEM.bandwidth = 2.25
 GWPR.FEM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
                              SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = T,
                              p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
@@ -204,24 +203,26 @@ GWPR.OLS.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("C
                              model = "pooling")
 save(GWPR.OLS.CV.F.result, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/GWPR_OLS_CV_F_result.Rdata")
 
-# let us test REM #### random effect fail
-GWPR.REM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
-                             SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
-                             p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
-                             model = "random", random.method = "amemiya")
-#note: the REM requires very high freedom. therefore, the bandwidth should be super large, since the points are
-#      not evenly distributed.
-
-formula.total <- no2_measured_mg.m3 ~ mg_m2_total_no2 + 
-  ter_pressure + ndvi +  precipitation + NTL + PBLH +
-  #UVAerosolIndex + ozone + dayTimeTemperature + nightTimeTemperature + humidity + speedwind +
-  #cloudfraction + cloudpressure + # add this two variables effect are limited, only increase 0.2% R2
-  Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
-GWPR.FEM.CV.F.result <- GWPR(formula = formula.total, data = usedDataset, index = c("CityCode", "period"),
-                             SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
-                             p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
-                             model = "within")
-
+run <- F
+if (run){
+  # let us test REM #### random effect fail
+  GWPR.REM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+                               SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
+                               p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                               model = "random", random.method = "amemiya")
+  #note: the REM requires very high freedom. therefore, the bandwidth should be super large, since the points are
+  #      not evenly distributed.
+  
+  formula.total <- no2_measured_mg.m3 ~ mg_m2_total_no2 + 
+    ter_pressure + ndvi +  precipitation + NTL + PBLH +
+    #UVAerosolIndex + ozone + dayTimeTemperature + nightTimeTemperature + humidity + speedwind +
+    #cloudfraction + cloudpressure + # add this two variables effect are limited, only increase 0.2% R2
+    Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
+  GWPR.FEM.CV.F.result <- GWPR(formula = formula.total, data = usedDataset, index = c("CityCode", "period"),
+                               SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
+                               p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                               model = "within")
+}
 
 
 GWPR.FEM.Adaptive.bandwidth <- # this is about adaptive bandwidth
