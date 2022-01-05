@@ -168,37 +168,63 @@ bw.GWPR.step.selection <- function(formula, data, index, SDF, adaptive = FALSE, 
     #0.1.2
     if (gradientIncrecement)
     {
-      if (adaptive)
-      {
-        stop("Grandient Increcement Selection only accept Fixed bandwidth!")
-      }
       if (is.null(GI.upper) | is.null(GI.lower) | is.null(GI.step))
       {
         stop("Please input upper, lower boundaries (GI.upper and GI.lower) and step length (GI.step) of GI")
       }
-      message("Since GI method is used, so the GI.upper is the real upper boundary: ",
-              GI.upper, " lower boundary: ", GI.lower," step length: ", GI.step)
-      BandwidthVector <- c()
-      ScoreVector <- c()
-      if(approach == "CV")
+      if (adaptive)
       {
-        bw.now <- GI.lower
-        while (bw.now < GI.upper)
+        message("Since GI method is used, so the GI.upper is the real upper boundary: ",
+                GI.upper, " lower boundary: ", GI.lower," step length: ", GI.step)
+        BandwidthVector <- c()
+        ScoreVector <- c()
+        if(approach == "CV")
         {
-          BandwidthVector <- append(BandwidthVector, bw.now)
-          Score <- CV_F_para.step(bw = bw.now, data = lvl1_data, ID_list = ID_num,
-                                  formula = formula, p = p, longlat = longlat, adaptive = adaptive,
-                                  model = model, index = index, kernel = kernel, effect = effect,
-                                  random.method = random.method,  cluster.number = cluster.number)
-          ScoreVector <- append(ScoreVector, Score)
-          bw.now = bw.now + GI.step
+          bw.now <- GI.lower
+          while (bw.now < GI.upper)
+          {
+            BandwidthVector <- append(BandwidthVector, bw.now)
+            Score <- CV_A_para.step(bw = bw.now, data = lvl1_data, ID_list = ID_num,
+                                    formula = formula, p = p, longlat = longlat, adaptive = adaptive,
+                                    model = model, index = index, kernel = kernel, effect = effect,
+                                    random.method = random.method,  cluster.number = cluster.number)
+            ScoreVector <- append(ScoreVector, Score)
+            bw.now = bw.now + GI.step
+          }
+          BandwidthSocreTable <- cbind(BandwidthVector, ScoreVector)
+          return(BandwidthSocreTable)
         }
-        BandwidthSocreTable <- cbind(BandwidthVector, ScoreVector)
-        return(BandwidthSocreTable)
-      }
+        else
+        {
+          message("AIC is not coming")
+        }
+      } 
       else
       {
-        message("AIC is not coming")
+        message("Since GI method is used, so the GI.upper is the real upper boundary: ",
+                GI.upper, " lower boundary: ", GI.lower," step length: ", GI.step)
+        BandwidthVector <- c()
+        ScoreVector <- c()
+        if(approach == "CV")
+        {
+          bw.now <- GI.lower
+          while (bw.now < GI.upper)
+          {
+            BandwidthVector <- append(BandwidthVector, bw.now)
+            Score <- CV_F_para.step(bw = bw.now, data = lvl1_data, ID_list = ID_num,
+                                    formula = formula, p = p, longlat = longlat, adaptive = adaptive,
+                                    model = model, index = index, kernel = kernel, effect = effect,
+                                    random.method = random.method,  cluster.number = cluster.number)
+            ScoreVector <- append(ScoreVector, Score)
+            bw.now = bw.now + GI.step
+          }
+          BandwidthSocreTable <- cbind(BandwidthVector, ScoreVector)
+          return(BandwidthSocreTable)
+        }
+        else
+        {
+          message("AIC is not coming")
+        }
       }
     }
     #0.1.2 /|\
@@ -539,4 +565,79 @@ protect_model_with_least_individuals <- function(data, ID_list, index,
   lower <- max(max_dist) * 1.011 # because individuals with the weight lower than 0.01 would be ignored,
   # to guarantee all the individuals used in local panel model, we use 1.011 here.
   return(lower)
+}
+
+CV_A_para.step <- function(bw, data, ID_list, formula, p, longlat, adaptive, kernel,
+                           model = model, index = index, effect = effect,
+                           random.method = random.method, cluster.number = cluster.number)
+{
+  ID_list_single <- as.vector(ID_list[[1]])
+  wgt <- 0
+  ID_individual <- 0
+  varibale_name_in_equation <- all.vars(formula)
+  cl <- parallel::makeCluster(cluster.number)
+  doParallel::registerDoParallel(cl)
+  #  v0.1.1 the loss function is based on local r2
+  # CVscore_vector <- foreach(ID_individual = ID_list_single, .combine = c) %dopar%
+  # v0.1.2
+  residualsVector <- foreach(ID_individual = ID_list_single, .combine = c) %dopar%
+    {
+      data$aim[data$id == ID_individual] <- 1
+      data$aim[data$id != ID_individual] <- 0
+      subsample <- data
+      #v0.1.2
+      numberOfAim <- nrow(subsample[subsample$aim == 1,])
+      subsample <- subsample[order(-subsample$aim),]
+      dp_locat_subsample <- dplyr::select(subsample, 'X', 'Y')
+      dp_locat_subsample <- as.matrix(dp_locat_subsample)
+      dMat <- GWmodel::gw.dist(dp.locat = dp_locat_subsample, rp.locat = dp_locat_subsample,
+                               focus = 1, p=p, longlat=longlat)
+      subsample$dist <- as.vector(dMat)
+      subsample <- subsample[order(subsample$dist),]
+      id_subsample <- dplyr::select(subsample, "id")
+      id_subsample <- id_subsample[!duplicated(id_subsample$id),]
+      id_subsample <- as.data.frame(id_subsample)
+      id_subsample <- id_subsample[1:bw,]
+      id_subsample <- as.data.frame(id_subsample)
+      colnames(id_subsample) <- "id"
+      id_subsample$flag <- 1
+      subsample <- dplyr::inner_join(subsample, id_subsample, by = "id")
+      bw_to_total <- nrow(subsample)
+      weight <- GWmodel::gw.weight(as.numeric(subsample$dist), bw=bw_to_total, kernel=kernel, adaptive=adaptive)
+      subsample$wgt <- as.vector(weight)
+      Psubsample <- plm::pdata.frame(subsample, index = index, drop.index = FALSE, row.names = FALSE,
+                                     stringsAsFactors = default.stringsAsFactors())
+      plm_subsample <- plm::plm(formula=formula, model=model, data=Psubsample,
+                                effect = effect, index=index, weights = wgt,
+                                random.method = random.method)
+      # v0.1.1
+      #    if(!inherits(plm_subsample, "try-error"))
+      #    {
+      #      CVscore <- nrow(subsample) * sum(plm_subsample$residuals^2) /
+      #        (nrow(subsample) - length(varibale_name_in_equation) + 1)^2
+      #    }
+      #    else
+      #    {
+      #      CVscore <- Inf
+      #    }
+      #0.1.2
+      if(!inherits(plm_subsample, "try-error"))
+      {
+        residualsLocalAim <-  plm_subsample$residuals[1:numberOfAim]
+      }
+      else
+      {
+        residualsLocalAim <- Inf
+      }
+    }
+  parallel::stopCluster(cl)
+  #  v0.1.1 the loss function is based on local r2
+  #  mean_CVscore <- mean(CVscore_vector)
+  #  cat("Fixed Bandwidth:", bw, "CV score:", mean_CVscore, "\n")
+  #  return(mean_CVscore)
+  #v0.1.2
+  CVscore <- nrow(data) * sum(residualsVector^2) /
+    (nrow(data) - length(varibale_name_in_equation) + 1)^2
+  cat("Fixed Bandwidth:", bw, "CV score:", CVscore, "\n")
+  return(CVscore)
 }

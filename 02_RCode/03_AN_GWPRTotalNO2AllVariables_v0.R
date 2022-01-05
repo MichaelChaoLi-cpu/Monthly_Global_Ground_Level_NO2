@@ -39,7 +39,9 @@
 
 # Note: "mg_m2_troposphere_no2" is with high accuracy.
 # Note: in this version, we drop "NTL", because low accuary of interpolation in both coefficient and 
-#       mean value. After dropping this variable the R2 only reduces 0.1%. So, we decide to do so.
+#       mean value. After dropping this variable the R2 only reduces 0.1%. So, we decide to do so. Bandwidth
+#       is 10 arc degrees.
+# Note: we test 2.25 degrees, this time.
 
 # end
 
@@ -58,7 +60,7 @@ na.test <- mergedDataset %>% na.omit()
 na.test$count <- 1
 na.test <- aggregate(na.test$count, by = list(na.test$City, na.test$Country), FUN=sum)
 colnames(na.test) <- c("City", "Country", "RecordCount")
-na.test <- na.test %>% filter(RecordCount > 15) #freedom 
+na.test <- na.test %>% filter(RecordCount > 5) #freedom 
 
 usedDataset <- left_join(mergedDataset, na.test, by = c("City", "Country"))
 usedDataset <- usedDataset %>% filter(!is.na(RecordCount))
@@ -67,7 +69,7 @@ usedDataset <- usedDataset %>% dplyr::select(
   no2, mg_m2_total_no2, mg_m2_troposphere_no2,
   #mg_m2_total_no2_lag, mg_m2_troposphere_no2_lag,
   ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
-  precipitation, NTL, PBLH, #speedwind, humidity,
+  precipitation, PBLH, #speedwind, humidity,  NTL,
   #UVAerosolIndex, ozone, cloudfraction, cloudpressure,
   CityCode, City, Country, 
   month, year, Date, Y2016, Y2017, Y2018, Y2019, Y2020, Y2021
@@ -102,7 +104,7 @@ rm(xy)
 # get the city points 
 
 # distance matrix
-drop_island <- T
+drop_island <- F # this time we test adaptive bandwidth
 if (drop_island) {
   coord.point <- coordinates(cityLocationSpatialPoint)
   dist.matrix <- GWmodel::gw.dist(dp.locat = coord.point, focus=0, p=2, theta=0, longlat=F)
@@ -115,14 +117,14 @@ if (drop_island) {
   dist.matrix <- dist.matrix %>%
     dplyr::select(min, CityCode)
   dist.matrix <- dist.matrix %>%
-    filter(min < 10)
-}
+    filter(min < 2.25)
 # distance matrix
 
 ##### this is a strange value
-usedDataset <- left_join(usedDataset, dist.matrix, by = "CityCode")
-usedDataset <- usedDataset %>%
-  filter(!is.na(min))
+  usedDataset <- left_join(usedDataset, dist.matrix, by = "CityCode")
+  usedDataset <- usedDataset %>%
+    filter(!is.na(min))
+}
 
 ##### re-obtain the point
 cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
@@ -140,6 +142,7 @@ xy <- cityLocation %>% dplyr::select(Longitude, Latitude)
 cityLocationSpatialPoint <- SpatialPointsDataFrame(coords = xy, data = cityLocation[,c(1, 2, 3, 4, 5)],
                                                    proj4string = CRS(proj))
 rm(xy)
+plot(cityLocationSpatialPoint)
 # get the city points 
 save(usedDataset, file = "03_Rawdata/usedDataset.RData")
 
@@ -167,12 +170,12 @@ plmtest(ols, type = c("bp"))
 setwd("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/")
 source("02_RCode/07_AF_GWPRBandwidthStepSelection_v1.R")
 # we exiamine from the GWPR based on fem 
-GWPR.FEM.bandwidth <- 
+GWPR.FEM.bandwidth <- # this is about fixed bandwidth
   bw.GWPR.step.selection(formula = formula, data = usedDataset, index = c("CityCode", "period"),
                               SDF = cityLocationSpatialPoint, adaptive = F, p = 2, bigdata = F,
                               upperratio = 0.10, effect = "individual", model = "within", approach = "CV",
                               kernel = "bisquare",doParallel = T, cluster.number = 6, gradientIncrecement = T,
-                              GI.step = 0.25, GI.upper = 50, GI.lower = 0.25)
+                              GI.step = 0.25, GI.upper = 20, GI.lower = 0.25)
 GWPR.FEM.bandwidth.step.list <- GWPR.FEM.bandwidth
 plot(GWPR.FEM.bandwidth.step.list[,1], GWPR.FEM.bandwidth.step.list[,2])
 save(GWPR.FEM.bandwidth.step.list,
@@ -183,37 +186,12 @@ GWPR.FEM.bandwidth.golden <-
           SDF = cityLocationSpatialPoint, adaptive = F, p = 2, bigdata = T,
           upperratio = 0.15, effect = "individual", model = "within", approach = "CV",
           kernel = "bisquare",doParallel = T, cluster.number = 6)
-
-GWPR.FEM.bandwidth = 10 ###
-
-GWPR.plmtest.Fixed.result <-
-  GWPR.plmtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),
-               SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
-               p = 2, kernel = "bisquare", longlat = F)
-tm_shape(GWPR.plmtest.Fixed.result$SDF) +
-  tm_dots(col = "p.value", breaks = c(0, 0.1, 1))
-### this indicate that OLS is better than REM in most samples
-
-GWPR.pFtest.Fixed.result <- 
-  GWPR.pFtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),
-              SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
-              p = 2, effect = "individual", kernel = "bisquare", longlat = F)
-tm_shape(GWPR.pFtest.Fixed.result$SDF) +
-  tm_dots(col = "p.value", breaks = c(0, 0.1, 1))
-### this indicate that FEM is better than OLS in most samples
-
-GWPR.phtest.Fixed.result <- 
-  GWPR.phtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),
-              SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
-              p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
-              random.method = "amemiya")
-tm_shape(GWPR.phtest.Fixed.result$SDF) +
-  tm_dots(col = "p.value", breaks = c(0, 0.05, 1))
-### this indicate that FEM is better than REM in most samples
+GWPR.FEM.bandwidth = 2.25 ###
 
 ################################ this is GWPR based on FEM
+GWPR.FEM.bandwidth = 2.25
 GWPR.FEM.CV.F.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
-                             SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
+                             SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = T,
                              p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
                              model = "within")
 GWPR.FEM.CV.F.result$SDF@data %>% view()
@@ -243,3 +221,78 @@ GWPR.FEM.CV.F.result <- GWPR(formula = formula.total, data = usedDataset, index 
                              SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
                              p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
                              model = "within")
+
+
+
+GWPR.FEM.Adaptive.bandwidth <- # this is about adaptive bandwidth
+  bw.GWPR.step.selection(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+                         SDF = cityLocationSpatialPoint, adaptive = T, p = 2, bigdata = F,
+                         upperratio = 0.10, effect = "individual", model = "within", approach = "CV",
+                         kernel = "bisquare",doParallel = T, cluster.number = 6, gradientIncrecement = T,
+                         GI.step = 1, GI.upper = 100, GI.lower = 2)
+GWPR.FEM.Adaptive.bandwidth.step.list <- GWPR.FEM.Adaptive.bandwidth
+plot(GWPR.FEM.Adaptive.bandwidth.step.list[,1], GWPR.FEM.Adaptive.bandwidth.step.list[,2])
+save(GWPR.FEM.Adaptive.bandwidth.step.list,
+     file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/GWPR_Adaptive_BW_setp_list.Rdata")
+# turning point is 7 and 22. minimum is 2
+# we test them both
+
+run <- F
+if(run){
+  GWPR.FEM.Adaptive.bandwidth.golden <- 
+    bw.GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+            SDF = cityLocationSpatialPoint, adaptive = T, p = 2, bigdata = T,
+            upperratio = 0.15, effect = "individual", model = "within", approach = "CV",
+            kernel = "bisquare",doParallel = T, cluster.number = 6)
+}
+
+GWPR.FEM.CV.A.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+                             SDF = cityLocationSpatialPoint, bw = 7, adaptive = T,
+                             p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                             model = "within")
+run <- F
+if(run){
+  GWPR.FEM.CV.A.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+                               SDF = cityLocationSpatialPoint, bw = 22, adaptive = T,
+                               p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                               model = "within")
+}
+GWPR.FEM.CV.A.result$SDF@data %>% view()
+save(GWPR.FEM.CV.A.result, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/GWPR_FEM_CV_A_result.Rdata")
+
+# let us test pooled regression
+GWPR.OLS.CV.A.result <- GWPR(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+                             SDF = cityLocationSpatialPoint, bw = 7, adaptive = T,
+                             p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                             model = "pooling")
+save(GWPR.OLS.CV.A.result, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/GWPR_OLS_CV_A_result.Rdata")
+
+
+run <- F
+if(run){
+  GWPR.plmtest.Fixed.result <-
+    GWPR.plmtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+                 SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
+                 p = 2, kernel = "bisquare", longlat = F)
+  tm_shape(GWPR.plmtest.Fixed.result$SDF) +
+    tm_dots(col = "p.value", breaks = c(0, 0.1, 1))
+  ### this indicate that OLS is better than REM in most samples
+  
+  GWPR.pFtest.Fixed.result <- 
+    GWPR.pFtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+                SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
+                p = 2, effect = "individual", kernel = "bisquare", longlat = F)
+  tm_shape(GWPR.pFtest.Fixed.result$SDF) +
+    tm_dots(col = "p.value", breaks = c(0, 0.1, 1))
+  ### this indicate that FEM is better than OLS in most samples
+  
+  GWPR.phtest.Fixed.result <- 
+    GWPR.phtest(formula = formula, data = usedDataset, index = c("CityCode", "period"),
+                SDF = cityLocationSpatialPoint, bw = GWPR.FEM.bandwidth, adaptive = F,
+                p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                random.method = "amemiya")
+  tm_shape(GWPR.phtest.Fixed.result$SDF) +
+    tm_dots(col = "p.value", breaks = c(0, 0.05, 1))
+  ### this indicate that FEM is better than REM in most samples
+}
+
