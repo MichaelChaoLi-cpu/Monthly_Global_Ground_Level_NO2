@@ -31,6 +31,7 @@ library(tidyverse)
 library(dplyr)
 library(raster)
 library(lubridate)
+library(magick)
 
 makePredictRaster <- function(aim_year, aim_month){
   load("05_CoefficientRaster/COEF_raster.RData")
@@ -173,14 +174,18 @@ month.list <- c("01", "02", "03", "04", "05", "06",
 year.list <- c("2015", "2016", "2017", "2018", "2019", "2020")
 predict_raster_folder <- "D:/10_Article/11_PredictRaster/01_Test0104/"
 predict_jpg_folder <- "D:/10_Article/11_PredictRaster/02_Test0104JPG/"
+brks = c(0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3)
+pal <- colorRampPalette(c("blue","green","yellow","red"))
+
 for (aim_year in year.list){
   for (aim_month in month.list){
     predict.raster <- makePredictRaster(aim_year, aim_month = aim_month)
     writeRaster(predict.raster, filename = paste0(predict_raster_folder,aim_year,aim_month,".tif"),
                 format="GTiff", overwrite=TRUE)
     jpeg(paste0(predict_jpg_folder,aim_year,aim_month,".jpg"), 
-         quality = 300, width = 1000, height = 1000)
-    plot(predict.raster)
+         quality = 300, width = 1800, height = 1000)
+    plot(predict.raster, breaks = brks, col = pal(13))
+    title(paste0(aim_year, "-", aim_month))
     dev.off()
   }
 }
@@ -192,8 +197,9 @@ for (aim_month in month.list){
   writeRaster(predict.raster, filename = paste0(predict_raster_folder,aim_year,aim_month,".tif"),
               format="GTiff", overwrite=TRUE)
   jpeg(paste0(predict_jpg_folder,aim_year,aim_month,".jpg"), 
-       quality = 300, width = 1000, height = 1000)
-  plot(predict.raster)
+       quality = 300, width = 1800, height = 1000)
+  plot(predict.raster, breaks = brks, col = pal(13))
+  title(paste0(aim_year, "-", aim_month))
   dev.off()
 }
 
@@ -243,6 +249,15 @@ testDataset <- testDataset %>%
 
 cor.test(testDataset$no2_measured_mg.m3, abs(testDataset$residuals))
 cor.test(testDataset$no2_measured_mg.m3, testDataset$predict_no2)
+lm(no2_measured_mg.m3 ~ predict_no2, testDataset) %>% summary()
 r2 <- 1 - sum( (testDataset$no2_measured_mg.m3 - testDataset$predict_no2)^2 ) /
   sum((testDataset$no2_measured_mg.m3 - mean(testDataset$no2_measured_mg.m3))^2)
 plot(testDataset$no2_measured_mg.m3, testDataset$predict_no2)
+
+jpg.list <- list.files(predict_jpg_folder)
+frames <- paste0(predict_jpg_folder, jpg.list)
+m <- image_read(frames)
+m <- image_animate(m, fps = 2)
+image_write(m, 
+            paste0("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/06_Animate/",
+                   "ani.gif"))

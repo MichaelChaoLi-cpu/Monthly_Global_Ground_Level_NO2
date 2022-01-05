@@ -4,6 +4,9 @@ Originally, we use GOME-2 data to detect the global ground-level NO2, from 2007 
   
 ## Author  
 Chao Li, Shunsuke Managi
+
+## Result: Monthly NO2 Concentration  
+![](06_Animate/ani.gif)
   
 ## Data
 ### Used in 01_DW_MonthlyAverageNo2Panel_v1.R
@@ -50,23 +53,26 @@ This code in the cmd should miss some file. The 04_DW python is designed to solv
 ### R Code  
 [01_DW_MonthlyAverageNo2Panel_v1.R](02_RCode/01_DW_MonthlyAverageNo2Panel_v1.R): This script is to wash the data to get the panel data set in the analysis from 2015.01 to 2021.11 of groud-level measured NO2 concentration of 540 major cities globally. The result of this script is the [PanelNo2Dataset.Rdata](03_Rawdata/PanelNo2Dataset.Rdata), including "no2" (monthly average no2 concentration ppm).  
 [02_DW_MonthlyRasterDataPanel_v0.R](02_RCode/02_DW_MonthlyRasterDataPanel_v0.R): This script is to get the panel data set with all the control variables. The input data sets are [PanelNo2Dataset.Rdata](03_Rawdata/PanelNo2Dataset.Rdata) and CityLocationOfficial.csv produced by [03_DW_CityLocationJson_v0](01_PythonCode/03_DW_CityLocationJson_v0). The result of this script is the [mergedDataset.Rdata](03_Rawdata/mergedDataset.Rdata), including "no2" (monthly average no2 concentration ppm), "mg_m2_total_no2" (monthly average total column amount of no2 mg/m2), "mg_m2_troposphere_no2" (monthly average tropospheric column amount of no2 mg/m2), "ter_pressure" (monthly average terrain surface pressure hpa), "dayTimeTemperature" (monthly average day time temperature C), "nightTimeTemperature" (monthly average night time temperature C), "ndvi" (NDVI -1 to 1), "humidity" (g/kg means 1 gram water in the 1 kg air), "precipitation" (the precipitation unit is kg/(m2 * h)), "speedwind" (the wind speed unit is m/s), "NTL" (nighttime light), "PBLR" (planetary boundary layer height unit is m), and "no2_measured_mg.m3" (convert based on the "no2", "ter_pressure", "dayTimeTemperature", and "nightTimeTemperature" the unit is mg/m3).  Identity ID is "CityCode" and time index is "period" (year * 100 + month).  
-[03_AN_GWPRNO2AllVariables_v0.R](02_RCode/03_AN_GWPRNO2AllVariables_v0.R): This script conducts the analysis based on GWPR. Outputs are the results of GWPR based on the FEM and OLS, respectively. [GWPR_FEM_CV_F_result.Rdata](04_Results/GWPR_FEM_CV_F_result.Rdata) is the result of GWPR based on FEM, using the fixed distance bandwidth. [GWPR_OLS_CV_F_result.Rdata](04_Results/GWPR_OLS_CV_F_result.Rdata) is the result of GWPR based on OLS. [GWPR_BW_setp_list.Rdata](04_Results/GWPR_BW_setp_list.Rdata) is the bandwidth selection process.  The R2 of the GWPR result based on FEM taking "mg_m2_troposphere_no2" as the crucial independent variable is 90.09%. If "mg_m2_total_no2", the R2 is 89.99%.   
+[03_AN_GWPRNO2AllVariables_v0.R](02_RCode/03_AN_GWPRNO2AllVariables_v0.R): This script conducts the analysis based on GWPR. Outputs are the results of GWPR based on the FEM and OLS, respectively. [GWPR_FEM_CV_A_result.Rdata](04_Results/GWPR_FEM_CV_A_result.Rdata) is the result of GWPR based on FEM, using the **Adaptive** distance bandwidth. [GWPR_OLS_CV_A_result.Rdata](04_Results/GWPR_OLS_CV_A_result.Rdata) is the result of GWPR based on OLS. [GWPR_Adaptive_BW_setp_list.Rdata](04_Results/GWPR_Adaptive_BW_setp_list.Rdata) is the bandwidth selection process. Bandwidth is selected to be 7.    
 [05_AF_GWPRRevisedForCrossValidation_v1.R](02_RCode/05_AF_GWPRRevisedForCrossValidation_v1.R): This script revises the function in GWPR.light to complete 10-fold CV, used in [06_AN_GWPR10FoldCrossValidation_v0.R](02_RCode/06_AN_GWPR10FoldCrossValidation_v0.R).  
 [06_AN_GWPR10FoldCrossValidation_v0.R](02_RCode/06_AN_GWPR10FoldCrossValidation_v0.R): This script performs 10-fold CV. The input data sets are [mergedDataset.Rdata](03_Rawdata/mergedDataset.Rdata) and CityLocationOfficial.csv. The output is [femCrossValidation.Rdata](04_Results/femCrossValidation.Rdata).  
 [07_AF_GWPRBandwidthStepSelection_v1.R](02_RCode/07_AF_GWPRBandwidthStepSelection_v1.R): This script revises the function in GWPR.light to perform step bandwidth selection, used in [03_AN_GWPRNO2AllVariables_v0.R](02_RCode/03_AN_GWPRNO2AllVariables_v0.R).  
 [08_AN_InterpolationGWPR_v0.R](02_RCode/08_AN_InterpolationGWPR_v0.R): This script is to interpolate the coefficient from the GWPR, based on the results [GWPR_FEM_CV_F_result.Rdata](04_Results/GWPR_FEM_CV_F_result.Rdata). We use ordinary kriging (OK) here. OK method is significantly better than IDW, due to results of cross validation. IDW is 0.44 and kriging is 0.99. The output of this script is COEF_raster.RData (not uploaded due to data size), which includes the raster data sets of the coefficients.
 [09_AN_InterpolationMeanValueOfCities_v1.R](02_RCode/09_AN_InterpolationMeanValueOfCities_v1.R): This script is to interpolate the mean value of variables.
+[10_AN_PredictionRasterCrossValidation_v1.R](02_RCode/10_AN_PredictionRasterCrossValidation_v1.R): This script is to use the interpolation results from [08_AN_InterpolationGWPR_v0.R](02_RCode/08_AN_InterpolationGWPR_v0.R) and [09_AN_InterpolationMeanValueOfCities_v1.R](02_RCode/09_AN_InterpolationMeanValueOfCities_v1.R) and satellite rasters to generate the final results, the GTiff files and some figures. 
 
    
 ## Workflow
 **WF.py: (01, 02, 03, 07, 08, 09, 10, 11, 16) -> END**  
 **WF.py.XX**: This step provides the all raster data from NASA or some places else.  
 
-**WF.A: 01 -> 02 -> 03 -> 06 -> (08, 09) -> END **  
+**WF.A: 01 -> 02 -> 03 -> 06 -> (08, 09) -> 10 -> END **  
 **WF.A.01.02**: This step merges [PanelNo2Dataset.Rdata](03_Rawdata/PanelNo2Dataset.Rdata) and [mergedDataset.Rdata](03_Rawdata/mergedDataset.Rdata).  
-**WF.A.02.03**: This step conducts the analysis using GWPR based on FEM with fixed distance bandwidth.  
+**WF.A.02.03**: This step conducts the analysis using GWPR based on FEM with **Adaptive** distance bandwidth.  
 **WF.A.03.06**: This step conducts the 10-fold cross validation on the model of GWPR based on FEM.
 **WF.A.06.0809**: This step completes the ordinary kriging interpolation of coefficients and mean values.
+**WF.A.0809.10**: This step obtain the final prediction.
+
   
 ## Contact Us:
 - Email: Prof. Shunsuke Managi <managi@doc.kyushu-u.ac.jp>  
