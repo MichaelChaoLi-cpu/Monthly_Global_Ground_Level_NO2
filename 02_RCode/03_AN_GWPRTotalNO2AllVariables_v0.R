@@ -323,6 +323,7 @@ colnames(coef.CV1) <- paste0(colnames(coef.CV1), "_Coef")
 colnames(coef.CV1)[1] <- "CityCode"
 colnames(meanValueOfVariables.use) <- paste0(colnames(meanValueOfVariables.use), "_mean")
 colnames(meanValueOfVariables.use)[1] <- "CityCode"
+meanValueOfVariables.use <- meanValueOfVariables.use %>% dplyr::select(-"period_mean") %>% distinct()
 
 data.predict <- left_join(femTransformationDataset, coef.CV1, by = "CityCode")
 data.predict <- left_join(data.predict, meanValueOfVariables.use, by = "CityCode")

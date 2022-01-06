@@ -253,6 +253,7 @@ lm(no2_measured_mg.m3 ~ predict_no2, testDataset) %>% summary()
 r2 <- 1 - sum( (testDataset$no2_measured_mg.m3 - testDataset$predict_no2)^2 ) /
   sum((testDataset$no2_measured_mg.m3 - mean(testDataset$no2_measured_mg.m3))^2)
 plot(testDataset$no2_measured_mg.m3, testDataset$predict_no2)
+save(testDataset, file = "04_Results/FinalRasterCrossValidation.Rdata")
 
 jpg.list <- list.files(predict_jpg_folder)
 frames <- paste0(predict_jpg_folder, jpg.list)

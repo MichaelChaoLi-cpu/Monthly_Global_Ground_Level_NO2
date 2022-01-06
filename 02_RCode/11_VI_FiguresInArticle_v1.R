@@ -13,6 +13,8 @@ library(rgeos)
 library("rnaturalearth")
 library(ggpubr)
 library(gridExtra)
+library("viridisLite")
+library("viridis") 
 
 get_density <- function(x, y, ...) {
   dens <- MASS::kde2d(x, y, ...)
@@ -267,32 +269,33 @@ grid.arrange(plot1, plot2, plot3,
 dev.off()
 #-------------trends of XY------------------------
 
+load("04_Results/dataPrediction.Rdata")
 #---------------------GWPR-------------------------------------
-predict.gwpr$Density <- get_density(predict.gwpr$no2.ori, predict.gwpr$pred, n = 100)
-reg <- lm(pred ~ no2.ori, data = predict.gwpr )
+data.predict$Density <- get_density(data.predict$predictNo2, data.predict$no2_measured_mg.m3.ori, n = 100)
+reg <- lm(predictNo2 ~ no2_measured_mg.m3.ori, data = data.predict )
 coeff = coefficients(reg)
 eq = paste0("y = ", round(coeff[2],3), "x + ", round(coeff[1],3))
 grob <- grobTree(textGrob(eq,
                           x = 0.05,  y = 0.90, hjust = 0,
                           gp = gpar(col = "black", fontsize = 12)))
-corre <- cor(predict.gwpr$no2.ori, predict.gwpr$pred)
+corre <- cor(data.predict$predictNo2, data.predict$no2_measured_mg.m3.ori)
 corr.text <- paste0("r = ", round(corre,4))
 grob.corr <- grobTree(textGrob(corr.text,
                                x = 0.05,  y = 0.85, hjust = 0,
                                gp = gpar(col = "black", fontsize = 12)))
-N <- length(predict.gwpr$no2.ori)
+N <- length(data.predict$no2_measured_mg.m3.ori)
 N.text <- paste0("N = ", N)
 grob.N <- grobTree(textGrob(N.text,
                             x = 0.05,  y = 0.80, hjust = 0,
                             gp = gpar(col = "black", fontsize = 12)))
-grob_add <- grobTree(textGrob("e",
+grob_add <- grobTree(textGrob("GWPR",
                               x = 0.02,  y = 0.95, hjust = 0,
                               gp = gpar(col = "black", fontsize = 18)))
-e <- ggplot(predict.gwpr ) +
-  geom_point(aes(x = no2.ori, y = pred, color = Density)) +
+gwpr.cv <- ggplot(data.predict ) +
+  geom_point(aes(x = no2_measured_mg.m3.ori, y = predictNo2, color = Density)) +
   scale_color_viridis() + 
-  scale_x_continuous(name = "Measured NO2 (PPB)", limits = c(0, 100)) +
-  scale_y_continuous(name = "Predicted NO2 (PPB)", limits = c(0, 100)) +
+  scale_x_continuous(name = "Measured NO2 (mg/m3)", limits = c(0, 1.5)) +
+  scale_y_continuous(name = "Predicted NO2 (mg/m3)", limits = c(0, 1.5)) +
   geom_abline(intercept = 0, slope = 1, color="red", 
               linetype = "dashed", size = 0.5) + 
   geom_abline(intercept = coeff[1], slope = coeff[2], color="blue", 
@@ -301,3 +304,47 @@ e <- ggplot(predict.gwpr ) +
   annotation_custom(grob.corr) +
   annotation_custom(grob.N) +
   annotation_custom(grob_add)
+
+jpeg(file="07_Figure/gwpr.cv.jpeg", width = 210, height = 210, units = "mm", quality = 300, res = 300)
+gwpr.cv 
+dev.off()
+
+load("04_Results/FinalRasterCrossValidation.Rdata")
+#---------------------Raster-------------------------------------
+testDataset$Density <- get_density(testDataset$predict_no2, testDataset$no2_measured_mg.m3, n = 100)
+reg <- lm(predict_no2 ~ no2_measured_mg.m3, data = testDataset )
+coeff = coefficients(reg)
+eq = paste0("y = ", round(coeff[2],3), "x + ", round(coeff[1],3))
+grob <- grobTree(textGrob(eq,
+                          x = 0.05,  y = 0.90, hjust = 0,
+                          gp = gpar(col = "black", fontsize = 12)))
+corre <- cor(testDataset$predict_no2, testDataset$no2_measured_mg.m3)
+corr.text <- paste0("r = ", round(corre,4))
+grob.corr <- grobTree(textGrob(corr.text,
+                               x = 0.05,  y = 0.85, hjust = 0,
+                               gp = gpar(col = "black", fontsize = 12)))
+N <- length(testDataset$no2_measured_mg.m3)
+N.text <- paste0("N = ", N)
+grob.N <- grobTree(textGrob(N.text,
+                            x = 0.05,  y = 0.80, hjust = 0,
+                            gp = gpar(col = "black", fontsize = 12)))
+grob_add <- grobTree(textGrob("Raster",
+                              x = 0.02,  y = 0.95, hjust = 0,
+                              gp = gpar(col = "black", fontsize = 18)))
+raster.cv <- ggplot(testDataset) +
+  geom_point(aes(x = no2_measured_mg.m3, y = predict_no2, color = Density)) +
+  scale_color_viridis() + 
+  scale_x_continuous(name = "Measured NO2 (mg/m3)", limits = c(0, 1.5)) +
+  scale_y_continuous(name = "Predicted NO2 (mg/m3)", limits = c(0, 1.5)) +
+  geom_abline(intercept = 0, slope = 1, color="red", 
+              linetype = "dashed", size = 0.5) + 
+  geom_abline(intercept = coeff[1], slope = coeff[2], color="blue", 
+              size= 0.5) + 
+  annotation_custom(grob) + 
+  annotation_custom(grob.corr) +
+  annotation_custom(grob.N) +
+  annotation_custom(grob_add)
+
+jpeg(file="07_Figure/gwpr.Raster.cv.jpeg", width = 210, height = 210, units = "mm", quality = 300, res = 300)
+raster.cv
+dev.off()
