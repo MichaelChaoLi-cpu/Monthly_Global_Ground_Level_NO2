@@ -145,6 +145,7 @@ rm(xy)
 plot(cityLocationSpatialPoint)
 # get the city points 
 save(usedDataset, file = "03_Rawdata/usedDataset.RData")
+save(cityLocationSpatialPoint, file = "03_Rawdata/cityLocationSpatialPoint.Rdata")
 
 pdata <- pdata.frame(usedDataset, index = c("CityCode", "Date"))
 formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + 
@@ -297,3 +298,45 @@ if(run){
   ### this indicate that FEM is better than REM in most samples
 }
 
+
+rawCrossValidationDataset <- usedDataset %>% 
+  dplyr::select("CityCode", "period", all.vars(formula.CV.FEM))
+meanValueOfVariables <- stats::aggregate(rawCrossValidationDataset[,all.vars(formula.CV.FEM)],
+                                         by = list(rawCrossValidationDataset$CityCode), mean)
+colnames(meanValueOfVariables)[1] <- "CityCode"
+meanValueOfVariablesCity <- meanValueOfVariables
+meanValueOfVariables <- dplyr::left_join(dplyr::select(rawCrossValidationDataset, "CityCode", "period"),
+                                         meanValueOfVariables, by = "CityCode")
+meanValueOfVariables <- meanValueOfVariables %>% arrange("CityCode", "period")
+rawCrossValidationDataset <- rawCrossValidationDataset %>% arrange("CityCode", "period")
+
+#### get FEM Transformation Dataset
+femTransformationDataset <- (dplyr::select(rawCrossValidationDataset, -"CityCode", -"period")) - 
+  (dplyr::select(meanValueOfVariables, -"CityCode", -"period"))
+femTransformationDataset$CityCode <- rawCrossValidationDataset$CityCode
+femTransformationDataset$period <- rawCrossValidationDataset$period
+
+meanValueOfVariables.use <- meanValueOfVariables
+coef.CV1 <- GWPR.FEM.CV.A.result$SDF@data
+coef.CV1 <- coef.CV1[,1:17]
+colnames(coef.CV1) <- paste0(colnames(coef.CV1), "_Coef")
+colnames(coef.CV1)[1] <- "CityCode"
+colnames(meanValueOfVariables.use) <- paste0(colnames(meanValueOfVariables.use), "_mean")
+colnames(meanValueOfVariables.use)[1] <- "CityCode"
+
+data.predict <- left_join(femTransformationDataset, coef.CV1, by = "CityCode")
+data.predict <- left_join(data.predict, meanValueOfVariables.use, by = "CityCode")
+data.predict <- data.predict %>%
+  mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
+           ter_pressure_Coef * (ter_pressure) + 
+           temp_Coef * temp +
+           ndvi_Coef * (ndvi) +
+           precipitation_Coef * (precipitation) +
+           PBLH_Coef * (PBLH) +
+           Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
+           Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
+           Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_mg.m3_mean
+  )
+data.predict$no2_measured_mg.m3.ori <- data.predict$no2_measured_mg.m3 + data.predict$no2_measured_mg.m3_mean
+cor.test(data.predict$predictNo2, data.predict$no2_measured_mg.m3.ori)
+save(data.predict, file = "04_Results/dataPrediction.Rdata")
