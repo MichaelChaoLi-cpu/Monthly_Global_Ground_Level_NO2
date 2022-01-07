@@ -77,9 +77,12 @@ while (line.num < nrow(month.grid.dataset) + 1){
   test.single.grid$month <- 1:77
   
   test.reg <- lm(data ~ month, test.single.grid)
-  coeff = coefficients(test.reg)
-  line <- c(id, coeff)
+  coeff <- summary(test.reg)
+  if (nrow(coeff$coefficients) == 2){
+    line <- c(id, coeff$coefficients[1,], coeff$coefficients[2,])
+  }
   test.coeff.grid <- rbind(test.coeff.grid, line)
   line.num <- line.num + 1
 }
-colnames(test.coeff.grid) <- c("id", "Intercept", "month.slope")
+colnames(test.coeff.grid) <- c("id", "Intercept", "I.Std.Error","I.t.value","I.Pr",
+                               "month.slope", "M.Std.Error","M.t.value","M.Pr")
