@@ -31,7 +31,6 @@ library(tidyverse)
 library(dplyr)
 library(raster)
 library(lubridate)
-library(magick)
 
 makePredictRaster <- function(aim_year, aim_month){
   load("05_CoefficientRaster/COEF_raster.RData")
@@ -255,10 +254,10 @@ r2 <- 1 - sum( (testDataset$no2_measured_mg.m3 - testDataset$predict_no2)^2 ) /
 plot(testDataset$no2_measured_mg.m3, testDataset$predict_no2)
 save(testDataset, file = "04_Results/FinalRasterCrossValidation.Rdata")
 
-jpg.list <- list.files(predict_jpg_folder)
-frames <- paste0(predict_jpg_folder, jpg.list)
-m <- image_read(frames)
-m <- image_animate(m, fps = 2)
-image_write(m, 
-            paste0("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/06_Animate/",
-                   "ani.gif"))
+#jpg.list <- list.files(predict_jpg_folder)
+#frames <- paste0(predict_jpg_folder, jpg.list)
+#m <- image_read(frames)
+#m <- image_animate(m, fps = 2)
+#image_write(m, 
+#            paste0("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/06_Animate/",
+#                   "ani.gif"))

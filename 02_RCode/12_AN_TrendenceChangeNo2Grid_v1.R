@@ -1,5 +1,11 @@
 # Author: M.L.
 
+# output: trendenceMonthGroundLevel.RData
+# trendenceMonthGroundLevel.RData: "month.slope" the slope of regression between prediction and month
+
+# output: meanOfRasterNo2.RData
+# meanOfRasterNo2.RData: "ave.value" the mean of 77 month predictions 
+
 # end
 
 
@@ -7,6 +13,7 @@ library(tidyverse)
 library(dplyr)
 library(sp) 
 library(raster)
+library(tmap)
 
 # make the raster -180 -60 180 90
 nx = 600                                       # number of cells in the x direction
@@ -86,3 +93,41 @@ while (line.num < nrow(month.grid.dataset) + 1){
 }
 colnames(test.coeff.grid) <- c("id", "Intercept", "I.Std.Error","I.t.value","I.Pr",
                                "month.slope", "M.Std.Error","M.t.value","M.Pr")
+xy <- coordinates(coords)
+id.xy <- cbind(coords@data, xy) 
+id.xy <- id.xy %>% dplyr::select(id, X, Y)
+
+test.coeff.grid$slope.sig <- NA
+test.coeff.grid <- test.coeff.grid %>% 
+  mutate(slope.sig = ifelse((M.Pr < 0.1), T, F))
+test.coeff.grid.sp <- left_join(test.coeff.grid, id.xy, by = "id")
+xy <- test.coeff.grid.sp[,c("X", "Y")]
+test.coeff.grid.sp <- SpatialPointsDataFrame(coords = xy, data = test.coeff.grid.sp,
+                                    proj4string = CRS(proj))
+
+test.coeff.grid.raster <- as(test.coeff.grid.sp, 'SpatialPixelsDataFrame')
+test.coeff.grid.raster <- as(test.coeff.grid.raster, "SpatialGridDataFrame")
+test.coeff.grid.raster.output <- test.coeff.grid.raster
+test.coeff.grid.raster.output@data <- test.coeff.grid.raster.output@data %>%
+  mutate(month.slope = ifelse(slope.sig == F, NA, month.slope))
+test.coeff.grid.raster.output@data <- test.coeff.grid.raster.output@data %>% dplyr::select("month.slope")
+test.coeff.grid.raster.output <- raster(test.coeff.grid.raster.output)
+
+save(test.coeff.grid.raster.output, file = "04_Results/trendenceMonthGroundLevel.RData")
+
+month.grid.dataset$ave.value <- rowMeans(month.grid.dataset[,2:78], na.rm = T)
+month.grid.dataset.mean <- month.grid.dataset %>%
+  dplyr::select("id", "ave.value")
+
+xy <- coordinates(coords)
+id.xy <- cbind(coords@data, xy) 
+id.xy <- id.xy %>% dplyr::select(id, X, Y)
+id.xy <- left_join(id.xy, month.grid.dataset.mean, by = 'id')
+test.mean.grid.sp <- SpatialPointsDataFrame(coords = xy, data = id.xy, proj4string = CRS(proj))
+test.mean.grid.raster <- as(test.mean.grid.sp, 'SpatialPixelsDataFrame')
+test.mean.grid.raster <- as(test.mean.grid.raster, "SpatialGridDataFrame")
+test.mean.grid.raster.output <- test.mean.grid.raster
+test.mean.grid.raster.output@data <- test.mean.grid.raster.output@data %>% dplyr::select("ave.value")
+test.mean.grid.raster.output <- raster(test.mean.grid.raster.output)
+
+save(test.mean.grid.raster.output, file = "04_Results/meanOfRasterNo2.RData")

@@ -15,6 +15,9 @@ library(ggpubr)
 library(gridExtra)
 library("viridisLite")
 library("viridis") 
+library(raster)
+library(stringr)
+library(magick)
 
 get_density <- function(x, y, ...) {
   dens <- MASS::kde2d(x, y, ...)
@@ -348,3 +351,85 @@ raster.cv <- ggplot(testDataset) +
 jpeg(file="07_Figure/gwpr.Raster.cv.jpeg", width = 210, height = 210, units = "mm", quality = 300, res = 300)
 raster.cv
 dev.off()
+
+load("04_Results/trendenceMonthGroundLevel.RData")
+pal <- colorRampPalette(c("blue", "white", "red"))
+brks = c(-0.005, -0.004, -0.003, -0.002, -0.001,
+         0, 0.001, 0.002, 0.003, 0.004, 0.005)
+labels_brks = c("-5", "-4", "-3", "-2", "-1", "0",
+                "1", "2", "3", "4", "5")
+title_size = .0001
+legend_title_size = 1
+margin = 0
+
+slope.tmap <- tm_shape(test.coeff.grid.raster.output) +
+  tm_raster("month.slope", palette = pal(11), breaks = brks, 
+            style = 'cont', legend.is.portrait = F, title = "The Slope of Monthly Chage\n[0.001 mg/(m3 * month)]",
+            labels = labels_brks) +
+  tm_grid(alpha = .25) + 
+  tm_layout(
+    inner.margins = c(margin, margin, margin, margin),
+    title.size = title_size, 
+    legend.position = c("left", "bottom"),
+    legend.title.size = legend_title_size,
+    legend.text.size = legend_title_size * 0.75
+  ) + 
+  tm_scale_bar()
+
+#slope.tmap
+slope.tmap %>%
+  tmap_save(filename = "07_Figure/monthSlope.jpg", width = 300, height = 140, units = 'mm', dpi = 1000)
+
+pal <- colorRampPalette(c("blue","green","yellow","red"))
+load("04_Results/meanOfRasterNo2.RData")
+#test.mean.grid.raster.output %>% plot()
+brks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5)
+labels_brks = brks %>% as.character()
+mean.tmap <- tm_shape(test.mean.grid.raster.output) +
+  tm_raster("ave.value", palette = pal(11), breaks = brks, 
+            style = 'cont', legend.is.portrait = F, title = "The Mean of Monthly Concentration (mg/m3)",
+            labels = labels_brks) +
+  tm_grid(alpha = .25) + 
+  tm_layout(
+    inner.margins = c(margin, margin, margin, margin),
+    title.size = title_size, 
+    legend.position = c("left", "bottom"),
+    legend.title.size = legend_title_size,
+    legend.text.size = legend_title_size * 0.75
+  ) + 
+  tm_scale_bar()
+mean.tmap %>%
+  tmap_save(filename = "07_Figure/meanConcentration.jpg", width = 300, height = 140, units = 'mm', dpi = 1000)
+
+predict_raster_folder <- "D:/10_Article/11_PredictRaster/01_Test0104/"
+raster.filelist <- list.files(predict_raster_folder)
+brks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5)
+labels_brks = brks %>% as.character()
+
+for (file in raster.filelist){
+  predict.tiff <- raster(paste0(predict_raster_folder, file))
+  filename <- substr(file, 1, 6)
+  tiff.tmap <- tm_shape(predict.tiff) +
+    tm_raster(paste0("X", filename), palette = pal(11), breaks = brks, 
+              style = 'cont', legend.is.portrait = F, 
+              title = paste0("Monthly Concentration in ", filename, " (mg/m3)"),
+              labels = labels_brks) +
+    tm_grid(alpha = .25) + 
+    tm_layout(
+      inner.margins = c(margin, margin, margin, margin),
+      title.size = title_size, 
+      legend.position = c("left", "bottom"),
+      legend.title.size = legend_title_size,
+      legend.text.size = legend_title_size * 0.75
+    ) + 
+    tm_scale_bar()
+  tiff.tmap %>%
+    tmap_save(filename = paste0("07_Figure/month/", filename, ".jpg"),
+              width = 300, height = 140, units = 'mm', dpi = 1000)
+}
+
+jpg.list <- list.files("07_Figure/month/")
+frames <- paste0("07_Figure/month/", jpg.list)
+m <- image_read(frames)
+m <- image_animate(m, fps = 2)
+image_write(m, paste0("06_Animate/","ani.gif"))
