@@ -428,8 +428,30 @@ for (file in raster.filelist){
               width = 300, height = 140, units = 'mm', dpi = 1000)
 }
 
-jpg.list <- list.files("07_Figure/month/")
-frames <- paste0("07_Figure/month/", jpg.list)
+for (file in raster.filelist){
+  predict.tiff <- raster(paste0(predict_raster_folder, file))
+  filename <- substr(file, 1, 6)
+  tiff.tmap <- tm_shape(predict.tiff) +
+    tm_raster(paste0("X", filename), palette = pal(11), breaks = brks, 
+              style = 'cont', legend.is.portrait = F, 
+              title = paste0("Monthly Concentration in ", filename, " (mg/m3)"),
+              labels = labels_brks) +
+    tm_grid(alpha = .25) + 
+    tm_layout(
+      inner.margins = c(margin, margin, margin, margin),
+      title.size = title_size, 
+      legend.position = c("left", "bottom"),
+      legend.title.size = legend_title_size,
+      legend.text.size = legend_title_size * 0.75
+    ) + 
+    tm_scale_bar()
+  tiff.tmap %>%
+    tmap_save(filename = paste0("07_Figure/lowRes/", filename, ".jpg"),
+              width = 300, height = 140, units = 'mm', dpi = 200)
+}
+
+jpg.list <- list.files("07_Figure/lowRes/")
+frames <- paste0("07_Figure/lowRes/", jpg.list)
 m <- image_read(frames)
 m <- image_animate(m, fps = 2)
 image_write(m, paste0("06_Animate/","ani.gif"))
