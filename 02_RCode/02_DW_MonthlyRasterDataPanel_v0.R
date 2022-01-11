@@ -384,12 +384,12 @@ cor.test(mergedDataset$ozone, mergedDataset$no2)
 mergedDataset <- left_join(mergedDataset, UVAerosolIndexRasterDataset, by = c("Country", "City", "year", "month"))
 cor.test(mergedDataset$UVAerosolIndex, mergedDataset$no2)
 
-# convert into ug/m3
+# convert into ug/m3 (https://www.ccohs.ca/oshanswers/chemicals/convert.html)
 Pcoef = 0.00750061683
 MW = 46.0055
 mergedDataset$no2_measured_mg.m3 <-
   Pcoef * mergedDataset$ter_pressure * MW * mergedDataset$no2 /
-  (62.4 * (273.2 + mergedDataset$dayTimeTemperature/2 + mergedDataset$nightTimeTemperature/2))
+  (62.4 * (273.16 + mergedDataset$dayTimeTemperature/2 + mergedDataset$nightTimeTemperature/2))
 
 mergedDataset$month <- mergedDataset$month %>% as.factor()
 mergedDataset$year <- mergedDataset$year %>% as.factor()

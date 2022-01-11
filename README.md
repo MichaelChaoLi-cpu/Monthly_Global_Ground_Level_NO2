@@ -66,7 +66,7 @@ This code in the cmd should miss some file. The 04_DW python is designed to solv
 **WF.py: (01, 02, 03, 07, 08, 09, 10, 11, 16) -> END**  
 **WF.py.XX**: This step provides the all raster data from NASA or some places else.  
 
-**WF.A: 01 -> 02 -> 03 -> 06 -> (08, 09) -> 10 -> END **  
+**WF.A: 01 -> 02 -> 03 -> 06 -> (08, 09) -> 10 -> END**  
 **WF.A.01.02**: This step merges [PanelNo2Dataset.Rdata](03_Rawdata/PanelNo2Dataset.Rdata) and [mergedDataset.Rdata](03_Rawdata/mergedDataset.Rdata).  
 **WF.A.02.03**: This step conducts the analysis using GWPR based on FEM with **Adaptive** distance bandwidth.  
 **WF.A.03.06**: This step conducts the 10-fold cross validation on the model of GWPR based on FEM.

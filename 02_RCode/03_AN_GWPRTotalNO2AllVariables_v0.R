@@ -269,6 +269,14 @@ GWPR.OLS.CV.A.result <- GWPR(formula = formula, data = usedDataset, index = c("C
                              model = "pooling")
 save(GWPR.OLS.CV.A.result, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/GWPR_OLS_CV_A_result.Rdata")
 
+formula.total <- no2_measured_mg.m3 ~ mg_m2_total_no2 + 
+  ter_pressure + temp +
+  ndvi + precipitation + PBLH +
+  Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
+GWPR.FEM.CV.A.result.total <- GWPR(formula = formula.total, data = usedDataset, index = c("CityCode", "period"),
+                             SDF = cityLocationSpatialPoint, bw = 7, adaptive = T,
+                             p = 2, effect = "individual", kernel = "bisquare", longlat = F, 
+                             model = "within")
 
 run <- F
 if(run){
