@@ -455,3 +455,17 @@ frames <- paste0("07_Figure/lowRes/", jpg.list)
 m <- image_read(frames)
 m <- image_animate(m, fps = 2)
 image_write(m, paste0("06_Animate/","ani.gif"))
+
+load("04_Results/GWPR_BW_setp_list.Rdata")
+jpeg(file="07_Figure/fixedbw.jpeg", width = 297, height = 210, units = "mm", quality = 300, res = 300)
+plot(GWPR.FEM.bandwidth.step.list[,1], GWPR.FEM.bandwidth.step.list[,2],
+     xlab = "Bandwidth", ylab = "Root Mean Square Prediction Error")
+dev.off()
+
+load("04_Results/GWPR_Adaptive_BW_setp_list.Rdata")
+jpeg(file="07_Figure/adaptivebw.jpeg", width = 297, height = 210, units = "mm", quality = 300, res = 300)
+plot(GWPR.FEM.Adaptive.bandwidth.step.list[,1], GWPR.FEM.Adaptive.bandwidth.step.list[,2],
+     xlab = "Bandwidth", ylab = "Root Mean Square Prediction Error")
+dev.off()
+
+
