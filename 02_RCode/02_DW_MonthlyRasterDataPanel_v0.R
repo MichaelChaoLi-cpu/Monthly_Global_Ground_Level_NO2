@@ -224,7 +224,7 @@ nightTimeTemperatureRasterDataset <- nightTimeTemperatureRasterDataset %>% dplyr
 nightTimeTemperatureRasterDataset$nightTimeTemperature <- nightTimeTemperatureRasterDataset$nightTimeTemperature *
   0.02 - 273.16  #convert into c degree temperature
 
-#get monthly NDVI temperature from the MOD13C3 0.25 arc degree
+#get monthly NDVI from the MOD13C2 0.25 arc degree
 ndviRasterFolder <- "D:/10_Article/09_TempOutput/05_MonthlyNDVITif/VI_Monthly_005dg_v6/NDVI/"
 filelist <- list.files(ndviRasterFolder)
 ndviRasterDataset <- 
