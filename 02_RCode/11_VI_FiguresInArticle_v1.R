@@ -18,6 +18,7 @@ library("viridis")
 library(raster)
 library(stringr)
 library(magick)
+library(cowplot)
 
 get_density <- function(x, y, ...) {
   dens <- MASS::kde2d(x, y, ...)
@@ -228,7 +229,7 @@ formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 +
 (plot2 <- ggscatter(usedDataset, x = "ter_pressure", y = "no2_measured_mg.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
-                   xlab = "Terrian Atmospheric Pressure", ylab = "Ground-level NO2",
+                   xlab = "Terrain Atmospheric Pressure", ylab = "Ground-level NO2",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
@@ -457,15 +458,25 @@ m <- image_animate(m, fps = 2)
 image_write(m, paste0("06_Animate/","ani.gif"))
 
 load("04_Results/GWPR_BW_setp_list.Rdata")
-jpeg(file="07_Figure/fixedbw.jpeg", width = 297, height = 210, units = "mm", quality = 300, res = 300)
-plot(GWPR.FEM.bandwidth.step.list[,1], GWPR.FEM.bandwidth.step.list[,2],
-     xlab = "Bandwidth", ylab = "Root Mean Square Prediction Error")
-dev.off()
+GWPR.FEM.bandwidth.step.list <- GWPR.FEM.bandwidth.step.list %>% as.data.frame()
+plot1 <- ggplot(GWPR.FEM.bandwidth.step.list, aes(x = BandwidthVector, y = ScoreVector)) +
+  geom_point() +
+  scale_x_continuous(name = "Fixed Distance Bandwidth (Arc Degree)") +
+  scale_y_continuous(name = "Mean Square Prediction Error") +
+  theme_bw()
+
 
 load("04_Results/GWPR_Adaptive_BW_setp_list.Rdata")
-jpeg(file="07_Figure/adaptivebw.jpeg", width = 297, height = 210, units = "mm", quality = 300, res = 300)
-plot(GWPR.FEM.Adaptive.bandwidth.step.list[,1], GWPR.FEM.Adaptive.bandwidth.step.list[,2],
-     xlab = "Bandwidth", ylab = "Root Mean Square Prediction Error")
+GWPR.FEM.Adaptive.bandwidth.step.list <- GWPR.FEM.Adaptive.bandwidth.step.list %>% as.data.frame()
+GWPR.FEM.Adaptive.bandwidth.step.list <- GWPR.FEM.Adaptive.bandwidth.step.list[3:98,]
+plot2 <- ggplot(GWPR.FEM.Adaptive.bandwidth.step.list, aes(x = BandwidthVector, y = ScoreVector)) +
+  geom_point() +
+  scale_x_continuous(name = "Adaptive Distance Bandwidth") +
+  scale_y_continuous(name = "Mean Square Prediction Error") +
+  theme_bw()
+
+
+jpeg(file="07_Figure/bwselection.jpeg", width = 297, height = 105, units = "mm", quality = 300, res = 300)
+plot_grid(plot1, plot2, 
+          labels = c("A", "B"), nrow = 1, ncol = 2)
 dev.off()
-
-
