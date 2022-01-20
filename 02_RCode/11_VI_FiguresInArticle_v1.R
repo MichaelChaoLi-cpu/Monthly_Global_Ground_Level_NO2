@@ -19,6 +19,8 @@ library(raster)
 library(stringr)
 library(magick)
 library(cowplot)
+library(patchwork)
+library(plotrix)
 
 get_density <- function(x, y, ...) {
   dens <- MASS::kde2d(x, y, ...)
@@ -479,4 +481,49 @@ plot2 <- ggplot(GWPR.FEM.Adaptive.bandwidth.step.list, aes(x = BandwidthVector, 
 jpeg(file="07_Figure/bwselection.jpeg", width = 297, height = 105, units = "mm", quality = 300, res = 300)
 plot_grid(plot1, plot2, 
           labels = c("A", "B"), nrow = 1, ncol = 2)
+dev.off()
+
+# time series of data
+load("04_Results/GWPR_FEM_CV_A_result.Rdata")
+residual.GWPR <- GWPR.FEM.CV.A.result$GWPR.residuals 
+
+load("03_Rawdata/usedDataset.RData")
+merge.tropono2 <- usedDataset %>% dplyr::select(mg_m2_troposphere_no2,
+                                                CityCode, period, year, month) %>%
+  rename("id" = "CityCode")
+residual.GWPR <- left_join(residual.GWPR, merge.tropono2, by = c("id", "period"))
+residual.GWPR$mg_m2_troposphere_no2 <- residual.GWPR$mg_m2_troposphere_no2/20
+monthly.GWPR <- aggregate(residual.GWPR %>% dplyr::select(y, yhat, mg_m2_troposphere_no2), 
+                          list(residual.GWPR$period), FUN = mean)
+monthly.GWPR$Group.2 <- monthly.GWPR$Group.1 %>% as.factor()
+monthly.pre <- monthly.GWPR %>% dplyr::select(-Group.1 )
+monthly.pre <- monthly.pre %>% pivot_longer(cols = c("y", "yhat", "mg_m2_troposphere_no2"))
+monthly.GWPR.stderr <- aggregate(residual.GWPR %>% dplyr::select(y, yhat, mg_m2_troposphere_no2), 
+                                 list(residual.GWPR$period), FUN = std.error)
+monthly.GWPR.stderr$Group.2 <- monthly.GWPR.stderr$Group.1 %>% as.factor()
+monthly.pre.stderr <- monthly.GWPR.stderr %>% dplyr::select(-Group.1 )
+monthly.pre.stderr <- monthly.pre.stderr %>% pivot_longer(cols = c("y", "yhat", "mg_m2_troposphere_no2"))
+monthly.pre.stderr <- monthly.pre.stderr %>% rename("SE" = "value")
+monthly.pre <- left_join(monthly.pre, monthly.pre.stderr, by = c("Group.2", "name"))
+
+(p3 <- ggplot(monthly.pre) +
+    geom_col(aes(x = Group.2, y = value, fill = name), alpha = 0.7, stat = "identity",
+             position = position_dodge(1), width = 0.8) +
+    geom_errorbar(aes(x = Group.2, ymin = value - SE * 1.96, ymax = value + SE * 1.96, color = name), 
+                  position = position_dodge(1), width = 0.5, size = 0.2) +
+    scale_y_continuous(name = "Ground-Level NO2 Concentration",
+                       sec.axis = sec_axis(~.*20, name="Tropospheric NO2 Concentration")) +
+    scale_fill_manual(values = c("red", "blue", "gold1"), name =NULL, 
+                      labels = c("Tropospheric NO2 Concentration", 
+                                 "Measured Ground-Level NO2 Concentration",
+                                 "Predicted Ground-Level NO2 Concentration")) +
+    scale_color_manual(values = c("red4", "blue3", "salmon4")) +
+    scale_x_discrete(name = NULL)+ 
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+          legend.position = c(0.85, 0.88)) +
+    guides(color = FALSE)
+  )
+jpeg(file="07_Figure/monthlymean.jpeg", width = 297, height = 150, units = "mm", quality = 300, res = 300)
+p3
 dev.off()

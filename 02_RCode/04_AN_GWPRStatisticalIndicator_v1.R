@@ -36,6 +36,7 @@ load("04_Results/GWPR_FEM_CV_A_result.Rdata")
 ### get judgement score
 residual.GWPR <- GWPR.FEM.CV.A.result$GWPR.residuals 
 rmse <- sqrt(sum(residual.GWPR$resid^2)/nrow(residual.GWPR))
+mae <- mean(abs(residual.GWPR$resid))
 
 residual.GWPR.2015 <- residual.GWPR %>%
   filter(period < 201600)

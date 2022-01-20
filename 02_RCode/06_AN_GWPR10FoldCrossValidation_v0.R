@@ -318,7 +318,7 @@ while (foldNumberth < 11){
   coeff.train = coefficients(reg)
   N.train = length(train.predict$predictNo2)
   corre.train <- cor(train.predict$predictNo2, train.predict$no2_measured_mg.m3.ori)
-  
+  rmse.train <- sqrt(ss.res/nrow(train.predict))  
   
   test.predict <- left_join(test, coef.CV1, by = "CityCode")
   test.predict <- left_join(test.predict, meanValueOfVariables.use, by = "CityCode")
@@ -342,14 +342,16 @@ while (foldNumberth < 11){
   coeff.test = coefficients(reg)
   N.test = length(test.predict$predictNo2)
   corre.test <- cor(test.predict$predictNo2, test.predict$no2_measured_mg.m3.ori)
-  result <- c(foldNumberth, CVtrain.R2, coeff.train, N.train, corre.train,
-              CVtest.R2, coeff.test, N.test, corre.test)
+  rmse.test <- sqrt(ss.res/nrow(test.predict))
+  result <- c(foldNumberth, CVtrain.R2, coeff.train, N.train, corre.train, rmse.train,
+              CVtest.R2, coeff.test, N.test, corre.test, rmse.test)
   print(result)
   CV.A.result.table <- rbind(CV.A.result.table, result)
   foldNumberth <- foldNumberth + 1
 }
 colnames(CV.A.result.table) <- c("foldNumber", "CVtrain.R2", "train.inter", "train.slope", "N.train", "corre.train",
-                                 "CVtest.R2", "test.inter", "test.slope", "N.test", "corre.test")
+                                 "rmse.train",
+                                 "CVtest.R2", "test.inter", "test.slope", "N.test", "corre.test", "rmse.test")
 save(CV.A.result.table, file = "04_Results/AdaptivefemCrossValidation.Rdata")
 write.csv(CV.A.result.table, file = "08_Tables/AdaptivefemCrossValidation.csv")
 
