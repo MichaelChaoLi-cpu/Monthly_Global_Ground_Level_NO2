@@ -33,9 +33,17 @@
 
 # output: GWPR_FEM_CV_F_result.Rdata
 # note: this is the result of GWPR based on FEM. R2 is 0.8501. Fixed bandwidth is 2.25 arc degrees.
+#       But islands appear.
 
 # output: GWPR_OLS_CV_F_result.Rdata
 # note: this is the result of GWPR based on OLS. R2 is 0.8124. Fixed bandwidth is 2.25 arc degrees.
+#       But islands appear
+
+# output: GWPR_FEM_CV_A_result.Rdata
+# note: this is the result of GWPR based on FEM. R2 is 0.7943. Adaptive bandwidth is 7.
+
+# output: GWPR_OLS_CV_A_result.Rdata
+# note: this is the result of GWPR based on OLS. R2 is 0.7939. Adaptive bandwidth is 7.
 
 # Note: "mg_m2_troposphere_no2" is with high accuracy.
 # Note: in this version, we drop "NTL", because low accuary of interpolation in both coefficient and 
