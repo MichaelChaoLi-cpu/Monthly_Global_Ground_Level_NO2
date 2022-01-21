@@ -15,6 +15,9 @@
 # mergedDataset.Rdata "PBLR" planetary boundary layer height unit is m.
 # mergedDataset.Rdata "CityCode" identity index.
 # mergedDataset.Rdata "period" year * 100 + month, time index. 
+# mergedDataset.Rdata "ug_m2_total_no2" monthly average total column amount of no2 (ug/m2)
+# mergedDataset.Rdata "ug_m2_troposphere_no2" monthly average tropospheric column amount of no2 (ug/m2)
+# mergedDataset.Rdata "no2_measured_ug.m3" (ug/m3)
 
 # input: CityLocationOfficial.csv
 # CityLocationOfficial.csv: "Country", "City", "Latitude", "Longitude"
@@ -50,7 +53,7 @@ proj <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
 #FEM Cross Validation, fixed bw 10
 formula.CV.FEM <-
-  no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + temp +
+  no2_measured_ug.m3 ~ ug_m2_troposphere_no2 + ter_pressure + temp +
   ndvi + precipitation +  PBLH +
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021 + 0
 
@@ -127,7 +130,7 @@ if(run){
     train.predict <- left_join(train, coef.CV1, by = "CityCode")
     train.predict <- left_join(train.predict, meanValueOfVariables.use, by = "CityCode")
     train.predict <- train.predict %>%
-      mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
+      mutate(predictNo2 = ug_m2_troposphere_no2_Coef * (ug_m2_troposphere_no2) + 
                ter_pressure_Coef * (ter_pressure) + 
                temp_Coef * temp +
                ndvi_Coef * (ndvi) +
@@ -135,18 +138,18 @@ if(run){
                PBLH_Coef * (PBLH) +
                Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
                Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
-               Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_mg.m3_mean
+               Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_ug.m3_mean
       )
-    train.predict$no2_measured_mg.m3.ori <- train.predict$no2_measured_mg.m3 + train.predict$no2_measured_mg.m3_mean
-    #ss.tot <- sum((train.predict$no2_measured_mg.m3.ori - mean(train.predict$no2_measured_mg.m3.ori))^2)
-    ss.tot <- sum((train.predict$no2_measured_mg.m3.ori - mean(test.predict$no2_measured_mg.m3))^2)
-    ss.res <- sum((train.predict$no2_measured_mg.m3.ori - train.predict$predictNo2)^2)
+    train.predict$no2_measured_ug.m3.ori <- train.predict$no2_measured_ug.m3 + train.predict$no2_measured_ug.m3_mean
+    #ss.tot <- sum((train.predict$no2_measured_ug.m3.ori - mean(train.predict$no2_measured_ug.m3.ori))^2)
+    ss.tot <- sum((train.predict$no2_measured_ug.m3.ori - mean(test.predict$no2_measured_ug.m3))^2)
+    ss.res <- sum((train.predict$no2_measured_ug.m3.ori - train.predict$predictNo2)^2)
     CVtrain.R2 <- 1 - ss.res/ss.tot
     
     test.predict <- left_join(test, coef.CV1, by = "CityCode")
     test.predict <- left_join(test.predict, meanValueOfVariables.use, by = "CityCode")
     test.predict <- test.predict %>%
-      mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
+      mutate(predictNo2 = ug_m2_troposphere_no2_Coef * (ug_m2_troposphere_no2) + 
                ter_pressure_Coef * (ter_pressure) + 
                temp_Coef * temp +
                ndvi_Coef * (ndvi) +
@@ -154,12 +157,12 @@ if(run){
                PBLH_Coef * (PBLH) +
                Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
                Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
-               Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_mg.m3_mean
+               Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_ug.m3_mean
              )
-    test.predict$no2_measured_mg.m3.ori <- test.predict$no2_measured_mg.m3 + test.predict$no2_measured_mg.m3_mean
-    #ss.tot <- sum((test.predict$no2_measured_mg.m3.ori - mean(test.predict$no2_measured_mg.m3.ori))^2)
-    ss.tot <- sum((test.predict$no2_measured_mg.m3.ori - mean(test.predict$no2_measured_mg.m3))^2)
-    ss.res <- sum((test.predict$no2_measured_mg.m3.ori - test.predict$predictNo2)^2)
+    test.predict$no2_measured_ug.m3.ori <- test.predict$no2_measured_ug.m3 + test.predict$no2_measured_ug.m3_mean
+    #ss.tot <- sum((test.predict$no2_measured_ug.m3.ori - mean(test.predict$no2_measured_ug.m3.ori))^2)
+    ss.tot <- sum((test.predict$no2_measured_ug.m3.ori - mean(test.predict$no2_measured_ug.m3))^2)
+    ss.res <- sum((test.predict$no2_measured_ug.m3.ori - test.predict$predictNo2)^2)
     CVtest.R2 <- 1 - ss.res/ss.tot
     result <- c(foldNumberth, CVtrain.R2, CVtest.R2)
     print(result)
@@ -171,7 +174,7 @@ if(run){
   
   #PoM Cross Validation, fixed bw 2.25 
   formula.CV.PoM <-
-    no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + temp +
+    no2_measured_ug.m3 ~ ug_m2_troposphere_no2 + ter_pressure + temp +
     ndvi + precipitation +  PBLH +
     Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
   rawCrossValidationDataset <- usedDataset %>% 
@@ -222,7 +225,7 @@ if(run){
     
     test.predict <- left_join(test, coef.CV1, by = "CityCode")
     test.predict <- test.predict %>%
-      mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
+      mutate(predictNo2 = ug_m2_troposphere_no2_Coef * (ug_m2_troposphere_no2) + 
                ter_pressure_Coef * (ter_pressure) + 
                temp_Coef * temp +
                ndvi_Coef * (ndvi) +
@@ -233,8 +236,8 @@ if(run){
                Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) +
                Intercept_Coef
       )
-    ss.tot <- sum((test.predict$no2_measured_mg.m3 - mean(test.predict$no2_measured_mg.m3))^2)
-    ss.res <- sum((test.predict$no2_measured_mg.m3 - test.predict$predictNo2)^2)
+    ss.tot <- sum((test.predict$no2_measured_ug.m3 - mean(test.predict$no2_measured_ug.m3))^2)
+    ss.res <- sum((test.predict$no2_measured_ug.m3 - test.predict$predictNo2)^2)
     CVtest.R2 <- 1 - ss.res/ss.tot
     result <- c(foldNumberth, CVtrain.R2, CVtest.R2)
     print(result)
@@ -299,7 +302,7 @@ while (foldNumberth < 11){
   train.predict <- left_join(train, coef.CV1, by = "CityCode")
   train.predict <- left_join(train.predict, meanValueOfVariables.use, by = "CityCode")
   train.predict <- train.predict %>%
-    mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
+    mutate(predictNo2 = ug_m2_troposphere_no2_Coef * (ug_m2_troposphere_no2) + 
              ter_pressure_Coef * (ter_pressure) + 
              temp_Coef * temp +
              ndvi_Coef * (ndvi) +
@@ -307,23 +310,24 @@ while (foldNumberth < 11){
              PBLH_Coef * (PBLH) +
              Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
              Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
-             Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_mg.m3_mean
+             Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_ug.m3_mean
     )
-  train.predict$no2_measured_mg.m3.ori <- train.predict$no2_measured_mg.m3 + train.predict$no2_measured_mg.m3_mean
-  #ss.tot <- sum((train.predict$no2_measured_mg.m3.ori - mean(train.predict$no2_measured_mg.m3.ori))^2)
-  ss.tot <- sum((train.predict$no2_measured_mg.m3.ori - mean(test.predict$no2_measured_mg.m3))^2)
-  ss.res <- sum((train.predict$no2_measured_mg.m3.ori - train.predict$predictNo2)^2)
+  train.predict$no2_measured_ug.m3.ori <- train.predict$no2_measured_ug.m3 + train.predict$no2_measured_ug.m3_mean
+  #ss.tot <- sum((train.predict$no2_measured_ug.m3.ori - mean(train.predict$no2_measured_ug.m3.ori))^2)
+  ss.tot <- sum((train.predict$no2_measured_ug.m3.ori - mean(train.predict$no2_measured_ug.m3))^2)
+  ss.res <- sum((train.predict$no2_measured_ug.m3.ori - train.predict$predictNo2)^2)
   CVtrain.R2 <- 1 - ss.res/ss.tot
-  reg <- lm(predictNo2 ~ no2_measured_mg.m3.ori, data = train.predict)
+  reg <- lm(predictNo2 ~ no2_measured_ug.m3.ori, data = train.predict)
   coeff.train = coefficients(reg)
   N.train = length(train.predict$predictNo2)
-  corre.train <- cor(train.predict$predictNo2, train.predict$no2_measured_mg.m3.ori)
-  rmse.train <- sqrt(ss.res/nrow(train.predict))  
+  corre.train <- cor(train.predict$predictNo2, train.predict$no2_measured_ug.m3.ori)
+  rmse.train <- sqrt(ss.res/nrow(train.predict)) 
+  mae.train <- mean(abs(train.predict$no2_measured_ug.m3.ori - train.predict$predictNo2))
   
   test.predict <- left_join(test, coef.CV1, by = "CityCode")
   test.predict <- left_join(test.predict, meanValueOfVariables.use, by = "CityCode")
   test.predict <- test.predict %>%
-    mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
+    mutate(predictNo2 = ug_m2_troposphere_no2_Coef * (ug_m2_troposphere_no2) + 
              ter_pressure_Coef * (ter_pressure) + 
              temp_Coef * temp +
              ndvi_Coef * (ndvi) +
@@ -331,33 +335,35 @@ while (foldNumberth < 11){
              PBLH_Coef * (PBLH) +
              Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
              Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
-             Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_mg.m3_mean
+             Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_ug.m3_mean
     )
-  test.predict$no2_measured_mg.m3.ori <- test.predict$no2_measured_mg.m3 + test.predict$no2_measured_mg.m3_mean
-  #ss.tot <- sum((test.predict$no2_measured_mg.m3.ori - mean(test.predict$no2_measured_mg.m3.ori))^2)
-  ss.tot <- sum((test.predict$no2_measured_mg.m3.ori - mean(test.predict$no2_measured_mg.m3))^2)
-  ss.res <- sum((test.predict$no2_measured_mg.m3.ori - test.predict$predictNo2)^2)
+  test.predict$no2_measured_ug.m3.ori <- test.predict$no2_measured_ug.m3 + test.predict$no2_measured_ug.m3_mean
+  #ss.tot <- sum((test.predict$no2_measured_ug.m3.ori - mean(test.predict$no2_measured_ug.m3.ori))^2)
+  ss.tot <- sum((test.predict$no2_measured_ug.m3.ori - mean(test.predict$no2_measured_ug.m3))^2)
+  ss.res <- sum((test.predict$no2_measured_ug.m3.ori - test.predict$predictNo2)^2)
   CVtest.R2 <- 1 - ss.res/ss.tot
-  reg <- lm(predictNo2 ~ no2_measured_mg.m3.ori, data = test.predict)
+  reg <- lm(predictNo2 ~ no2_measured_ug.m3.ori, data = test.predict)
   coeff.test = coefficients(reg)
   N.test = length(test.predict$predictNo2)
-  corre.test <- cor(test.predict$predictNo2, test.predict$no2_measured_mg.m3.ori)
+  corre.test <- cor(test.predict$predictNo2, test.predict$no2_measured_ug.m3.ori)
   rmse.test <- sqrt(ss.res/nrow(test.predict))
-  result <- c(foldNumberth, CVtrain.R2, coeff.train, N.train, corre.train, rmse.train,
-              CVtest.R2, coeff.test, N.test, corre.test, rmse.test)
+  mae.test <- mean(abs(test.predict$no2_measured_ug.m3.ori - test.predict$predictNo2))
+  
+  result <- c(foldNumberth, CVtrain.R2, coeff.train, N.train, corre.train, rmse.train, mae.train,
+              CVtest.R2, coeff.test, N.test, corre.test, rmse.test, mae.test)
   print(result)
   CV.A.result.table <- rbind(CV.A.result.table, result)
   foldNumberth <- foldNumberth + 1
 }
 colnames(CV.A.result.table) <- c("foldNumber", "CVtrain.R2", "train.inter", "train.slope", "N.train", "corre.train",
-                                 "rmse.train",
-                                 "CVtest.R2", "test.inter", "test.slope", "N.test", "corre.test", "rmse.test")
+                                 "rmse.train", "mae.train",
+                                 "CVtest.R2", "test.inter", "test.slope", "N.test", "corre.test", "rmse.test", "mae.test")
 save(CV.A.result.table, file = "04_Results/AdaptivefemCrossValidation.Rdata")
 write.csv(CV.A.result.table, file = "08_Tables/AdaptivefemCrossValidation.csv")
 
 #PoM Cross Validation, adaptive bw 7 
 formula.CV.PoM <-
-  no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + ter_pressure + temp +
+  no2_measured_ug.m3 ~ ug_m2_troposphere_no2 + ter_pressure + temp +
   ndvi + precipitation +  PBLH +
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
 rawCrossValidationDataset <- usedDataset %>% 
@@ -408,7 +414,7 @@ while (foldNumberth < 11){
   
   test.predict <- left_join(test, coef.CV1, by = "CityCode")
   test.predict <- test.predict %>%
-    mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
+    mutate(predictNo2 = ug_m2_troposphere_no2_Coef * (ug_m2_troposphere_no2) + 
              ter_pressure_Coef * (ter_pressure) + 
              temp_Coef * temp +
              ndvi_Coef * (ndvi) +
@@ -419,8 +425,8 @@ while (foldNumberth < 11){
              Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) +
              Intercept_Coef
     )
-  ss.tot <- sum((test.predict$no2_measured_mg.m3 - mean(test.predict$no2_measured_mg.m3))^2)
-  ss.res <- sum((test.predict$no2_measured_mg.m3 - test.predict$predictNo2)^2)
+  ss.tot <- sum((test.predict$no2_measured_ug.m3 - mean(test.predict$no2_measured_ug.m3))^2)
+  ss.res <- sum((test.predict$no2_measured_ug.m3 - test.predict$predictNo2)^2)
   CVtest.R2 <- 1 - ss.res/ss.tot
   result <- c(foldNumberth, CVtrain.R2, CVtest.R2)
   print(result)

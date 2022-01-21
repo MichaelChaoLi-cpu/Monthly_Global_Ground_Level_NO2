@@ -24,6 +24,9 @@
 # mergedDataset.Rdata "no2_measured_mg.m3" convert based on the "no2", 
 #                     "ter_pressure", "dayTimeTemperature", and "nightTimeTemperature"
 #                     the unit is mg/m3. equation listed in the code
+# mergedDataset.Rdata "ug_m2_total_no2" monthly average total column amount of no2 (ug/m2)
+# mergedDataset.Rdata "ug_m2_troposphere_no2" monthly average tropospheric column amount of no2 (ug/m2)
+# mergedDataset.Rdata "no2_measured_ug.m3" (ug/m3)
 
 # end
 
@@ -417,5 +420,9 @@ na.test <- mergedDataset%>% dplyr::select(
 )  %>% na.omit()
 na.test$count <- 1
 na.test <- aggregate(na.test$count, by = list(na.test$City, na.test$Country), FUN=sum)
+
+mergedDataset$no2_measured_ug.m3 <- mergedDataset$no2_measured_mg.m3 * 1000
+mergedDataset$ug_m2_troposphere_no2 <- mergedDataset$mg_m2_troposphere_no2 * 1000
+mergedDataset$ug_m2_total_no2 <- mergedDataset$mg_m2_total_no2 * 1000
 
 save(mergedDataset, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/mergedDataset.Rdata")

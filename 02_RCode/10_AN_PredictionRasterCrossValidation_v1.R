@@ -1,7 +1,7 @@
 # Author: M.L.
 
 # input: COEF_raster.RData
-# COEF_raster.RData: "CO_mg_m2_troposphere_no2.kriged.raster" interpolation of troposheric no2 coefficient
+# COEF_raster.RData: "CO_ug_m2_troposphere_no2.kriged.raster" interpolation of troposheric no2 coefficient
 #                                                             based on ordinary kriging
 # COEF_raster.RData: "CO_ndvi.kriged.raster" interpolation of ndvi coefficient based on ordinary kriging (OK)
 # COEF_raster.RData: "CO_temp.kriged.raster" interpolation of night temperature coefficient (OK)
@@ -16,7 +16,7 @@
 # COEF_raster.RData: "CO_Y2021.kriged.raster" interpolation of 2021 dummy variable coefficient (OK)
 
 # output: MEAN_raster.RData
-# MEAN_raster.RData: "MEAN_mg_m2_troposphere_no2.kriged.raster" interpolation of troposheric no2 mean value
+# MEAN_raster.RData: "MEAN_ug_m2_troposphere_no2.kriged.raster" interpolation of troposheric no2 mean value
 #                                                               in the usedDataset based on ordinary kriging (OK)
 # MEAN_raster.RData: "MEAN_ndvi.kriged.raster" interpolation of ndvi mean value (OK)
 # MEAN_raster.RData: "MEAN_temp.kriged.raster" interpolation of temperature mean value (OK)
@@ -45,9 +45,9 @@ makePredictRaster <- function(aim_year, aim_month){
   raster_troposphere_no2 <- flip(raster_troposphere_no2, direction = 'y')
   mol_g = 6.022140857 * 10^23  # mol
   raster_troposphere_no2 <- raster_troposphere_no2 / mol_g * 46.0055 # convert mol to g
-  raster_troposphere_no2 <- raster_troposphere_no2 * 10000 * 1000 # conver /cm2 to /m2 and g to mg
-  predict_part_troposphere_no2 <- (raster_troposphere_no2 - MEAN_mg_m2_troposphere_no2.kriged.raster) *
-    CO_mg_m2_troposphere_no2.kriged.raster
+  raster_troposphere_no2 <- raster_troposphere_no2 * 10000 * 1000000 # conver /cm2 to /m2 and g to ug
+  predict_part_troposphere_no2 <- (raster_troposphere_no2 - MEAN_ug_m2_troposphere_no2.kriged.raster) *
+    CO_ug_m2_troposphere_no2.kriged.raster
   
   raster_ter_pressure_folder <- 
     "D:/10_Article/09_TempOutput/03_MonthlyTerrainPressureTif/OMI-Aura_L2G-OMNO2G_"
@@ -129,7 +129,7 @@ makePredictRaster <- function(aim_year, aim_month){
   {
     predict.raster <- predict.raster + CO_Y2021.kriged.raster
   }
-  predict.raster <- predict.raster + MEAN_no2_measured_mg.m3.kriged.raster
+  predict.raster <- predict.raster + MEAN_no2_measured_ug.m3.kriged.raster
   values(predict.raster)[values(predict.raster) < 0] = 0
   return(predict.raster)
 }
@@ -233,11 +233,11 @@ mergedDataset$month <- mergedDataset$month %>% as.character() %>% as.numeric()
 mergedDataset$year <- mergedDataset$year %>% as.character() %>% as.numeric()
 testDataset <- left_join(mergedDataset, predictGroundNo2, by = c("Country", "City", "year", "month"))
 testDataset <- testDataset %>%
-  filter(!is.na(no2_measured_mg.m3)) %>%
+  filter(!is.na(no2_measured_ug.m3)) %>%
   filter(!is.na(predict_no2))
-testDataset$residuals <- testDataset$predict_no2 - testDataset$no2_measured_mg.m3
+testDataset$residuals <- testDataset$predict_no2 - testDataset$no2_measured_ug.m3
 testDataset <- testDataset %>%
-  dplyr::select(Country, City, year, month, CityCode, no2_measured_mg.m3,
+  dplyr::select(Country, City, year, month, CityCode, no2_measured_ug.m3,
                 predict_no2, residuals)
 load("03_Rawdata/usedDataset.Rdata")
 inFlag <- usedDataset %>% dplyr::select(CityCode) %>% distinct()
@@ -246,12 +246,12 @@ testDataset <- left_join(testDataset, inFlag, by = "CityCode")
 testDataset <- testDataset %>%
   filter(flag == 1)
 
-cor.test(testDataset$no2_measured_mg.m3, abs(testDataset$residuals))
-cor.test(testDataset$no2_measured_mg.m3, testDataset$predict_no2)
-lm(no2_measured_mg.m3 ~ predict_no2, testDataset) %>% summary()
-r2 <- 1 - sum( (testDataset$no2_measured_mg.m3 - testDataset$predict_no2)^2 ) /
-  sum((testDataset$no2_measured_mg.m3 - mean(testDataset$no2_measured_mg.m3))^2)
-plot(testDataset$no2_measured_mg.m3, testDataset$predict_no2)
+cor.test(testDataset$no2_measured_ug.m3, abs(testDataset$residuals))
+cor.test(testDataset$no2_measured_ug.m3, testDataset$predict_no2)
+lm(no2_measured_ug.m3 ~ predict_no2, testDataset) %>% summary()
+r2 <- 1 - sum( (testDataset$no2_measured_ug.m3 - testDataset$predict_no2)^2 ) /
+  sum((testDataset$no2_measured_ug.m3 - mean(testDataset$no2_measured_ug.m3))^2)
+plot(testDataset$no2_measured_ug.m3, testDataset$predict_no2)
 save(testDataset, file = "04_Results/FinalRasterCrossValidation.Rdata")
 
 #jpg.list <- list.files(predict_jpg_folder)

@@ -15,6 +15,9 @@
 # mergedDataset.Rdata "PBLH" planetary boundary layer height unit is m.
 # mergedDataset.Rdata "CityCode" identity index.
 # mergedDataset.Rdata "period" year * 100 + month, time index. 
+# mergedDataset.Rdata "ug_m2_total_no2" monthly average total column amount of no2 (ug/m2)
+# mergedDataset.Rdata "ug_m2_troposphere_no2" monthly average tropospheric column amount of no2 (ug/m2)
+# mergedDataset.Rdata "no2_measured_ug.m3" (ug/m3)
 
 # input CityLocationOfficial.csv
 # CityLocationOfficial.csv: "Country", "City", "Latitude", "Longitude"
@@ -32,18 +35,18 @@
 # GWPR_BW_setp_list.Rdata: "ScoreVector" CV score.
 
 # output: GWPR_FEM_CV_F_result.Rdata
-# note: this is the result of GWPR based on FEM. R2 is 0.8501. Fixed bandwidth is 2.25 arc degrees.
+# note: this is the result of GWPR based on FEM. R2 is 0.8167. Fixed bandwidth is 2.25 arc degrees.
 #       But islands appear.
 
 # output: GWPR_OLS_CV_F_result.Rdata
-# note: this is the result of GWPR based on OLS. R2 is 0.8124. Fixed bandwidth is 2.25 arc degrees.
+# note: this is the result of GWPR based on OLS. R2 is 0.7436. Fixed bandwidth is 2.25 arc degrees.
 #       But islands appear
 
 # output: GWPR_FEM_CV_A_result.Rdata
-# note: this is the result of GWPR based on FEM. R2 is 0.7943. Adaptive bandwidth is 7.
+# note: this is the result of GWPR based on FEM. R2 is 0.7445. Adaptive bandwidth is 7.
 
 # output: GWPR_OLS_CV_A_result.Rdata
-# note: this is the result of GWPR based on OLS. R2 is 0.7939. Adaptive bandwidth is 7.
+# note: this is the result of GWPR based on OLS. R2 is 0.7004. Adaptive bandwidth is 7.
 
 # Note: "mg_m2_troposphere_no2" is with high accuracy.
 # Note: in this version, we drop "NTL", because low accuary of interpolation in both coefficient and 
@@ -64,7 +67,16 @@ library(foreach)
 
 load("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/mergedDataset.Rdata")
 
-na.test <- mergedDataset %>% na.omit()
+na.test <- mergedDataset %>% dplyr::select(
+  no2_measured_ug.m3,
+  no2, ug_m2_total_no2, ug_m2_troposphere_no2,
+  #ug_m2_total_no2_lag, ug_m2_troposphere_no2_lag,
+  ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
+  precipitation, PBLH, #speedwind, humidity,  NTL,
+  #UVAerosolIndex, ozone, cloudfraction, cloudpressure,
+  CityCode, City, Country, 
+  month, year, Date, Y2016, Y2017, Y2018, Y2019, Y2020, Y2021
+) %>% na.omit()
 na.test$count <- 1
 na.test <- aggregate(na.test$count, by = list(na.test$City, na.test$Country), FUN=sum)
 colnames(na.test) <- c("City", "Country", "RecordCount")
@@ -73,9 +85,9 @@ na.test <- na.test %>% filter(RecordCount > 5) #freedom
 usedDataset <- left_join(mergedDataset, na.test, by = c("City", "Country"))
 usedDataset <- usedDataset %>% filter(!is.na(RecordCount))
 usedDataset <- usedDataset %>% dplyr::select(
-  no2_measured_mg.m3,
-  no2, mg_m2_total_no2, mg_m2_troposphere_no2,
-  #mg_m2_total_no2_lag, mg_m2_troposphere_no2_lag,
+  no2_measured_ug.m3,
+  no2, ug_m2_total_no2, ug_m2_troposphere_no2,
+  #ug_m2_total_no2_lag, ug_m2_troposphere_no2_lag,
   ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
   precipitation, PBLH, #speedwind, humidity,  NTL,
   #UVAerosolIndex, ozone, cloudfraction, cloudpressure,
@@ -155,8 +167,13 @@ plot(cityLocationSpatialPoint)
 save(usedDataset, file = "03_Rawdata/usedDataset.RData")
 save(cityLocationSpatialPoint, file = "03_Rawdata/cityLocationSpatialPoint.Rdata")
 
+na.test <- usedDataset %>% na.omit()
+na.test$count <- 1
+na.test <- aggregate(na.test$count, by = list(na.test$City, na.test$Country), FUN=sum)
+colnames(na.test) <- c("City", "Country", "RecordCount")
+
 pdata <- pdata.frame(usedDataset, index = c("CityCode", "Date"))
-formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + 
+formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 + 
   ter_pressure + 
   temp +
   ndvi + precipitation + PBLH + 
@@ -222,7 +239,7 @@ if (run){
   #note: the REM requires very high freedom. therefore, the bandwidth should be super large, since the points are
   #      not evenly distributed.
   
-  formula.total <- no2_measured_mg.m3 ~ mg_m2_total_no2 + 
+  formula.total <- no2_measured_ug.m3 ~ ug_m2_total_no2 + 
     ter_pressure + ndvi +  precipitation + NTL + PBLH +
     #UVAerosolIndex + ozone + dayTimeTemperature + nightTimeTemperature + humidity + speedwind +
     #cloudfraction + cloudpressure + # add this two variables effect are limited, only increase 0.2% R2
@@ -277,7 +294,7 @@ GWPR.OLS.CV.A.result <- GWPR(formula = formula, data = usedDataset, index = c("C
                              model = "pooling")
 save(GWPR.OLS.CV.A.result, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/04_Results/GWPR_OLS_CV_A_result.Rdata")
 
-formula.total <- no2_measured_mg.m3 ~ mg_m2_total_no2 + 
+formula.total <- no2_measured_ug.m3 ~ ug_m2_total_no2 + 
   ter_pressure + temp +
   ndvi + precipitation + PBLH +
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
@@ -314,7 +331,7 @@ if(run){
   ### this indicate that FEM is better than REM in most samples
 }
 
-
+# the result are included in the GWPR.result$resid
 rawCrossValidationDataset <- usedDataset %>% 
   dplyr::select("CityCode", "period", all.vars(formula))
 meanValueOfVariables <- stats::aggregate(rawCrossValidationDataset[,all.vars(formula)],
@@ -344,7 +361,7 @@ meanValueOfVariables.use <- meanValueOfVariables.use %>% dplyr::select(-"period_
 data.predict <- left_join(femTransformationDataset, coef.CV1, by = "CityCode")
 data.predict <- left_join(data.predict, meanValueOfVariables.use, by = "CityCode")
 data.predict <- data.predict %>%
-  mutate(predictNo2 = mg_m2_troposphere_no2_Coef * (mg_m2_troposphere_no2) + 
+  mutate(predictNo2 = ug_m2_troposphere_no2_Coef * (ug_m2_troposphere_no2) + 
            ter_pressure_Coef * (ter_pressure) + 
            temp_Coef * temp +
            ndvi_Coef * (ndvi) +
@@ -352,8 +369,8 @@ data.predict <- data.predict %>%
            PBLH_Coef * (PBLH) +
            Y2016_Coef * (Y2016) + Y2017_Coef * (Y2017) +
            Y2018_Coef * (Y2018) + Y2019_Coef * (Y2019) +
-           Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_mg.m3_mean
+           Y2020_Coef * (Y2020) + Y2021_Coef * (Y2021) + no2_measured_ug.m3_mean
   )
-data.predict$no2_measured_mg.m3.ori <- data.predict$no2_measured_mg.m3 + data.predict$no2_measured_mg.m3_mean
-cor.test(data.predict$predictNo2, data.predict$no2_measured_mg.m3.ori)
+data.predict$no2_measured_ug.m3.ori <- data.predict$no2_measured_ug.m3 + data.predict$no2_measured_ug.m3_mean
+cor.test(data.predict$predictNo2, data.predict$no2_measured_ug.m3.ori)
 save(data.predict, file = "04_Results/dataPrediction.Rdata")

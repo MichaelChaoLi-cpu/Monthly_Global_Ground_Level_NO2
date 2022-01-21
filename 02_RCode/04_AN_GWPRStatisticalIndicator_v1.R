@@ -8,6 +8,7 @@
 # judgement.score.csv: "N" the year data size
 # judgement.score.csv: "R2" R2, calculated following the article
 # judgement.score.csv: "RMSE" RMSE, calculated following the article
+# judgement.score.csv: "MAE" MAE, calculated following the article
 # judgement.score.csv: "r" correlation coefficient
 # judgement.score.csv: "Slope" the slope from the OLS between measured and predicted values
 # judgement.score.csv: "Intercept" the intercept from the OLS between measured and predicted values
@@ -21,13 +22,14 @@ year.judgement.score <- function(residual.dataset){
   r2 <- 1 - sum( (residual.dataset$resid)^2 ) /
     sum((residual.dataset$y - mean(residual.dataset$y))^2)
   rmse <- sqrt(sum(residual.dataset$resid^2)/nrow(residual.dataset))
+  mae <- mean(abs(residual.dataset$resid))
   cor.score <- cor.test(residual.dataset$y, residual.dataset$yhat)
   cor.score <- cor.score$estimate %>% as.numeric()
   reg <- lm(yhat ~ y, data = residual.dataset )
   coeff = coefficients(reg)
   N <- nrow(residual.dataset)
   year <- round(residual.dataset$period[1]/100,0)
-  line.result <- c(year, N, r2, rmse, cor.score, coeff[2], coeff[1])
+  line.result <- c(year, N, r2, rmse, mae, cor.score, coeff[2], coeff[1])
   return(line.result)
 }
 
@@ -60,8 +62,9 @@ line.2018 <- year.judgement.score(residual.GWPR.2018)
 line.2019 <- year.judgement.score(residual.GWPR.2019)
 line.2020 <- year.judgement.score(residual.GWPR.2020)
 line.2021 <- year.judgement.score(residual.GWPR.2021)
+line.total <- year.judgement.score(residual.GWPR)
 
 judgement.score <- rbind(line.2015, line.2016, line.2017, line.2018,
-                         line.2019, line.2020, line.2021)
-colnames(judgement.score) <- c("Year", "N", "R2", "RMSE", "r", "Slope", "Intercept")
+                         line.2019, line.2020, line.2021, line.total)
+colnames(judgement.score) <- c("Year", "N", "R2", "RMSE", "MAE", "r", "Slope", "Intercept")
 write.csv(judgement.score, file = "08_Tables/judgement.score.csv")
