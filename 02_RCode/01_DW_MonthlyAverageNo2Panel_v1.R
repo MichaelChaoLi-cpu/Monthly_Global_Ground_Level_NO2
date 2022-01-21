@@ -48,5 +48,5 @@ rm(totalAirPollutionDataset)
 rm(filelist)
 rm(singlefile)
 
+save(totalNo2Dataset, file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/PanelNo2Dataset.Rdata")
 setwd("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub")
-save.image("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/PanelNo2Dataset.Rdata")

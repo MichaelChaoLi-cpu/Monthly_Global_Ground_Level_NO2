@@ -316,8 +316,8 @@ if(run){
 
 
 rawCrossValidationDataset <- usedDataset %>% 
-  dplyr::select("CityCode", "period", all.vars(formula.CV.FEM))
-meanValueOfVariables <- stats::aggregate(rawCrossValidationDataset[,all.vars(formula.CV.FEM)],
+  dplyr::select("CityCode", "period", all.vars(formula))
+meanValueOfVariables <- stats::aggregate(rawCrossValidationDataset[,all.vars(formula)],
                                          by = list(rawCrossValidationDataset$CityCode), mean)
 colnames(meanValueOfVariables)[1] <- "CityCode"
 meanValueOfVariablesCity <- meanValueOfVariables

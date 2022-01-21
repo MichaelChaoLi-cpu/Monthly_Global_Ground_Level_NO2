@@ -61,6 +61,8 @@ originalFileLocation = "D:/10_Article/09_TempOutput/07_MonthlyPrecipitationTif"
 outputFileLocation = "D:/10_Article/09_TempOutput/07_MonthlyPrecipitationTif/Add025Outline/"
 
 fileList = glob.glob(originalFileLocation + "/*.tif")
+#fileList = fileList[-2:]
+######### Add Oct and Nov 2021
 
 for file in fileList:
     raster = gdal.Open(file, gdal.GA_ReadOnly)

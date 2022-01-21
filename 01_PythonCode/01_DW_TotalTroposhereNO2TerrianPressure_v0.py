@@ -32,6 +32,7 @@ for raster in rasterFilesRaw:
     if raster[-3:] == "he5":
         rasterFiles.append(raster)
 #print(rasterFiles)
+#rasterFiles = rasterFiles[-61:]
 
 rasterFilePre = rasterFiles[1][:20]
 totalNo2FileExtension = "_WGS84_.25.25_monthly_total_no2.tif"

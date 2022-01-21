@@ -26,6 +26,7 @@ nband = 1
 
 FileList = glob.glob("D:/10_Article/09_TempOutput/10_PlanetaryBoundaryLayerHeight/Temp/*.nc4")
 outputPBLHGeoTiffFileFolder = "D:/10_Article/09_TempOutput/10_PlanetaryBoundaryLayerHeight/RawData/"
+FileList = FileList [-6:]
 
 for nc4File in FileList:
     #nc4File = FileList[0]
@@ -46,6 +47,7 @@ for nc4File in FileList:
 #Resampling to 0.25 bilinear 
 FileList = glob.glob("D:/10_Article/09_TempOutput/10_PlanetaryBoundaryLayerHeight/RawData/*.tif")
 outputPBLHGeoTiffFileFolder = "D:/10_Article/09_TempOutput/10_PlanetaryBoundaryLayerHeight/Resample/"
+FileList = FileList [-6:]
 
 for GeoTiffFile in FileList:
     

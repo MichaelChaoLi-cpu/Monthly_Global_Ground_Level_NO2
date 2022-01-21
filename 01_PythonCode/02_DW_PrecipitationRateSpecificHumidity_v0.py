@@ -40,6 +40,8 @@ for raster in rasterFilesRaw:
     if raster[-3:] == "nc4":
         rasterFiles.append(raster)
 #print(rasterFiles)
+# rasterFiles = rasterFiles[-2:]
+######### Add Oct and Nov 2021
 
 for raster in rasterFiles:
     nc4File = inputNc4FileFolder + '/' + raster

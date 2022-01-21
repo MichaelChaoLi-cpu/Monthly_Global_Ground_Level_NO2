@@ -384,11 +384,11 @@ cor.test(mergedDataset$ozone, mergedDataset$no2)
 mergedDataset <- left_join(mergedDataset, UVAerosolIndexRasterDataset, by = c("Country", "City", "year", "month"))
 cor.test(mergedDataset$UVAerosolIndex, mergedDataset$no2)
 
-# convert into ug/m3 (https://www.ccohs.ca/oshanswers/chemicals/convert.html)
-Pcoef = 0.00750061683
+# convert into mg/m3 (https://www.ccohs.ca/oshanswers/chemicals/convert.html)
+Pcoef = 0.750061683
 MW = 46.0055
 mergedDataset$no2_measured_mg.m3 <-
-  Pcoef * mergedDataset$ter_pressure * MW * mergedDataset$no2 /
+  Pcoef * mergedDataset$ter_pressure * MW * mergedDataset$no2/ 1000 /
   (62.4 * (273.16 + mergedDataset$dayTimeTemperature/2 + mergedDataset$nightTimeTemperature/2))
 
 mergedDataset$month <- mergedDataset$month %>% as.factor()
@@ -405,7 +405,16 @@ mergedDataset <- mergedDataset %>%
 
 mergedDataset %>% summary()
 
-na.test <- mergedDataset %>% na.omit()
+na.test <- mergedDataset%>% dplyr::select(
+  no2_measured_mg.m3,
+  no2, mg_m2_total_no2, mg_m2_troposphere_no2,
+  #mg_m2_total_no2_lag, mg_m2_troposphere_no2_lag,
+  ter_pressure, dayTimeTemperature, nightTimeTemperature, ndvi,
+  precipitation, PBLH, #speedwind, humidity,  NTL,
+  #UVAerosolIndex, ozone, cloudfraction, cloudpressure,
+  CityCode, City, Country, 
+  month, year, Date, Y2016, Y2017, Y2018, Y2019, Y2020, Y2021
+)  %>% na.omit()
 na.test$count <- 1
 na.test <- aggregate(na.test$count, by = list(na.test$City, na.test$Country), FUN=sum)
 
