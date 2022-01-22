@@ -107,27 +107,33 @@ makePredictRaster <- function(aim_year, aim_month){
   
   if (aim_year == "2016")
   {
-    predict.raster <- predict.raster + CO_Y2016.kriged.raster
+    predict.raster <- predict.raster + CO_Y2016.kriged.raster * 
+      (1 - MEAN_Y2016.kriged.raster)
   }
   if (aim_year == "2017")
   {
-    predict.raster <- predict.raster + CO_Y2017.kriged.raster
+    predict.raster <- predict.raster + CO_Y2017.kriged.raster * 
+      (1 - MEAN_Y2017.kriged.raster)
   }
   if (aim_year == "2018")
   {
-    predict.raster <- predict.raster + CO_Y2018.kriged.raster
+    predict.raster <- predict.raster + CO_Y2018.kriged.raster * 
+      (1 - MEAN_Y2018.kriged.raster)
   }
   if (aim_year == "2019")
   {
-    predict.raster <- predict.raster + CO_Y2019.kriged.raster
+    predict.raster <- predict.raster + CO_Y2019.kriged.raster * 
+      (1 - MEAN_Y2019.kriged.raster)
   }
   if (aim_year == "2020")
   {
-    predict.raster <- predict.raster + CO_Y2020.kriged.raster
+    predict.raster <- predict.raster + CO_Y2020.kriged.raster * 
+      (1 - MEAN_Y2020.kriged.raster)
   }
   if (aim_year == "2021")
   {
-    predict.raster <- predict.raster + CO_Y2021.kriged.raster
+    predict.raster <- predict.raster + CO_Y2021.kriged.raster * 
+      (1 - MEAN_Y2021.kriged.raster)
   }
   predict.raster <- predict.raster + MEAN_no2_measured_ug.m3.kriged.raster
   values(predict.raster)[values(predict.raster) < 0] = 0
@@ -170,10 +176,10 @@ extractPointDataFromRaster <- function(RasterFolder, filelist, cityLocationSpati
 
 month.list <- c("01", "02", "03", "04", "05", "06",
                 "07", "08", "09", "10", "11", "12")
-year.list <- c("2015", "2016", "2017", "2018", "2019", "2020")
+year.list <- c("2015", "2016", "2017", "2018", "2019", "2020", "2021")
 predict_raster_folder <- "D:/10_Article/11_PredictRaster/01_Test0104/"
 predict_jpg_folder <- "D:/10_Article/11_PredictRaster/02_Test0104JPG/"
-brks = c(0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3)
+brks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 260)
 pal <- colorRampPalette(c("blue","green","yellow","red"))
 
 for (aim_year in year.list){
@@ -183,24 +189,12 @@ for (aim_year in year.list){
                 format="GTiff", overwrite=TRUE)
     jpeg(paste0(predict_jpg_folder,aim_year,aim_month,".jpg"), 
          quality = 300, width = 1800, height = 1000)
-    plot(predict.raster, breaks = brks, col = pal(13))
+    plot(predict.raster, breaks = brks, col = pal(12))
     title(paste0(aim_year, "-", aim_month))
     dev.off()
   }
 }
 
-month.list <- c("01", "02", "03", "04", "05")
-for (aim_month in month.list){
-  aim_year = "2021"
-  predict.raster <- makePredictRaster(aim_year, aim_month = aim_month)
-  writeRaster(predict.raster, filename = paste0(predict_raster_folder,aim_year,aim_month,".tif"),
-              format="GTiff", overwrite=TRUE)
-  jpeg(paste0(predict_jpg_folder,aim_year,aim_month,".jpg"), 
-       quality = 300, width = 1800, height = 1000)
-  plot(predict.raster, breaks = brks, col = pal(13))
-  title(paste0(aim_year, "-", aim_month))
-  dev.off()
-}
 
 cityLocation <- read.csv("D:/10_Article/01_RawData/12_LocationJson/CityLocationOfficial.csv",
                          encoding="UTF-8") %>%
@@ -228,10 +222,10 @@ filelist <- list.files(predict_raster_folder)
 predictGroundNo2 <- 
   extractPointDataFromRaster(predict_raster_folder, filelist, cityLocationSpatialPoint,
                              1, 5, F, "predict_no2")
-load("03_Rawdata/mergedDataset.Rdata")
-mergedDataset$month <- mergedDataset$month %>% as.character() %>% as.numeric()
-mergedDataset$year <- mergedDataset$year %>% as.character() %>% as.numeric()
-testDataset <- left_join(mergedDataset, predictGroundNo2, by = c("Country", "City", "year", "month"))
+load("03_Rawdata/usedDataset.Rdata")
+usedDataset$month <- usedDataset$month %>% as.character() %>% as.numeric()
+usedDataset$year <- usedDataset$year %>% as.character() %>% as.numeric()
+testDataset <- left_join(usedDataset, predictGroundNo2, by = c("City", "Country", "year", "month"))
 testDataset <- testDataset %>%
   filter(!is.na(no2_measured_ug.m3)) %>%
   filter(!is.na(predict_no2))
@@ -251,6 +245,9 @@ cor.test(testDataset$no2_measured_ug.m3, testDataset$predict_no2)
 lm(no2_measured_ug.m3 ~ predict_no2, testDataset) %>% summary()
 r2 <- 1 - sum( (testDataset$no2_measured_ug.m3 - testDataset$predict_no2)^2 ) /
   sum((testDataset$no2_measured_ug.m3 - mean(testDataset$no2_measured_ug.m3))^2)
+r2
+(sum( (testDataset$no2_measured_ug.m3 - testDataset$predict_no2)^2 ) / nrow(testDataset)) %>% sqrt()
+mean( abs( (testDataset$no2_measured_ug.m3 - testDataset$predict_no2) ) )
 plot(testDataset$no2_measured_ug.m3, testDataset$predict_no2)
 save(testDataset, file = "04_Results/FinalRasterCrossValidation.Rdata")
 

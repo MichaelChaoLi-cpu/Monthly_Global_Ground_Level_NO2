@@ -427,13 +427,250 @@ MEAN_PBLH.kriged.raster <- raster(PBLH.kriged.raster)
 rm(PBLH_emp_OK, dat.fit, PBLH.kriged, 
    PBLH.kriged.raster)
 
+### Y2016
+Y2016_emp_OK <- gstat::variogram(
+  Y2016 ~ 1, meanValueSpatialDataFrame
+)
+plot(Y2016_emp_OK)
+dat.fit  <- fit.variogram(Y2016_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
+                          vgm(model = "Sph"))
+out <- 
+  krige.cv(Y2016 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MAE <- mean(abs(out$residual))
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+Y2016.kriged <- 
+  krige(Y2016~1, meanValueSpatialDataFrame, coords, 
+        model = dat.fit)
+Y2016.kriged@data$Ttest <- Y2016.kriged@data$var1.pred / 
+  Y2016.kriged@data$var1.var
+Y2016.kriged.raster <- as(Y2016.kriged, 'SpatialPixelsDataFrame')
+Y2016.kriged.raster <- as(Y2016.kriged.raster, "SpatialGridDataFrame")
+predict.value <- over(meanValueSpatialDataFrame, Y2016.kriged.raster)
+meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
+# R2
+onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2016)^2) / 
+  sum( ( meanValueSpatialDataFrame$Y2016 - mean(meanValueSpatialDataFrame$Y2016) )^2 )
+cv.line <- c("Y2016.mean", mean_error, MAE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
+cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2016)
+Y2016.kriged.raster@data <- Y2016.kriged.raster@data %>% dplyr::select(var1.pred)
+MEAN_Y2016.kriged.raster <- raster(Y2016.kriged.raster)
+rm(Y2016_emp_OK, dat.fit, Y2016.kriged, 
+   Y2016.kriged.raster)
+
+### Y2017
+Y2017_emp_OK <- gstat::variogram(
+  Y2017 ~ 1, meanValueSpatialDataFrame
+)
+plot(Y2017_emp_OK)
+dat.fit  <- fit.variogram(Y2017_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
+                          vgm(model = "Sph"))
+out <- 
+  krige.cv(Y2017 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MAE <- mean(abs(out$residual))
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+Y2017.kriged <- 
+  krige(Y2017~1, meanValueSpatialDataFrame, coords, 
+        model = dat.fit)
+Y2017.kriged@data$Ttest <- Y2017.kriged@data$var1.pred / 
+  Y2017.kriged@data$var1.var
+Y2017.kriged.raster <- as(Y2017.kriged, 'SpatialPixelsDataFrame')
+Y2017.kriged.raster <- as(Y2017.kriged.raster, "SpatialGridDataFrame")
+predict.value <- over(meanValueSpatialDataFrame, Y2017.kriged.raster)
+meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
+# R2
+onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2017)^2) / 
+  sum( ( meanValueSpatialDataFrame$Y2017 - mean(meanValueSpatialDataFrame$Y2017) )^2 )
+cv.line <- c("Y2017.mean", mean_error, MAE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
+cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2017)
+Y2017.kriged.raster@data <- Y2017.kriged.raster@data %>% dplyr::select(var1.pred)
+MEAN_Y2017.kriged.raster <- raster(Y2017.kriged.raster)
+rm(Y2017_emp_OK, dat.fit, Y2017.kriged, 
+   Y2017.kriged.raster)
+
+### Y2018
+Y2018_emp_OK <- gstat::variogram(
+  Y2018 ~ 1, meanValueSpatialDataFrame
+)
+plot(Y2018_emp_OK)
+dat.fit  <- fit.variogram(Y2018_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
+                          vgm(model = "Sph"))
+out <- 
+  krige.cv(Y2018 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MAE <- mean(abs(out$residual))
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+Y2018.kriged <- 
+  krige(Y2018~1, meanValueSpatialDataFrame, coords, 
+        model = dat.fit)
+Y2018.kriged@data$Ttest <- Y2018.kriged@data$var1.pred / 
+  Y2018.kriged@data$var1.var
+Y2018.kriged.raster <- as(Y2018.kriged, 'SpatialPixelsDataFrame')
+Y2018.kriged.raster <- as(Y2018.kriged.raster, "SpatialGridDataFrame")
+predict.value <- over(meanValueSpatialDataFrame, Y2018.kriged.raster)
+meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
+# R2
+onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2018)^2) / 
+  sum( ( meanValueSpatialDataFrame$Y2018 - mean(meanValueSpatialDataFrame$Y2018) )^2 )
+cv.line <- c("Y2018.mean", mean_error, MAE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
+cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2018)
+Y2018.kriged.raster@data <- Y2018.kriged.raster@data %>% dplyr::select(var1.pred)
+MEAN_Y2018.kriged.raster <- raster(Y2018.kriged.raster)
+rm(Y2018_emp_OK, dat.fit, Y2018.kriged, 
+   Y2018.kriged.raster)
+
+### Y2019
+Y2019_emp_OK <- gstat::variogram(
+  Y2019 ~ 1, meanValueSpatialDataFrame
+)
+plot(Y2019_emp_OK)
+dat.fit  <- fit.variogram(Y2019_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
+                          vgm(model = "Sph"))
+out <- 
+  krige.cv(Y2019 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MAE <- mean(abs(out$residual))
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+Y2019.kriged <- 
+  krige(Y2019~1, meanValueSpatialDataFrame, coords, 
+        model = dat.fit)
+Y2019.kriged@data$Ttest <- Y2019.kriged@data$var1.pred / 
+  Y2019.kriged@data$var1.var
+Y2019.kriged.raster <- as(Y2019.kriged, 'SpatialPixelsDataFrame')
+Y2019.kriged.raster <- as(Y2019.kriged.raster, "SpatialGridDataFrame")
+predict.value <- over(meanValueSpatialDataFrame, Y2019.kriged.raster)
+meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
+# R2
+onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2019)^2) / 
+  sum( ( meanValueSpatialDataFrame$Y2019 - mean(meanValueSpatialDataFrame$Y2019) )^2 )
+cv.line <- c("Y2019.mean", mean_error, MAE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
+cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2019)
+Y2019.kriged.raster@data <- Y2019.kriged.raster@data %>% dplyr::select(var1.pred)
+MEAN_Y2019.kriged.raster <- raster(Y2019.kriged.raster)
+rm(Y2019_emp_OK, dat.fit, Y2019.kriged, 
+   Y2019.kriged.raster)
+
+### Y2020
+Y2020_emp_OK <- gstat::variogram(
+  Y2020 ~ 1, meanValueSpatialDataFrame
+)
+plot(Y2020_emp_OK)
+dat.fit  <- fit.variogram(Y2020_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
+                          vgm(model = "Sph"))
+out <- 
+  krige.cv(Y2020 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MAE <- mean(abs(out$residual))
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+Y2020.kriged <- 
+  krige(Y2020~1, meanValueSpatialDataFrame, coords, 
+        model = dat.fit)
+Y2020.kriged@data$Ttest <- Y2020.kriged@data$var1.pred / 
+  Y2020.kriged@data$var1.var
+Y2020.kriged.raster <- as(Y2020.kriged, 'SpatialPixelsDataFrame')
+Y2020.kriged.raster <- as(Y2020.kriged.raster, "SpatialGridDataFrame")
+predict.value <- over(meanValueSpatialDataFrame, Y2020.kriged.raster)
+meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
+# R2
+onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2020)^2) / 
+  sum( ( meanValueSpatialDataFrame$Y2020 - mean(meanValueSpatialDataFrame$Y2020) )^2 )
+cv.line <- c("Y2020.mean", mean_error, MAE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
+cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2020)
+Y2020.kriged.raster@data <- Y2020.kriged.raster@data %>% dplyr::select(var1.pred)
+MEAN_Y2020.kriged.raster <- raster(Y2020.kriged.raster)
+rm(Y2020_emp_OK, dat.fit, Y2020.kriged, 
+   Y2020.kriged.raster)
+
+### Y2021
+Y2021_emp_OK <- gstat::variogram(
+  Y2021 ~ 1, meanValueSpatialDataFrame
+)
+plot(Y2021_emp_OK)
+dat.fit  <- fit.variogram(Y2021_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
+                          vgm(model = "Sph"))
+out <- 
+  krige.cv(Y2021 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
+           model = dat.fit)
+mean_error <- mean(out$residual)
+MAE <- mean(abs(out$residual))
+Mean_square_normalized_error <- mean(out$zscore^2)
+correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
+correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+Y2021.kriged <- 
+  krige(Y2021~1, meanValueSpatialDataFrame, coords, 
+        model = dat.fit)
+Y2021.kriged@data$Ttest <- Y2021.kriged@data$var1.pred / 
+  Y2021.kriged@data$var1.var
+Y2021.kriged.raster <- as(Y2021.kriged, 'SpatialPixelsDataFrame')
+Y2021.kriged.raster <- as(Y2021.kriged.raster, "SpatialGridDataFrame")
+predict.value <- over(meanValueSpatialDataFrame, Y2021.kriged.raster)
+meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
+# R2
+onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2021)^2) / 
+  sum( ( meanValueSpatialDataFrame$Y2021 - mean(meanValueSpatialDataFrame$Y2021) )^2 )
+cv.line <- c("Y2021.mean", mean_error, MAE, Mean_square_normalized_error,
+             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
+             onpoint.R2)
+print(cv.line)
+kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
+cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2021)
+Y2021.kriged.raster@data <- Y2021.kriged.raster@data %>% dplyr::select(var1.pred)
+MEAN_Y2021.kriged.raster <- raster(Y2021.kriged.raster)
+rm(Y2021_emp_OK, dat.fit, Y2021.kriged, 
+   Y2021.kriged.raster)
+
 colnames(kriging.cv.mean.dataset) <- c("Variable", "mean_error", "MAE", "MSNE",
-                                         "CoOP", "CoPR", "R2")
+                                         "CoOP", "CoPR", "R2", "on.pointR2")
 
 save(MEAN_no2_measured_ug.m3.kriged.raster,
      MEAN_ug_m2_troposphere_no2.kriged.raster,
-     MEAN_ndvi.kriged.raster, MEAN_temp.kriged.raster, MEAN_NTL.kriged.raster,
+     MEAN_ndvi.kriged.raster, MEAN_temp.kriged.raster, 
      MEAN_PBLH.kriged.raster, MEAN_precipitation.kriged.raster, 
-     MEAN_ter_pressure.kriged.raster, file = "05_CoefficientRaster/MEAN_raster.RData")
+     MEAN_ter_pressure.kriged.raster, MEAN_Y2016.kriged.raster,
+     MEAN_Y2017.kriged.raster, MEAN_Y2018.kriged.raster,
+     MEAN_Y2019.kriged.raster, MEAN_Y2020.kriged.raster,
+     MEAN_Y2021.kriged.raster, file = "05_CoefficientRaster/MEAN_raster.RData")
 
 save(kriging.cv.mean.dataset, file = "04_Results/krigingMeanResult.RData")
