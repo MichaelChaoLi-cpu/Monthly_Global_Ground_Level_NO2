@@ -662,3 +662,4 @@ save(CO_ug_m2_troposphere_no2.kriged.raster,
      CO_Y2021.kriged.raster, file = "05_CoefficientRaster/COEF_raster.RData")
 
 save(kriging.cv.result.dataset, file = "04_Results/krigingCVResult.RData")
+write.csv(kriging.cv.result.dataset, file = "08_Tables/krigingCVResult.csv")

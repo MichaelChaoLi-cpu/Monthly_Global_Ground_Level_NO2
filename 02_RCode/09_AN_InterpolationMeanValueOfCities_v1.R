@@ -704,3 +704,4 @@ save(MEAN_no2_measured_ug.m3.kriged.raster,
      MEAN_Y2021.kriged.raster, file = "05_CoefficientRaster/MEAN_raster.RData")
 
 save(kriging.cv.mean.dataset, file = "04_Results/krigingMeanResult.RData")
+write.csv(kriging.cv.mean.dataset, file = "08_Tables/krigingCVMean.csv")
