@@ -37,7 +37,6 @@ library(sp)
 library(raster)
 library(dplyr)
 library(tmap)
-library(automap)
 
 IDW.cv <- function(formula.use, GWPR.point.dataset){
   IDW.out <- vector(length = length(GWPR.point.dataset))
@@ -106,10 +105,6 @@ addcoord <- function(nx,xmin,xsize,ny,ymin,ysize) { # Michael Pyrcz, March, 2018
   return (coords.df)
   
 }
-# check normality
-shapiro.test(GWPR.point.dataset$ug_m2_troposphere_no2)
-
-bubble(GWPR.point.dataset, "ug_m2_troposphere_no2", fill = FALSE, maxsize = 2, identify = FALSE)
 
 coords <- addcoord(nx,xmin,xsize,ny,ymin,ysize)
 
@@ -120,7 +115,6 @@ coords@proj4string <- CRS(proj)
 summary(coords) 
 class(coords)
 
-coords.GWPR <- coordinates(GWPR.point.dataset) %>% as.data.frame()
 
 # leave-one-out cv
 formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 + 

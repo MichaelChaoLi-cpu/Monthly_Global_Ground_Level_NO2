@@ -77,8 +77,8 @@ a_city_location %>%
   tmap_save(filename = "07_Figure/01_point_location.jpg" ,width = 210, height = 120, units = 'mm', dpi = 1000)
 
 #-------------descriptive statistics--------------
-Mean <- round(mean(usedDataset$no2_measured_mg.m3), 2)
-SD <- round(sd(usedDataset$no2_measured_mg.m3), 2)
+Mean <- round(mean(usedDataset$no2_measured_ug.m3), 2)
+SD <- round(sd(usedDataset$no2_measured_ug.m3), 2)
 N = nrow(usedDataset)
 grob <- grobTree(textGrob(paste0("Mean = ", Mean, "\nStd.dev = ", SD,"\nN = ", N),
                           x = 0.75,  y = 0.90, hjust = 0,
@@ -87,16 +87,16 @@ grob_add <- grobTree(textGrob("a",
                               x = 0.02,  y = 0.95, hjust = 0,
                               gp = gpar(col = "black", fontsize = 18)))
 (a <- ggplot(usedDataset) +
-  aes(x = no2_measured_mg.m3) +
-  xlim(0, 1.5) +
+  aes(x = no2_measured_ug.m3) +
+  xlim(0, 100) +
   geom_histogram(colour = "black", fill = "white") +
-  xlab("Ground-level NO2 (mg/m3)") + 
+  xlab("Ground-level NO2 (ug/m3)") + 
   ylab("Frequency") +
   annotation_custom(grob) +
   annotation_custom(grob_add))
 
-Mean <- round(mean(usedDataset$mg_m2_troposphere_no2), 2)
-SD <- round(sd(usedDataset$mg_m2_troposphere_no2), 2)
+Mean <- round(mean(usedDataset$ug_m2_troposphere_no2), 2)
+SD <- round(sd(usedDataset$ug_m2_troposphere_no2), 2)
 N = nrow(usedDataset)
 grob <- grobTree(textGrob(paste0("Mean = ", Mean, "\nStd.dev = ", SD,"\nN = ", N),
                           x = 0.75,  y = 0.90, hjust = 0,
@@ -105,10 +105,10 @@ grob_add <- grobTree(textGrob("b",
                               x = 0.02,  y = 0.95, hjust = 0,
                               gp = gpar(col = "black", fontsize = 18)))
 (b <- ggplot(usedDataset) +
-  aes(x = mg_m2_troposphere_no2) +
+  aes(x = ug_m2_troposphere_no2) +
   geom_histogram(colour = "black", fill = "white") +
-  xlim(0, 20) +
-  xlab("OMI TrCA NO2 (mg/m2)") + 
+  xlim(0, 10000) +
+  xlab("OMI TrCA NO2 (ug/m2)") + 
   ylab("Frequency") +
   annotation_custom(grob) +
   annotation_custom(grob_add))
@@ -210,7 +210,7 @@ grid.arrange(a, b, c,
              nrow = 3)
 dev.off()
 
-formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 + 
+formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 + 
   ter_pressure + 
   temp +
   ndvi + precipitation + PBLH + 
@@ -219,7 +219,7 @@ formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 +
   Y2016 + Y2017 + Y2018 + Y2019 + Y2020 + Y2021
 
 #-------------trends of XY------------------------
-(plot1 <- ggscatter(usedDataset %>% data.frame(), x = "mg_m2_troposphere_no2", y = "no2_measured_mg.m3", size = 1,
+(plot1 <- ggscatter(usedDataset %>% data.frame(), x = "ug_m2_troposphere_no2", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
                    xlab = "OMI TrCA NO2", ylab = "Ground-level NO2",           
@@ -228,7 +228,7 @@ formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 +
 ) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
 
-(plot2 <- ggscatter(usedDataset, x = "ter_pressure", y = "no2_measured_mg.m3", size = 1,
+(plot2 <- ggscatter(usedDataset, x = "ter_pressure", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
                    xlab = "Terrain Atmospheric Pressure", ylab = "Ground-level NO2",
@@ -236,7 +236,7 @@ formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 +
                    color = "grey76", shape = 21) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
 
-(plot3 <- ggscatter(usedDataset, x = "temp", y = "no2_measured_mg.m3", size = 1,
+(plot3 <- ggscatter(usedDataset, x = "temp", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
                    xlab = "Temperature", ylab = "Ground-level NO2",
@@ -244,7 +244,7 @@ formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 +
                    color = "grey76", shape = 21) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
 
-(plot4 <- ggscatter(usedDataset, x = "ndvi", y = "no2_measured_mg.m3", size = 1,
+(plot4 <- ggscatter(usedDataset, x = "ndvi", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
                    xlab = "NDVI", ylab = "Ground-level NO2",
@@ -252,7 +252,7 @@ formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 +
                    color = "grey76", shape = 21) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
 
-(plot5 <- ggscatter(usedDataset, x = "precipitation", y = "no2_measured_mg.m3", size = 1,
+(plot5 <- ggscatter(usedDataset, x = "precipitation", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
                    xlab = "Precipitation", ylab = "Ground-level NO2",
@@ -260,7 +260,7 @@ formula <- no2_measured_mg.m3 ~ mg_m2_troposphere_no2 +
                    color = "grey76", shape = 21) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
 
-(plot6 <- ggscatter(usedDataset, x = "PBLH", y = "no2_measured_mg.m3", size = 1,
+(plot6 <- ggscatter(usedDataset, x = "PBLH", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
                    xlab = "PBLH", ylab = "Ground-level NO2",
@@ -277,19 +277,19 @@ dev.off()
 
 load("04_Results/dataPrediction.Rdata")
 #---------------------GWPR-------------------------------------
-data.predict$Density <- get_density(data.predict$predictNo2, data.predict$no2_measured_mg.m3.ori, n = 100)
-reg <- lm(predictNo2 ~ no2_measured_mg.m3.ori, data = data.predict )
+data.predict$Density <- get_density(data.predict$predictNo2, data.predict$no2_measured_ug.m3.ori, n = 1000)
+reg <- lm(predictNo2 ~ no2_measured_ug.m3.ori, data = data.predict )
 coeff = coefficients(reg)
 eq = paste0("y = ", round(coeff[2],3), "x + ", round(coeff[1],3))
 grob <- grobTree(textGrob(eq,
                           x = 0.05,  y = 0.90, hjust = 0,
                           gp = gpar(col = "black", fontsize = 12)))
-corre <- cor(data.predict$predictNo2, data.predict$no2_measured_mg.m3.ori)
+corre <- cor(data.predict$predictNo2, data.predict$no2_measured_ug.m3.ori)
 corr.text <- paste0("r = ", round(corre,4))
 grob.corr <- grobTree(textGrob(corr.text,
                                x = 0.05,  y = 0.85, hjust = 0,
                                gp = gpar(col = "black", fontsize = 12)))
-N <- length(data.predict$no2_measured_mg.m3.ori)
+N <- length(data.predict$no2_measured_ug.m3.ori)
 N.text <- paste0("N = ", N)
 grob.N <- grobTree(textGrob(N.text,
                             x = 0.05,  y = 0.80, hjust = 0,
@@ -297,11 +297,11 @@ grob.N <- grobTree(textGrob(N.text,
 grob_add <- grobTree(textGrob("GWPR",
                               x = 0.02,  y = 0.95, hjust = 0,
                               gp = gpar(col = "black", fontsize = 18)))
-gwpr.cv <- ggplot(data.predict ) +
-  geom_point(aes(x = no2_measured_mg.m3.ori, y = predictNo2, color = Density)) +
+(gwpr.cv <- ggplot(data.predict ) +
+  geom_point(aes(x = no2_measured_ug.m3.ori, y = predictNo2, color = Density)) +
   scale_color_viridis() + 
-  scale_x_continuous(name = "Measured NO2 (mg/m3)", limits = c(0, 1.5)) +
-  scale_y_continuous(name = "Predicted NO2 (mg/m3)", limits = c(0, 1.5)) +
+  scale_x_continuous(name = "Measured NO2 (ug/m3)", limits = c(0, 100)) +
+  scale_y_continuous(name = "Predicted NO2 (ug/m3)", limits = c(0, 100)) +
   geom_abline(intercept = 0, slope = 1, color="red", 
               linetype = "dashed", size = 0.5) + 
   geom_abline(intercept = coeff[1], slope = coeff[2], color="blue", 
@@ -309,27 +309,27 @@ gwpr.cv <- ggplot(data.predict ) +
   annotation_custom(grob) + 
   annotation_custom(grob.corr) +
   annotation_custom(grob.N) +
-  annotation_custom(grob_add)
+  annotation_custom(grob_add))
 
 jpeg(file="07_Figure/gwpr.cv.jpeg", width = 210, height = 210, units = "mm", quality = 300, res = 300)
 gwpr.cv 
 dev.off()
 
-load("04_Results/FinalRasterCrossValidation.Rdata")
+load("04_Results/kriged.FinalRasterCrossValidation.Rdata")
 #---------------------Raster-------------------------------------
-testDataset$Density <- get_density(testDataset$predict_no2, testDataset$no2_measured_mg.m3, n = 100)
-reg <- lm(predict_no2 ~ no2_measured_mg.m3, data = testDataset )
+testDataset$Density <- get_density(testDataset$predict_no2, testDataset$no2_measured_ug.m3, n = 1000)
+reg <- lm(predict_no2 ~ no2_measured_ug.m3, data = testDataset )
 coeff = coefficients(reg)
 eq = paste0("y = ", round(coeff[2],3), "x + ", round(coeff[1],3))
 grob <- grobTree(textGrob(eq,
                           x = 0.05,  y = 0.90, hjust = 0,
                           gp = gpar(col = "black", fontsize = 12)))
-corre <- cor(testDataset$predict_no2, testDataset$no2_measured_mg.m3)
+corre <- cor(testDataset$predict_no2, testDataset$no2_measured_ug.m3)
 corr.text <- paste0("r = ", round(corre,4))
 grob.corr <- grobTree(textGrob(corr.text,
                                x = 0.05,  y = 0.85, hjust = 0,
                                gp = gpar(col = "black", fontsize = 12)))
-N <- length(testDataset$no2_measured_mg.m3)
+N <- length(testDataset$no2_measured_ug.m3)
 N.text <- paste0("N = ", N)
 grob.N <- grobTree(textGrob(N.text,
                             x = 0.05,  y = 0.80, hjust = 0,
@@ -337,11 +337,11 @@ grob.N <- grobTree(textGrob(N.text,
 grob_add <- grobTree(textGrob("Raster",
                               x = 0.02,  y = 0.95, hjust = 0,
                               gp = gpar(col = "black", fontsize = 18)))
-raster.cv <- ggplot(testDataset) +
-  geom_point(aes(x = no2_measured_mg.m3, y = predict_no2, color = Density)) +
+(raster.cv <- ggplot(testDataset) +
+  geom_point(aes(x = no2_measured_ug.m3, y = predict_no2, color = Density)) +
   scale_color_viridis() + 
-  scale_x_continuous(name = "Measured NO2 (mg/m3)", limits = c(0, 1.5)) +
-  scale_y_continuous(name = "Predicted NO2 (mg/m3)", limits = c(0, 1.5)) +
+  scale_x_continuous(name = "Measured NO2 (ug/m3)", limits = c(0, 120)) +
+  scale_y_continuous(name = "Predicted NO2 (ug/m3)", limits = c(0, 120)) +
   geom_abline(intercept = 0, slope = 1, color="red", 
               linetype = "dashed", size = 0.5) + 
   geom_abline(intercept = coeff[1], slope = coeff[2], color="blue", 
@@ -349,7 +349,7 @@ raster.cv <- ggplot(testDataset) +
   annotation_custom(grob) + 
   annotation_custom(grob.corr) +
   annotation_custom(grob.N) +
-  annotation_custom(grob_add)
+  annotation_custom(grob_add))
 
 jpeg(file="07_Figure/gwpr.Raster.cv.jpeg", width = 210, height = 210, units = "mm", quality = 300, res = 300)
 raster.cv
@@ -367,7 +367,7 @@ margin = 0
 
 slope.tmap <- tm_shape(test.coeff.grid.raster.output) +
   tm_raster("month.slope", palette = pal(11), breaks = brks, 
-            style = 'cont', legend.is.portrait = F, title = "The Slope of Monthly Chage\n[0.001 mg/(m3 * month)]",
+            style = 'cont', legend.is.portrait = F, title = "The Slope of Monthly Chage\n[0.001 ug/(m3 * month)]",
             labels = labels_brks) +
   tm_grid(alpha = .25) + 
   tm_layout(
@@ -390,7 +390,7 @@ brks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5)
 labels_brks = brks %>% as.character()
 mean.tmap <- tm_shape(test.mean.grid.raster.output) +
   tm_raster("ave.value", palette = pal(11), breaks = brks, 
-            style = 'cont', legend.is.portrait = F, title = "The Mean of Monthly Concentration (mg/m3)",
+            style = 'cont', legend.is.portrait = F, title = "The Mean of Monthly Concentration (ug/m3)",
             labels = labels_brks) +
   tm_grid(alpha = .25) + 
   tm_layout(
@@ -415,7 +415,7 @@ for (file in raster.filelist){
   tiff.tmap <- tm_shape(predict.tiff) +
     tm_raster(paste0("X", filename), palette = pal(11), breaks = brks, 
               style = 'cont', legend.is.portrait = F, 
-              title = paste0("Monthly Concentration in ", filename, " (mg/m3)"),
+              title = paste0("Monthly Concentration in ", filename, " (ug/m3)"),
               labels = labels_brks) +
     tm_grid(alpha = .25) + 
     tm_layout(
@@ -437,7 +437,7 @@ for (file in raster.filelist){
   tiff.tmap <- tm_shape(predict.tiff) +
     tm_raster(paste0("X", filename), palette = pal(11), breaks = brks, 
               style = 'cont', legend.is.portrait = F, 
-              title = paste0("Monthly Concentration in ", filename, " (mg/m3)"),
+              title = paste0("Monthly Concentration in ", filename, " (ug/m3)"),
               labels = labels_brks) +
     tm_grid(alpha = .25) + 
     tm_layout(
@@ -488,21 +488,21 @@ load("04_Results/GWPR_FEM_CV_A_result.Rdata")
 residual.GWPR <- GWPR.FEM.CV.A.result$GWPR.residuals 
 
 load("03_Rawdata/usedDataset.RData")
-merge.tropono2 <- usedDataset %>% dplyr::select(mg_m2_troposphere_no2,
+merge.tropono2 <- usedDataset %>% dplyr::select(ug_m2_troposphere_no2,
                                                 CityCode, period, year, month) %>%
   rename("id" = "CityCode")
 residual.GWPR <- left_join(residual.GWPR, merge.tropono2, by = c("id", "period"))
-residual.GWPR$mg_m2_troposphere_no2 <- residual.GWPR$mg_m2_troposphere_no2/20
-monthly.GWPR <- aggregate(residual.GWPR %>% dplyr::select(y, yhat, mg_m2_troposphere_no2), 
+residual.GWPR$ug_m2_troposphere_no2 <- residual.GWPR$ug_m2_troposphere_no2/160
+monthly.GWPR <- aggregate(residual.GWPR %>% dplyr::select(y, yhat, ug_m2_troposphere_no2), 
                           list(residual.GWPR$period), FUN = mean)
 monthly.GWPR$Group.2 <- monthly.GWPR$Group.1 %>% as.factor()
 monthly.pre <- monthly.GWPR %>% dplyr::select(-Group.1 )
-monthly.pre <- monthly.pre %>% pivot_longer(cols = c("y", "yhat", "mg_m2_troposphere_no2"))
-monthly.GWPR.stderr <- aggregate(residual.GWPR %>% dplyr::select(y, yhat, mg_m2_troposphere_no2), 
+monthly.pre <- monthly.pre %>% pivot_longer(cols = c("y", "yhat", "ug_m2_troposphere_no2"))
+monthly.GWPR.stderr <- aggregate(residual.GWPR %>% dplyr::select(y, yhat, ug_m2_troposphere_no2), 
                                  list(residual.GWPR$period), FUN = std.error)
 monthly.GWPR.stderr$Group.2 <- monthly.GWPR.stderr$Group.1 %>% as.factor()
 monthly.pre.stderr <- monthly.GWPR.stderr %>% dplyr::select(-Group.1 )
-monthly.pre.stderr <- monthly.pre.stderr %>% pivot_longer(cols = c("y", "yhat", "mg_m2_troposphere_no2"))
+monthly.pre.stderr <- monthly.pre.stderr %>% pivot_longer(cols = c("y", "yhat", "ug_m2_troposphere_no2"))
 monthly.pre.stderr <- monthly.pre.stderr %>% rename("SE" = "value")
 monthly.pre <- left_join(monthly.pre, monthly.pre.stderr, by = c("Group.2", "name"))
 
@@ -512,7 +512,7 @@ monthly.pre <- left_join(monthly.pre, monthly.pre.stderr, by = c("Group.2", "nam
     geom_errorbar(aes(x = Group.2, ymin = value - SE * 1.96, ymax = value + SE * 1.96, color = name), 
                   position = position_dodge(1), width = 0.5, size = 0.2) +
     scale_y_continuous(name = "Ground-Level NO2 Concentration",
-                       sec.axis = sec_axis(~.*20, name="Tropospheric NO2 Concentration")) +
+                       sec.axis = sec_axis(~.*160, name="Tropospheric NO2 Concentration")) +
     scale_fill_manual(values = c("red", "blue", "gold1"), name =NULL, 
                       labels = c("Tropospheric NO2 Concentration", 
                                  "Measured Ground-Level NO2 Concentration",

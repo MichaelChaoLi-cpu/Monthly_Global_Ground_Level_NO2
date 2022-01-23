@@ -1,29 +1,28 @@
 # Author: M.L.
 
-# input: COEF_raster.RData
-# COEF_raster.RData: "CO_ug_m2_troposphere_no2.kriged.raster" interpolation of troposheric no2 coefficient
-#                                                             based on ordinary kriging
-# COEF_raster.RData: "CO_ndvi.kriged.raster" interpolation of ndvi coefficient based on ordinary kriging (OK)
-# COEF_raster.RData: "CO_temp.kriged.raster" interpolation of night temperature coefficient (OK)
-# COEF_raster.RData: "CO_PBLH.kriged.raster" interpolation of PBLH coefficient (OK)
-# COEF_raster.RData: "CO_precipitation.kriged.raster" interpolation of precipitation coefficient (OK)
-# COEF_raster.RData: "CO_ter_pressure.kriged.raster" interpolation of air pressure coefficient (OK)
-# COEF_raster.RData: "CO_Y2016.kriged.raster" interpolation of 2016 dummy variable coefficient (OK)
-# COEF_raster.RData: "CO_Y2017.kriged.raster" interpolation of 2017 dummy variable coefficient (OK)
-# COEF_raster.RData: "CO_Y2018.kriged.raster" interpolation of 2018 dummy variable coefficient (OK)
-# COEF_raster.RData: "CO_Y2019.kriged.raster" interpolation of 2019 dummy variable coefficient (OK)
-# COEF_raster.RData: "CO_Y2020.kriged.raster" interpolation of 2020 dummy variable coefficient (OK)
-# COEF_raster.RData: "CO_Y2021.kriged.raster" interpolation of 2021 dummy variable coefficient (OK)
+# input: idw_COEF_raster.RData
+# idw_COEF_raster.RData: "CO_ug_m2_troposphere_no2.idw.raster" interpolation of troposheric no2 coefficient (IDW)
+# idw_COEF_raster.RData: "CO_ndvi.idw.raster" interpolation of ndvi coefficient based on ordinary kriging (IDW)
+# idw_COEF_raster.RData: "CO_temp.idw.raster" interpolation of night temperature coefficient (IDW)
+# idw_COEF_raster.RData: "CO_PBLH.idw.raster" interpolation of PBLH coefficient (IDW)
+# idw_COEF_raster.RData: "CO_precipitation.idw.raster" interpolation of precipitation coefficient (IDW)
+# idw_COEF_raster.RData: "CO_ter_pressure.idw.raster" interpolation of air pressure coefficient (IDW)
+# idw_COEF_raster.RData: "CO_Y2016.idw.raster" interpolation of 2016 dummy variable coefficient (IDW)
+# idw_COEF_raster.RData: "CO_Y2017.idw.raster" interpolation of 2017 dummy variable coefficient (IDW)
+# idw_COEF_raster.RData: "CO_Y2018.idw.raster" interpolation of 2018 dummy variable coefficient (IDW)
+# idw_COEF_raster.RData: "CO_Y2019.idw.raster" interpolation of 2019 dummy variable coefficient (IDW)
+# idw_COEF_raster.RData: "CO_Y2020.idw.raster" interpolation of 2020 dummy variable coefficient (IDW)
+# idw_COEF_raster.RData: "CO_Y2021.idw.raster" interpolation of 2021 dummy variable coefficient (IDW)
 
-# output: MEAN_raster.RData
-# MEAN_raster.RData: "MEAN_ug_m2_troposphere_no2.kriged.raster" interpolation of troposheric no2 mean value
-#                                                               in the usedDataset based on ordinary kriging (OK)
-# MEAN_raster.RData: "MEAN_ndvi.kriged.raster" interpolation of ndvi mean value (OK)
-# MEAN_raster.RData: "MEAN_temp.kriged.raster" interpolation of temperature mean value (OK)
-# MEAN_raster.RData: "MEAN_NTL.kriged.raster" interpolation of night time light mean value (OK)
-# MEAN_raster.RData: "MEAN_PBLH.kriged.raster" interpolation of PBLH mean value (OK)
-# MEAN_raster.RData: "MEAN_precipitation.kriged.raster" interpolation of precipitation mean value (OK)
-# MEAN_raster.RData: "MEAN_ter_pressure.kriged.raster" interpolation of air pressure mean value (OK)
+# output: idw.MEAN_raster.RData
+# idw.MEAN_raster.RData: "MEAN_ug_m2_troposphere_no2.idw.raster" interpolation of troposheric no2 mean value
+#                                                               in the usedDataset based on ordinary kriging (IDW)
+# idw.MEAN_raster.RData: "MEAN_ndvi.idw.raster" interpolation of ndvi mean value (IDW)
+# idw.MEAN_raster.RData: "MEAN_temp.idw.raster" interpolation of temperature mean value (IDW)
+# idw.MEAN_raster.RData: "MEAN_NTL.idw.raster" interpolation of night time light mean value (IDW)
+# idw.MEAN_raster.RData: "MEAN_PBLH.idw.raster" interpolation of PBLH mean value (IDW)
+# idw.MEAN_raster.RData: "MEAN_precipitation.idw.raster" interpolation of precipitation mean value (IDW)
+# idw.MEAN_raster.RData: "MEAN_ter_pressure.idw.raster" interpolation of air pressure mean value (IDW)
 
 # end
 
@@ -33,8 +32,8 @@ library(raster)
 library(lubridate)
 
 makePredictRaster <- function(aim_year, aim_month){
-  load("05_CoefficientRaster/COEF_raster.RData")
-  load("05_CoefficientRaster/MEAN_raster.RData")
+  load("05_CoefficientRaster/idw_COEF_raster.RData")
+  load("05_CoefficientRaster/idw.MEAN_raster.RData")
   
   raster_troposphere_no2_folder <- 
     "D:/10_Article/09_TempOutput/02_MonthlyTroposphericNo2Tif/OMI-Aura_L2G-OMNO2G_"
@@ -46,8 +45,8 @@ makePredictRaster <- function(aim_year, aim_month){
   mol_g = 6.022140857 * 10^23  # mol
   raster_troposphere_no2 <- raster_troposphere_no2 / mol_g * 46.0055 # convert mol to g
   raster_troposphere_no2 <- raster_troposphere_no2 * 10000 * 1000000 # conver /cm2 to /m2 and g to ug
-  predict_part_troposphere_no2 <- (raster_troposphere_no2 - MEAN_ug_m2_troposphere_no2.kriged.raster) *
-    CO_ug_m2_troposphere_no2.kriged.raster
+  predict_part_troposphere_no2 <- (raster_troposphere_no2 - MEAN_ug_m2_troposphere_no2.idw.raster) *
+    CO_ug_m2_troposphere_no2.idw.raster
   
   raster_ter_pressure_folder <- 
     "D:/10_Article/09_TempOutput/03_MonthlyTerrainPressureTif/OMI-Aura_L2G-OMNO2G_"
@@ -56,8 +55,8 @@ makePredictRaster <- function(aim_year, aim_month){
            "_WGS84_.25.25_monthly_terrain_pressure.tif")
   raster_ter_pressure <- raster::raster(raster_ter_pressure_address)
   raster_ter_pressure <- flip(raster_ter_pressure, direction = 'y')
-  predict_part_ter_pressure <- (raster_ter_pressure - MEAN_ter_pressure.kriged.raster) *
-    CO_ter_pressure.kriged.raster
+  predict_part_ter_pressure <- (raster_ter_pressure - MEAN_ter_pressure.idw.raster) *
+    CO_ter_pressure.idw.raster
   
   dateUse <- as.Date(paste0(aim_year,"-",aim_month,"-01"))
   day_number <- strftime(dateUse, format = "%j") 
@@ -72,8 +71,8 @@ makePredictRaster <- function(aim_year, aim_month){
     paste0(raster_night_temp_folder, aim_year, "_", day_number, ".tif")
   raster_night_temp <- raster::raster(raster_night_temp_address)
   raster_temp <- ((raster_day_temp * 0.02 - 273.16) + (raster_night_temp * 0.02 - 273.16))/2
-  predict_part_raster_temp <- (raster_temp - MEAN_temp.kriged.raster) *
-    CO_temp.kriged.raster
+  predict_part_raster_temp <- (raster_temp - MEAN_temp.idw.raster) *
+    CO_temp.idw.raster
   
   raster_ndvi_folder <- 
     "D:/10_Article/09_TempOutput/05_MonthlyNDVITif/VI_Monthly_005dg_v6/NDVI/MOD13C2_NDVI_"
@@ -81,8 +80,8 @@ makePredictRaster <- function(aim_year, aim_month){
     paste0(raster_ndvi_folder, aim_year, "_", day_number, ".tif")
   raster_ndvi <- raster::raster(raster_ndvi_address)
   raster_ndvi <- raster_ndvi / 10000
-  predict_part_ndvi <- (raster_ndvi - MEAN_ndvi.kriged.raster) *
-    CO_ndvi.kriged.raster
+  predict_part_ndvi <- (raster_ndvi - MEAN_ndvi.idw.raster) *
+    CO_ndvi.idw.raster
   
   raster_precipitation_folder <- 
     "D:/10_Article/09_TempOutput/07_MonthlyPrecipitationTif/Add025Outline/add_totalPrecipitationRate"
@@ -91,16 +90,16 @@ makePredictRaster <- function(aim_year, aim_month){
   raster_precipitation <- raster::raster(raster_precipitation_address)
   raster_precipitation <- flip(raster_precipitation, direction = 'y')
   raster_precipitation <- raster_precipitation / 3600 # now, the precipitation unit is kg/(m2 * h)  
-  predict_part_precipitation <- (raster_precipitation - MEAN_precipitation.kriged.raster) *
-    CO_precipitation.kriged.raster
+  predict_part_precipitation <- (raster_precipitation - MEAN_precipitation.idw.raster) *
+    CO_precipitation.idw.raster
   
   raster_PBLH_folder <-
     "D:/10_Article/09_TempOutput/10_PlanetaryBoundaryLayerHeight/Resample/"
   raster_PBLH_address <- 
     paste0(raster_PBLH_folder, aim_year, aim_month, ".2525.tif")
   raster_PBLH <- raster::raster(raster_PBLH_address)
-  predict_part_PBLH <- (raster_PBLH - MEAN_PBLH.kriged.raster) *
-    CO_PBLH.kriged.raster
+  predict_part_PBLH <- (raster_PBLH - MEAN_PBLH.idw.raster) *
+    CO_PBLH.idw.raster
   
   predict.raster <- predict_part_troposphere_no2 + predict_part_ter_pressure + predict_part_precipitation +
     predict_part_raster_temp + predict_part_ndvi + predict_part_PBLH
@@ -119,18 +118,18 @@ makePredictRaster <- function(aim_year, aim_month){
   if(aim_year == "2020") {Y2020_dummy = 1}
   if(aim_year == "2021") {Y2021_dummy = 1}
   
-  predict_part_Y2016 <-  CO_Y2016.kriged.raster * (Y2016_dummy - MEAN_Y2016.kriged.raster)
-  predict_part_Y2017 <-  CO_Y2017.kriged.raster * (Y2017_dummy - MEAN_Y2017.kriged.raster)
-  predict_part_Y2018 <-  CO_Y2018.kriged.raster * (Y2018_dummy - MEAN_Y2018.kriged.raster)
-  predict_part_Y2019 <-  CO_Y2019.kriged.raster * (Y2019_dummy - MEAN_Y2019.kriged.raster)
-  predict_part_Y2020 <-  CO_Y2020.kriged.raster * (Y2020_dummy - MEAN_Y2020.kriged.raster)
-  predict_part_Y2021 <-  CO_Y2021.kriged.raster * (Y2021_dummy - MEAN_Y2021.kriged.raster)
+  predict_part_Y2016 <-  CO_Y2016.idw.raster * (Y2016_dummy - MEAN_Y2016.idw.raster)
+  predict_part_Y2017 <-  CO_Y2017.idw.raster * (Y2017_dummy - MEAN_Y2017.idw.raster)
+  predict_part_Y2018 <-  CO_Y2018.idw.raster * (Y2018_dummy - MEAN_Y2018.idw.raster)
+  predict_part_Y2019 <-  CO_Y2019.idw.raster * (Y2019_dummy - MEAN_Y2019.idw.raster)
+  predict_part_Y2020 <-  CO_Y2020.idw.raster * (Y2020_dummy - MEAN_Y2020.idw.raster)
+  predict_part_Y2021 <-  CO_Y2021.idw.raster * (Y2021_dummy - MEAN_Y2021.idw.raster)
   
   predict.raster <- predict.raster + 
     predict_part_Y2016 + predict_part_Y2017 + predict_part_Y2018 +
     predict_part_Y2019 + predict_part_Y2020 + predict_part_Y2021
-
-  predict.raster <- predict.raster + MEAN_no2_measured_ug.m3.kriged.raster
+  
+  predict.raster <- predict.raster + MEAN_no2_measured_ug.m3.idw.raster
   values(predict.raster)[values(predict.raster) < 0] = 0
   return(predict.raster)
 }
@@ -172,8 +171,8 @@ extractPointDataFromRaster <- function(RasterFolder, filelist, cityLocationSpati
 month.list <- c("01", "02", "03", "04", "05", "06",
                 "07", "08", "09", "10", "11", "12")
 year.list <- c("2015", "2016", "2017", "2018", "2019", "2020", "2021")
-predict_raster_folder <- "D:/10_Article/11_PredictRaster/01_Test0104/"
-predict_jpg_folder <- "D:/10_Article/11_PredictRaster/02_Test0104JPG/"
+predict_raster_folder <- "D:/10_Article/11_PredictRaster/03_Test0122/"
+predict_jpg_folder <- "D:/10_Article/11_PredictRaster/04_Test0122JPG/"
 brks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 260)
 pal <- colorRampPalette(c("blue","green","yellow","red"))
 
@@ -212,7 +211,7 @@ cityLocationSpatialPoint <- SpatialPointsDataFrame(coords = xy, data = cityLocat
 rm(xy)
 
 # get the point prediction
-predict_raster_folder <- "D:/10_Article/11_PredictRaster/01_Test0104/"
+predict_raster_folder <- "D:/10_Article/11_PredictRaster/03_Test0122/"
 filelist <- list.files(predict_raster_folder)
 predictGroundNo2 <- 
   extractPointDataFromRaster(predict_raster_folder, filelist, cityLocationSpatialPoint,
@@ -244,16 +243,8 @@ r2
 (sum( (testDataset$no2_measured_ug.m3 - testDataset$predict_no2)^2 ) / nrow(testDataset)) %>% sqrt()
 mean( abs( (testDataset$no2_measured_ug.m3 - testDataset$predict_no2) ) )
 plot(testDataset$no2_measured_ug.m3, testDataset$predict_no2)
-save(testDataset, file = "04_Results/kriged.FinalRasterCrossValidation.Rdata")
+save(testDataset, file = "04_Results/idw.FinalRasterCrossValidation.Rdata")
 
-lm(no2_measured_ug.m3 ~ predict_no2, testDataset) %>% coef() -> coef.line
-testDatasetLinearImprove <- testDataset
-testDatasetLinearImprove$predict_no2_line <-
-  testDatasetLinearImprove$predict_no2 * coef.line[2] + coef.line[1]
-1 - sum( (testDatasetLinearImprove$no2_measured_ug.m3 - testDatasetLinearImprove$predict_no2_line)^2 ) /
-  sum((testDatasetLinearImprove$no2_measured_ug.m3 - mean(testDatasetLinearImprove$no2_measured_ug.m3))^2)
-lm(no2_measured_ug.m3 ~ predict_no2_line, testDatasetLinearImprove) %>% summary()
-mean( abs( (testDatasetLinearImprove$no2_measured_ug.m3 - testDatasetLinearImprove$predict_no2_line) ) )
 #jpg.list <- list.files(predict_jpg_folder)
 #frames <- paste0(predict_jpg_folder, jpg.list)
 #m <- image_read(frames)
