@@ -63,7 +63,7 @@ while (month.count < length(raster.list) + 1) {
 month.grid.dataset <- coords@data %>% as.data.frame()
 month.grid.dataset$NACount <- rowSums(is.na(month.grid.dataset))
 month.grid.dataset <- month.grid.dataset %>%
-  filter(NACount < 77)
+  filter(NACount < 82)
 month.grid.dataset <- month.grid.dataset %>%
   dplyr::select(-NACount)
 
@@ -78,10 +78,10 @@ while (line.num < nrow(month.grid.dataset) + 1){
   test.single.grid <- month.grid.dataset[line.num,]
   test.single.grid <- as.matrix(test.single.grid)
   id <- test.single.grid[1,1]
-  test.single.grid <- test.single.grid[,2:78]
+  test.single.grid <- test.single.grid[,2:83]
   test.single.grid <- test.single.grid %>% as.data.frame()
   colnames(test.single.grid)[1] <- "data" 
-  test.single.grid$month <- 1:77
+  test.single.grid$month <- 1:82
   
   test.reg <- lm(data ~ month, test.single.grid)
   coeff <- summary(test.reg)
@@ -115,7 +115,7 @@ test.coeff.grid.raster.output <- raster(test.coeff.grid.raster.output)
 
 save(test.coeff.grid.raster.output, file = "04_Results/trendenceMonthGroundLevel.RData")
 
-month.grid.dataset$ave.value <- rowMeans(month.grid.dataset[,2:78], na.rm = T)
+month.grid.dataset$ave.value <- rowMeans(month.grid.dataset[,2:83], na.rm = T)
 month.grid.dataset.mean <- month.grid.dataset %>%
   dplyr::select("id", "ave.value")
 

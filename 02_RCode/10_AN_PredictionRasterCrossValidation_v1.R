@@ -246,14 +246,6 @@ mean( abs( (testDataset$no2_measured_ug.m3 - testDataset$predict_no2) ) )
 plot(testDataset$no2_measured_ug.m3, testDataset$predict_no2)
 save(testDataset, file = "04_Results/kriged.FinalRasterCrossValidation.Rdata")
 
-lm(no2_measured_ug.m3 ~ predict_no2, testDataset) %>% coef() -> coef.line
-testDatasetLinearImprove <- testDataset
-testDatasetLinearImprove$predict_no2_line <-
-  testDatasetLinearImprove$predict_no2 * coef.line[2] + coef.line[1]
-1 - sum( (testDatasetLinearImprove$no2_measured_ug.m3 - testDatasetLinearImprove$predict_no2_line)^2 ) /
-  sum((testDatasetLinearImprove$no2_measured_ug.m3 - mean(testDatasetLinearImprove$no2_measured_ug.m3))^2)
-lm(no2_measured_ug.m3 ~ predict_no2_line, testDatasetLinearImprove) %>% summary()
-mean( abs( (testDatasetLinearImprove$no2_measured_ug.m3 - testDatasetLinearImprove$predict_no2_line) ) )
 #jpg.list <- list.files(predict_jpg_folder)
 #frames <- paste0(predict_jpg_folder, jpg.list)
 #m <- image_read(frames)

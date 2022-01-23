@@ -340,8 +340,8 @@ grob_add <- grobTree(textGrob("Raster",
 (raster.cv <- ggplot(testDataset) +
   geom_point(aes(x = no2_measured_ug.m3, y = predict_no2, color = Density)) +
   scale_color_viridis() + 
-  scale_x_continuous(name = "Measured NO2 (ug/m3)", limits = c(0, 120)) +
-  scale_y_continuous(name = "Predicted NO2 (ug/m3)", limits = c(0, 120)) +
+  scale_x_continuous(name = "Measured NO2 (ug/m3)", limits = c(0, 100)) +
+  scale_y_continuous(name = "Predicted NO2 (ug/m3)", limits = c(0, 100)) +
   geom_abline(intercept = 0, slope = 1, color="red", 
               linetype = "dashed", size = 0.5) + 
   geom_abline(intercept = coeff[1], slope = coeff[2], color="blue", 
@@ -357,17 +357,17 @@ dev.off()
 
 load("04_Results/trendenceMonthGroundLevel.RData")
 pal <- colorRampPalette(c("blue", "white", "red"))
-brks = c(-0.005, -0.004, -0.003, -0.002, -0.001,
-         0, 0.001, 0.002, 0.003, 0.004, 0.005)
-labels_brks = c("-5", "-4", "-3", "-2", "-1", "0",
-                "1", "2", "3", "4", "5")
+brks = c(-0.10, -0.08, -0.06, -0.04, -0.02,
+         0, 0.02, 0.04, 0.06, 0.08, 0.10)
+labels_brks = c("-10", "-8", "-6", "-4", "-2",
+                "0", "2", "4", "6", "8", "10")
 title_size = .0001
 legend_title_size = 1
 margin = 0
 
 slope.tmap <- tm_shape(test.coeff.grid.raster.output) +
   tm_raster("month.slope", palette = pal(11), breaks = brks, 
-            style = 'cont', legend.is.portrait = F, title = "The Slope of Monthly Chage\n[0.001 ug/(m3 * month)]",
+            style = 'cont', legend.is.portrait = F, title = "The Slope of Monthly Chage\n[ *0.01 ug/(m3 * month)]",
             labels = labels_brks) +
   tm_grid(alpha = .25) + 
   tm_layout(
@@ -386,7 +386,7 @@ slope.tmap %>%
 pal <- colorRampPalette(c("blue","green","yellow","red"))
 load("04_Results/meanOfRasterNo2.RData")
 #test.mean.grid.raster.output %>% plot()
-brks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5)
+brks = c(0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60)
 labels_brks = brks %>% as.character()
 mean.tmap <- tm_shape(test.mean.grid.raster.output) +
   tm_raster("ave.value", palette = pal(11), breaks = brks, 
@@ -406,14 +406,15 @@ mean.tmap %>%
 
 predict_raster_folder <- "D:/10_Article/11_PredictRaster/01_Test0104/"
 raster.filelist <- list.files(predict_raster_folder)
-brks = c(0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5)
+#brks = c(0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80)
+brks = c(0, 10, 20, 30, 40, 50,  60, 70, 80, 90, 100)
 labels_brks = brks %>% as.character()
 
 for (file in raster.filelist){
   predict.tiff <- raster(paste0(predict_raster_folder, file))
   filename <- substr(file, 1, 6)
   tiff.tmap <- tm_shape(predict.tiff) +
-    tm_raster(paste0("X", filename), palette = pal(11), breaks = brks, 
+    tm_raster(paste0("X", filename), palette = pal(17), breaks = brks, 
               style = 'cont', legend.is.portrait = F, 
               title = paste0("Monthly Concentration in ", filename, " (ug/m3)"),
               labels = labels_brks) +

@@ -25,12 +25,14 @@
 # MEAN_raster.RData: "MEAN_ter_pressure.kriged.raster" interpolation of air pressure mean value (OK)
 
 # output: krigingMeanResult.RData
-# krigingMeanResult.RData: "mean_error" mean error
+# krigingMeanResult.RData: "N" number of observation
+# krigingMeanResult.RData: "R2" R2
+# krigingMeanResult.RData: "RMSE" root mean square error
 # krigingMeanResult.RData: "MAE" mean absolute error
-# krigingMeanResult.RData: "MSNE" Mean square normalized error
-# krigingMeanResult.RData: "CoOP" correlation observed and predicted
-# krigingMeanResult.RData: "CoPR" correlation predicted and residual
-# krigingMeanResult.RData: "R2" centered R2
+# krigingMeanResult.RData: "r" correlation coefficient
+# krigingMeanResult.RData: "Intercept" intercept of regression
+# krigingMeanResult.RData: "Slope" slope of regression
+# krigingMeanResult.RData: "onPoint.R2" R2 after interpolation
 
 # end
 
@@ -119,12 +121,14 @@ dat.fit  <- fit.variogram(no2_measured_ug.m3_emp_OK, fit.ranges = FALSE, fit.sil
 out <- 
   krige.cv(no2_measured_ug.m3~1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 no2_measured_ug.m3.kriged <- 
   krige(no2_measured_ug.m3~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -137,9 +141,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$no2_measured_ug.m3)^2) / 
   sum( ( meanValueSpatialDataFrame$no2_measured_ug.m3 - mean(meanValueSpatialDataFrame$no2_measured_ug.m3) )^2 )
-cv.line <- c("no2_measured_ug.m3.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation, 
-             onpoint.R2)
+cv.line <- c("no2_measured_ug.m3.mean", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$no2_measured_ug.m3)
@@ -159,12 +163,13 @@ dat.fit  <- fit.variogram(ug_m2_troposphere_no2_emp_OK, fit.ranges = FALSE, fit.
 out <- 
   krige.cv(ug_m2_troposphere_no2~1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
 
 ug_m2_troposphere_no2.kriged <- 
   krige(ug_m2_troposphere_no2~1, meanValueSpatialDataFrame, coords, 
@@ -178,9 +183,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$ug_m2_troposphere_no2)^2) / 
   sum( ( meanValueSpatialDataFrame$ug_m2_troposphere_no2 - mean(meanValueSpatialDataFrame$ug_m2_troposphere_no2) )^2 )
-cv.line <- c("ug_m2_troposphere_no2.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("ug_m2_troposphere_no2.mean",
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$ug_m2_troposphere_no2)
@@ -199,12 +204,14 @@ dat.fit  <- fit.variogram(ter_pressure_emp_OK, fit.ranges = FALSE, fit.sills = F
 out <- 
   krige.cv(ter_pressure~1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 ter_pressure.kriged <- 
   krige(ter_pressure~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -217,9 +224,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$ter_pressure)^2) / 
   sum( ( meanValueSpatialDataFrame$ter_pressure - mean(meanValueSpatialDataFrame$ter_pressure) )^2 )
-cv.line <- c("ter_pressure.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("ter_pressure.mean",
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$ter_pressure)
@@ -238,12 +245,14 @@ dat.fit  <- fit.variogram(temp_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(temp~1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 temp.kriged <- 
   krige(temp~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -256,9 +265,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$temp)^2) / 
   sum( ( meanValueSpatialDataFrame$temp - mean(meanValueSpatialDataFrame$temp) )^2 )
-cv.line <- c("temp.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("temp.mean", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$temp)
@@ -278,12 +287,14 @@ dat.fit  <- fit.variogram(ndvi_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(ndvi ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 ndvi.kriged <- 
   krige(ndvi~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -296,9 +307,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$ndvi)^2) / 
   sum( ( meanValueSpatialDataFrame$ndvi - mean(meanValueSpatialDataFrame$ndvi) )^2 )
-cv.line <- c("ndvi.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("ndvi.mean", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$ndvi)
@@ -317,12 +328,14 @@ dat.fit  <- fit.variogram(precipitation_emp_OK, fit.ranges = FALSE, fit.sills = 
 out <- 
   krige.cv(precipitation ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 precipitation.kriged <- 
   krige(precipitation~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -335,9 +348,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$precipitation)^2) / 
   sum( ( meanValueSpatialDataFrame$precipitation - mean(meanValueSpatialDataFrame$precipitation) )^2 )
-cv.line <- c("precipitation.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("precipitation.mean", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$precipitation)
@@ -359,14 +372,17 @@ if(run)
   out <- 
     krige.cv(NTL ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
              model = dat.fit)
-  mean_error <- mean(out$residual)
+  N <- nrow(meanValueSpatialDataFrame@data)
+  R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+  MRSE <- sqrt(mean(out$residual^2))
   MAE <- mean(abs(out$residual))
-  Mean_square_normalized_error <- mean(out$zscore^2)
   correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-  correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-  R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-  cv.line <- c("NTL.mean", mean_error, MAE, Mean_square_normalized_error,
-               correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+  out$pred <- out$observed - out$residual
+  coef.reg <- coef(lm(observed ~ pred, data = out))
+  
+  cv.line <- c("NTL.mean",              
+               N, R2_interpolation, MRSE, MAE, 
+               correlation_observed_predicted, coef.reg, onpoint.R2)
   print(cv.line)
   kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
   NTL.kriged <- 
@@ -398,12 +414,14 @@ dat.fit  <- fit.variogram(PBLH_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(PBLH ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 PBLH.kriged <- 
   krige(PBLH~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -416,9 +434,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$PBLH)^2) / 
   sum( ( meanValueSpatialDataFrame$PBLH - mean(meanValueSpatialDataFrame$PBLH) )^2 )
-cv.line <- c("PBLH.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("PBLH.mean", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$PBLH)
@@ -437,12 +455,14 @@ dat.fit  <- fit.variogram(Y2016_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(Y2016 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 Y2016.kriged <- 
   krige(Y2016~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -455,9 +475,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2016)^2) / 
   sum( ( meanValueSpatialDataFrame$Y2016 - mean(meanValueSpatialDataFrame$Y2016) )^2 )
-cv.line <- c("Y2016.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2016.mean", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2016)
@@ -476,12 +496,14 @@ dat.fit  <- fit.variogram(Y2017_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(Y2017 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 Y2017.kriged <- 
   krige(Y2017~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -494,9 +516,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2017)^2) / 
   sum( ( meanValueSpatialDataFrame$Y2017 - mean(meanValueSpatialDataFrame$Y2017) )^2 )
-cv.line <- c("Y2017.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2017.mean",
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2017)
@@ -515,12 +537,14 @@ dat.fit  <- fit.variogram(Y2018_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(Y2018 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 Y2018.kriged <- 
   krige(Y2018~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -533,9 +557,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2018)^2) / 
   sum( ( meanValueSpatialDataFrame$Y2018 - mean(meanValueSpatialDataFrame$Y2018) )^2 )
-cv.line <- c("Y2018.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2018.mean",              
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2018)
@@ -554,12 +578,14 @@ dat.fit  <- fit.variogram(Y2019_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(Y2019 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 Y2019.kriged <- 
   krige(Y2019~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -572,9 +598,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2019)^2) / 
   sum( ( meanValueSpatialDataFrame$Y2019 - mean(meanValueSpatialDataFrame$Y2019) )^2 )
-cv.line <- c("Y2019.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2019.mean", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2019)
@@ -593,12 +619,14 @@ dat.fit  <- fit.variogram(Y2020_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(Y2020 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 Y2020.kriged <- 
   krige(Y2020~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -611,9 +639,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2020)^2) / 
   sum( ( meanValueSpatialDataFrame$Y2020 - mean(meanValueSpatialDataFrame$Y2020) )^2 )
-cv.line <- c("Y2020.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2020.mean",
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2020)
@@ -632,12 +660,14 @@ dat.fit  <- fit.variogram(Y2021_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(Y2021 ~ 1, meanValueSpatialDataFrame, meanValueSpatialDataFrame@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(meanValueSpatialDataFrame@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 Y2021.kriged <- 
   krige(Y2021~1, meanValueSpatialDataFrame, coords, 
         model = dat.fit)
@@ -650,9 +680,9 @@ meanValueSpatialDataFrame$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (meanValueSpatialDataFrame$predict.value - meanValueSpatialDataFrame$Y2021)^2) / 
   sum( ( meanValueSpatialDataFrame$Y2021 - mean(meanValueSpatialDataFrame$Y2021) )^2 )
-cv.line <- c("Y2021.mean", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2021.mean", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.mean.dataset <- rbind(kriging.cv.mean.dataset, cv.line)
 cor.test(meanValueSpatialDataFrame$predict.value, meanValueSpatialDataFrame$Y2021)
@@ -661,8 +691,8 @@ MEAN_Y2021.kriged.raster <- raster(Y2021.kriged.raster)
 rm(Y2021_emp_OK, dat.fit, Y2021.kriged, 
    Y2021.kriged.raster)
 
-colnames(kriging.cv.mean.dataset) <- c("Variable", "mean_error", "MAE", "MSNE",
-                                         "CoOP", "CoPR", "R2", "on.pointR2")
+colnames(kriging.cv.mean.dataset) <- c("Variable", "N", "R2", "MRSE", "MAE", 
+                                       "r", "Intercept", "Slope", "onpoint.R2")
 
 save(MEAN_no2_measured_ug.m3.kriged.raster,
      MEAN_ug_m2_troposphere_no2.kriged.raster,

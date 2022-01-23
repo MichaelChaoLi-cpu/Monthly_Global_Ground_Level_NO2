@@ -20,12 +20,14 @@
 # COEF_raster.RData: "CO_Y2021.kriged.raster" interpolation of 2021 dummy variable coefficient (OK)
 
 # output: krigingCVResult.RData
-# krigingCVResult.RData: "mean_error" mean error
+# krigingCVResult.RData: "N" number of observation
+# krigingCVResult.RData: "R2" R2
+# krigingCVResult.RData: "RMSE" root mean square error
 # krigingCVResult.RData: "MAE" mean absolute error
-# krigingCVResult.RData: "MSNE" Mean square normalized error
-# krigingCVResult.RData: "CoOP" correlation observed and predicted
-# krigingCVResult.RData: "CoPR" correlation predicted and residual
-# krigingCVResult.RData: "R2" centered R2
+# krigingCVResult.RData: "r" correlation coefficient
+# krigingCVResult.RData: "Intercept" intercept of regression
+# krigingCVResult.RData: "Slope" slope of regression
+# krigingCVResult.RData: "onPoint.R2" R2 after interpolation
 
 # Note: in this version, "NTL" is dropped. (COEF_raster.RData: "CO_NTL.kriged.raster" 
 #                                           interpolation of night time light coefficient (OK))
@@ -141,12 +143,14 @@ dat.fit  <- fit.variogram(ug_m2_troposphere_no2_emp_OK, fit.ranges = FALSE, fit.
 out <- 
   krige.cv(ug_m2_troposphere_no2~1, GWPR.point.dataset, GWPR.point.dataset@data, 
         model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 ug_m2_troposphere_no2.kriged <- 
   krige(ug_m2_troposphere_no2~1, GWPR.point.dataset, coords, 
         model = dat.fit)
@@ -159,9 +163,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$ug_m2_troposphere_no2)^2) / 
   sum( ( GWPR.point.dataset$ug_m2_troposphere_no2 - mean(GWPR.point.dataset$ug_m2_troposphere_no2) )^2 )
-cv.line <- c("ug_m2_troposphere_no2", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("ug_m2_troposphere_no2", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 ug_m2_troposphere_no2.kriged.raster@data <- ug_m2_troposphere_no2.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -177,12 +181,14 @@ dat.fit  <- fit.variogram(ter_pressure_emp_OK, fit.ranges = FALSE, fit.sills = F
 out <- 
   krige.cv(ter_pressure~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 ter_pressure.kriged <- 
   krige(ter_pressure~1, GWPR.point.dataset, coords, 
         model = dat.fit)
@@ -195,9 +201,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$ter_pressure)^2) / 
   sum( ( GWPR.point.dataset$ter_pressure - mean(GWPR.point.dataset$ter_pressure) )^2 )
-cv.line <- c("ter_pressure", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("ter_pressure",
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 ter_pressure.kriged.raster@data <- ter_pressure.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -213,12 +219,14 @@ dat.fit  <- fit.variogram(temp_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(temp~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 temp.kriged <- 
   krige(temp~1, GWPR.point.dataset, coords, 
         model = dat.fit)
@@ -231,9 +239,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$temp)^2) / 
   sum( ( GWPR.point.dataset$temp - mean(GWPR.point.dataset$temp) )^2 )
-cv.line <- c("temp", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("temp",
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 temp.kriged.raster@data <- temp.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -251,12 +259,14 @@ dat.fit  <- fit.variogram(ndvi_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(ndvi~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 ndvi.kriged <- 
   krige(ndvi~1, GWPR.point.dataset, coords, 
         model = dat.fit)
@@ -269,9 +279,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$ndvi)^2) / 
   sum( ( GWPR.point.dataset$ndvi - mean(GWPR.point.dataset$ndvi) )^2 )
-cv.line <- c("ndvi", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("ndvi", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 ndvi.kriged.raster@data <- ndvi.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -289,12 +299,14 @@ dat.fit  <- fit.variogram(precipitation_emp_OK, fit.ranges = FALSE, fit.sills = 
 out <- 
   krige.cv(precipitation~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 precipitation.kriged <- 
   krige(precipitation~1, GWPR.point.dataset, coords, 
         model = dat.fit)
@@ -307,9 +319,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$precipitation)^2) / 
   sum( ( GWPR.point.dataset$precipitation - mean(GWPR.point.dataset$precipitation) )^2 )
-cv.line <- c("precipitation", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("precipitation", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 precipitation.kriged.raster@data <- precipitation.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -332,14 +344,17 @@ if(run){
   out <- 
     krige.cv(NTL~1, GWPR.point.dataset, GWPR.point.dataset@data, 
              model = dat.fit)
-  mean_error <- mean(out$residual)
+  N <- nrow(GWPR.point.dataset@data)
+  R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+  MRSE <- sqrt(mean(out$residual^2))
   MAE <- mean(abs(out$residual))
-  Mean_square_normalized_error <- mean(out$zscore^2)
   correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-  correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-  R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
-  cv.line <- c("NTL", mean_error, MAE, Mean_square_normalized_error,
-               correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation)
+  out$pred <- out$observed - out$residual
+  coef.reg <- coef(lm(observed ~ pred, data = out))
+  
+  cv.line <- c("NTL", 
+               N, R2_interpolation, MRSE, MAE, 
+               correlation_observed_predicted, coef.reg, onpoint.R2)
   kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
   NTL.kriged@data$Ttest <- NTL.kriged@data$var1.pred / 
     NTL.kriged@data$var1.var
@@ -366,12 +381,13 @@ dat.fit  <- fit.variogram(PBLH_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(PBLH~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
 PBLH.kriged <- 
   krige(PBLH~1, GWPR.point.dataset, coords, 
         model = dat.fit)
@@ -384,9 +400,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$PBLH)^2) / 
   sum( ( GWPR.point.dataset$PBLH - mean(GWPR.point.dataset$PBLH) )^2 )
-cv.line <- c("PBLH", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation, 
-             onpoint.R2)
+cv.line <- c("PBLH",
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 PBLH.kriged.raster@data <- PBLH.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -404,12 +420,14 @@ dat.fit  <- fit.variogram(Y2016_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 Y2016.kriged <- 
   krige(Y2016~1, GWPR.point.dataset, coords, 
         model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 out <- 
   krige.cv(Y2016~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
@@ -422,9 +440,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2016)^2) / 
   sum( ( GWPR.point.dataset$Y2016 - mean(GWPR.point.dataset$Y2016) )^2 )
-cv.line <- c("Y2016", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2016", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2016.kriged.raster@data <- Y2016.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -442,12 +460,14 @@ dat.fit  <- fit.variogram(Y2017_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(Y2017~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 Y2017.kriged <- 
   krige(Y2017~1, GWPR.point.dataset, coords, 
         model = dat.fit)
@@ -460,9 +480,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2017)^2) / 
   sum( ( GWPR.point.dataset$Y2017 - mean(GWPR.point.dataset$Y2017) )^2 )
-cv.line <- c("Y2017", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2017",              
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2017.kriged.raster@data <- Y2017.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -480,12 +500,14 @@ dat.fit  <- fit.variogram(Y2018_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(Y2018~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 Y2018.kriged <- 
   krige(Y2018~1, GWPR.point.dataset, coords, 
         model = dat.fit)
@@ -498,9 +520,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2018)^2) / 
   sum( ( GWPR.point.dataset$Y2018 - mean(GWPR.point.dataset$Y2018) )^2 )
-cv.line <- c("Y2018", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2018", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2018.kriged.raster@data <- Y2018.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -518,12 +540,14 @@ dat.fit  <- fit.variogram(Y2019_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(Y2019~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 Y2019.kriged <- 
   krige(Y2019~1, GWPR.point.dataset, coords, 
         model = dat.fit)
@@ -536,9 +560,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2019)^2) / 
   sum( ( GWPR.point.dataset$Y2019 - mean(GWPR.point.dataset$Y2019) )^2 )
-cv.line <- c("Y2019", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2019", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2019.kriged.raster@data <- Y2019.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -556,12 +580,14 @@ dat.fit  <- fit.variogram(Y2020_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(Y2020~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 Y2020.kriged <- 
   krige(Y2020~1, GWPR.point.dataset, coords, 
         model = dat.fit)
@@ -574,9 +600,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2020)^2) / 
   sum( ( GWPR.point.dataset$Y2020 - mean(GWPR.point.dataset$Y2020) )^2 )
-cv.line <- c("Y2020", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2020", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2020.kriged.raster@data <- Y2020.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -594,12 +620,14 @@ dat.fit  <- fit.variogram(Y2021_emp_OK, fit.ranges = FALSE, fit.sills = FALSE,
 out <- 
   krige.cv(Y2021~1, GWPR.point.dataset, GWPR.point.dataset@data, 
            model = dat.fit)
-mean_error <- mean(out$residual)
+N <- nrow(GWPR.point.dataset@data)
+R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed - mean(out$observed) )^2 )
+MRSE <- sqrt(mean(out$residual^2))
 MAE <- mean(abs(out$residual))
-Mean_square_normalized_error <- mean(out$zscore^2)
 correlation_observed_predicted <- cor(out$observed, out$observed - out$residual)
-correlation_predicted_residuals <- cor(out$observed - out$residual, out$residual)
-R2_interpolation <- 1 - sum( out$residual^2) / sum( (out$observed)^2 )
+out$pred <- out$observed - out$residual
+coef.reg <- coef(lm(observed ~ pred, data = out))
+
 Y2021.kriged <- 
   krige(Y2021~1, GWPR.point.dataset, coords, 
         model = dat.fit)
@@ -612,9 +640,9 @@ GWPR.point.dataset$predict.value <- predict.value$var1.pred
 # R2
 onpoint.R2 <- 1 - sum( (GWPR.point.dataset$predict.value - GWPR.point.dataset$Y2021)^2) / 
   sum( ( GWPR.point.dataset$Y2021 - mean(GWPR.point.dataset$Y2021) )^2 )
-cv.line <- c("Y2021", mean_error, MAE, Mean_square_normalized_error,
-             correlation_observed_predicted, correlation_predicted_residuals, R2_interpolation,
-             onpoint.R2)
+cv.line <- c("Y2021", 
+             N, R2_interpolation, MRSE, MAE, 
+             correlation_observed_predicted, coef.reg, onpoint.R2)
 print(cv.line)
 kriging.cv.result.dataset <- rbind(kriging.cv.result.dataset, cv.line)
 Y2021.kriged.raster@data <- Y2021.kriged.raster@data %>% dplyr::select(var1.pred)
@@ -623,8 +651,8 @@ rm(Y2021_emp_OK, dat.fit, Y2021.kriged,
    Y2021.kriged.raster)
 
 
-colnames(kriging.cv.result.dataset) <- c("Variable", "mean_error", "MAE", "MSNE",
-                                         "CoOP", "CoPR", "R2", "Onpoint_R2")
+colnames(kriging.cv.result.dataset) <- c("Variable", "N", "R2", "MRSE", "MAE", 
+                                         "r", "Intercept", "Slope", "onpoint.R2")
 
 save(CO_ug_m2_troposphere_no2.kriged.raster,
      CO_ndvi.kriged.raster, CO_temp.kriged.raster, 
