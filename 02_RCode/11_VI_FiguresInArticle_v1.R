@@ -387,9 +387,10 @@ pal <- colorRampPalette(c("blue","green","yellow","red"))
 load("04_Results/meanOfRasterNo2.RData")
 #test.mean.grid.raster.output %>% plot()
 brks = c(0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60)
+#brks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120)
 labels_brks = brks %>% as.character()
 mean.tmap <- tm_shape(test.mean.grid.raster.output) +
-  tm_raster("ave.value", palette = pal(11), breaks = brks, 
+  tm_raster("ave.value", palette = pal(13), breaks = brks, 
             style = 'cont', legend.is.portrait = F, title = "The Mean of Monthly Concentration (ug/m3)",
             labels = labels_brks) +
   tm_grid(alpha = .25) + 
@@ -401,6 +402,7 @@ mean.tmap <- tm_shape(test.mean.grid.raster.output) +
     legend.text.size = legend_title_size * 0.75
   ) + 
   tm_scale_bar()
+mean.tmap
 mean.tmap %>%
   tmap_save(filename = "07_Figure/meanConcentration.jpg", width = 300, height = 140, units = 'mm', dpi = 1000)
 
