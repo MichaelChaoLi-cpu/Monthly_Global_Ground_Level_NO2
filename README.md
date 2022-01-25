@@ -1,12 +1,15 @@
 # Monthly_Global_Ground_Level_NO2 (DP10)
-This article tries to estimate monthly global ground-level NO2 concentration from 2015 to 2021 based on NASA data.
-Originally, we use GOME-2 data to detect the global ground-level NO2, from 2007 to 2017. The data used in the analysis are from 2015 to 2017.
+Predicting long-term ground-level nitrogen dioxide (NO2) is important globally to support environmental and public health research and to provide information to governments and society for air pollution control policies. The ozone monitoring instrument (OMI), using Aura Satellite, detects monthly global tropospheric column amounts (TrCA) of NO2 molecules. However, the relationship between the ground-level NO2 concentration and TrCA of NO2 molecules remains elusive because NO2 molecules in the air are not vertically evenly distributed. Here, we examine the relationship between satellite-derived data and measured ground-level NO2 concentration, controlling several meteorological variables from January 2015 to October 2021. The geographically weighted panel regression (GWPR) is built and applied. The accuracy of GWPR prediction is 69.61%. The coefficient of correlation between predicted and measure value is 0.8376. The root mean square error and mean absolute error are 7.84 and 4.07 μg⁄m3 , respectively. Moreover, the GWPR is the reliable indicated by the 10-fold cross-validation. The GWPR can analyze unbalanced panel data and capture the spatial variability of the relationship. Based on the GWPR estimation, the 82 monthly global ground-level NO2 concentrations are predicted from January 2015 to October 2021. Overall, this research provides critical basic data to environmental and public health science and valuable information for governments and societies to make more reasonable policies.   
   
 ## Author  
 Chao Li, Shunsuke Managi
 
 ## Result: Monthly NO2 Concentration  
 ![](06_Animate/ani.gif)
+  
+## Maunscript  
+[Estimating Monthly Global Ground-Level NO2 Concentrations Using Geographically Weighted Panel Regression](09_Manuscript/ManuscriptDP10.v2.pdf)  
+[Supplementary Materials](09_Manuscript/SupplementaryMaterials.pdf)  
   
 ## Data
 ### Used in 01_DW_MonthlyAverageNo2Panel_v1.R
@@ -61,23 +64,31 @@ This code in the cmd should miss some file. The 04_DW python is designed to solv
 **[09_AN_InterpolationMeanValueOfCities_v1.R](02_RCode/09_AN_InterpolationMeanValueOfCities_v1.R)**: This script is to interpolate the mean value of variables.
 **[10_AN_PredictionRasterCrossValidation_v1.R](02_RCode/10_AN_PredictionRasterCrossValidation_v1.R)**: This script is to use the interpolation results from [08_AN_InterpolationGWPR_v0.R](02_RCode/08_AN_InterpolationGWPR_v0.R) and [09_AN_InterpolationMeanValueOfCities_v1.R](02_RCode/09_AN_InterpolationMeanValueOfCities_v1.R) and satellite rasters to generate the final results, the GTiff files and some figures. 
 
+**[11_VI_FiguresInArticle_v1.R](02_RCode/11_VI_FiguresInArticle_v1.R)**: This script is to visualize the result in the manuscript.  
+**[12_AN_TrendenceChangeNo2Grid_v1.R](02_RCode/12_AN_TrendenceChangeNo2Grid_v1.R)**: This script is to calculate the mean values of all 82 months and monthly change trends.  
+**[13_AN_IDWinterpolationCoefficient.R](02_RCode/13_AN_IDWinterpolationCoefficient.R)**: This script is similar to [08_AN_InterpolationGWPR_v0.R](02_RCode/08_AN_InterpolationGWPR_v0.R), but interpolation method is IDW.  
+**[14_AN_IDWMeanValueOfCities_v1.R](02_RCode/14_AN_IDWMeanValueOfCities_v1.R)**: similar to [09_AN_InterpolationMeanValueOfCities_v1.R](02_RCode/09_AN_InterpolationMeanValueOfCities_v1.R).  
+**[15_AN_PredictionIdwRasterCrossValidation_v1.R](02_RCode/15_AN_PredictionIdwRasterCrossValidation_v1.R)**: similar to [10_AN_PredictionRasterCrossValidation_v1.R](02_RCode/10_AN_PredictionRasterCrossValidation_v1.R).  
+
    
 ## Workflow
 **WF.py: (01, 02, 03, 07, 08, 09, 10, 11, 16) -> END**  
 **WF.py.XX**: This step provides the all raster data from NASA or some places else.  
 
-**WF.A: 01 -> 02 -> 03 -> 06 -> (08, 09) -> 10 -> END**  
+**WF.A: 01 -> 02 -> 03 -> 06 -> (08, 09) -> 10 -> 12 -> END**  
 **WF.A.01.02**: This step merges [PanelNo2Dataset.Rdata](03_Rawdata/PanelNo2Dataset.Rdata) and [mergedDataset.Rdata](03_Rawdata/mergedDataset.Rdata).  
 **WF.A.02.03**: This step conducts the analysis using GWPR based on FEM with **Adaptive** distance bandwidth.  
 **WF.A.03.06**: This step conducts the 10-fold cross validation on the model of GWPR based on FEM.
 **WF.A.06.0809**: This step completes the ordinary kriging interpolation of coefficients and mean values.  
 **WF.A.0809.10**: This step obtain the final prediction.
-
+**WF.A.10.12**: This step obtain the mean NO2 raster from 2015 to 2021 and monthly change trends.  
+  
+**WF.A: 01 -> 02 -> 03 -> 06 -> (13, 14) -> 15 -> 12 -> END**  
+The result is not better than OK method, so rejected.  
   
 ## Contact Us:
 - Email: Prof. Shunsuke Managi <managi@doc.kyushu-u.ac.jp>  
 - Email: Chao Li <chaoli0394@gmail.com>
   
-## Data Collecting and Preprocessing
-This section mainly records the satellite data sources.  
-
+## Term of Use:
+Authors/funders retain copyright (where applicable) of code on this Github repo. This GitHub repo and its contents herein, including data, link to data source, and analysis code that are intended solely for reproducing the results in the manuscript "Estimating Monthly Global Ground-Level NO2 Concentrations Using Geographically Weighted Panel Regression". The analyses rely upon publicly available data from multiple sources, that are often updated without advance notice. We hereby disclaim any and all representations and warranties with respect to the site, including accuracy, fitness for use, and merchantability. By using this site, its content, information, and software you agree to assume all risks associated with your use or transfer of information and/or software. You agree to hold the authors harmless from any claims relating to the use of this site.  
