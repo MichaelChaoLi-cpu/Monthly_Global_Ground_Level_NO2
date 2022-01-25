@@ -365,10 +365,13 @@ title_size = .0001
 legend_title_size = 1
 margin = 0
 
-slope.tmap <- tm_shape(test.coeff.grid.raster.output) +
+slope.tmap <-   
+  tm_shape(test.coeff.grid.raster.output) +
   tm_raster("month.slope", palette = pal(11), breaks = brks, 
             style = 'cont', legend.is.portrait = F, title = "The Slope of Monthly Chage\n[ *0.01 ug/(m3 * month)]",
             labels = labels_brks) +
+  tm_shape(world) +
+  tm_borders(col = 'black', lwd = 0.5, alpha = 0.8) +
   tm_grid(alpha = .25) + 
   tm_layout(
     inner.margins = c(margin, margin, margin, margin),
@@ -379,7 +382,7 @@ slope.tmap <- tm_shape(test.coeff.grid.raster.output) +
   ) + 
   tm_scale_bar()
 
-#slope.tmap
+slope.tmap
 slope.tmap %>%
   tmap_save(filename = "07_Figure/monthSlope.jpg", width = 300, height = 140, units = 'mm', dpi = 1000)
 
@@ -393,6 +396,8 @@ mean.tmap <- tm_shape(test.mean.grid.raster.output) +
   tm_raster("ave.value", palette = pal(13), breaks = brks, 
             style = 'cont', legend.is.portrait = F, title = "The Mean of Monthly Concentration (ug/m3)",
             labels = labels_brks) +
+  tm_shape(world) +
+  tm_borders(col = 'black', lwd = 0.5, alpha = 0.8) +
   tm_grid(alpha = .25) + 
   tm_layout(
     inner.margins = c(margin, margin, margin, margin),
