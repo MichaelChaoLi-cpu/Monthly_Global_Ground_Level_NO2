@@ -10,6 +10,9 @@ Chao Li, Shunsuke Managi
 ## Maunscript  
 [Estimating Monthly Global Ground-Level NO2 Concentrations Using Geographically Weighted Panel Regression](09_Manuscript/ManuscriptDP10.v2.pdf)  
 [Supplementary Materials](09_Manuscript/SupplementaryMaterials.pdf)  
+
+##Data Archive
+All the predicted raster data are stored in to the [10_DataArchive](10_DataArchive/)
   
 ## Data
 ### Used in 01_DW_MonthlyAverageNo2Panel_v1.R
