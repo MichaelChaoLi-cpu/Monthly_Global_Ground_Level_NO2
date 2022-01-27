@@ -411,6 +411,31 @@ mean.tmap
 mean.tmap %>%
   tmap_save(filename = "07_Figure/meanConcentration.jpg", width = 300, height = 140, units = 'mm', dpi = 1000)
 
+load("04_Results/meanOfTrCA.RData")
+test.mean.grid.raster.output.ug <- crop(test.mean.grid.raster.output.ug, extent(world))
+test.mean.grid.raster.output.ug <- mask(test.mean.grid.raster.output.ug, world)
+pal <- colorRampPalette(c("blue","green","yellow","red"))
+brks = c(0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000)
+labels_brks = (brks/1000) %>% as.character()
+mean.TrCA.tmap <- tm_shape(test.mean.grid.raster.output.ug) +
+  tm_raster("ave.value", palette = pal(11), breaks = brks, 
+            style = 'cont', legend.is.portrait = F, title = "The Mean of Monthly TrCA Concentration\n(1000 ug/m2)",
+            labels = labels_brks) +
+  tm_shape(world) +
+  tm_borders(col = 'black', lwd = 0.5, alpha = 0.8) +
+  tm_grid(alpha = .25) + 
+  tm_layout(
+    inner.margins = c(margin, margin, margin, margin),
+    title.size = title_size, 
+    legend.position = c("left", "bottom"),
+    legend.title.size = legend_title_size,
+    legend.text.size = legend_title_size * 0.75
+  ) + 
+  tm_scale_bar()
+mean.TrCA.tmap
+mean.TrCA.tmap %>%
+  tmap_save(filename = "07_Figure/meanTrCAConcentration.jpg", width = 300, height = 140, units = 'mm', dpi = 1000)
+
 predict_raster_folder <- "D:/10_Article/11_PredictRaster/01_Test0104/"
 raster.filelist <- list.files(predict_raster_folder)
 #brks = c(0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80)

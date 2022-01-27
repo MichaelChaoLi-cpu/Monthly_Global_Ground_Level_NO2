@@ -131,3 +131,48 @@ test.mean.grid.raster.output@data <- test.mean.grid.raster.output@data %>% dplyr
 test.mean.grid.raster.output <- raster(test.mean.grid.raster.output)
 
 save(test.mean.grid.raster.output, file = "04_Results/meanOfRasterNo2.RData")
+
+# average TrCA OMI
+coords <- addcoord(nx,xmin,xsize,ny,ymin,ysize,proj)
+TrCA.raster.folder <- "D:/10_Article/09_TempOutput/02_MonthlyTroposphericNo2Tif/"
+raster.list <- list.files(TrCA.raster.folder)
+month.count <- 1
+while (month.count < length(raster.list) + 1) {
+  filename = raster.list[month.count]
+  test_tiff <- raster::raster(paste0(TrCA.raster.folder, filename))
+  test_tiff <- flip(test_tiff, direction = 'y')
+  data_ext <- raster::extract(test_tiff, coords)
+  coords@data <- cbind(coords@data, data_ext)
+  colnames(coords@data)[ncol(coords@data)] <- paste0("Mon_", as.character(month.count))
+  month.count <- month.count + 1
+}
+
+month.grid.dataset <- coords@data %>% as.data.frame()
+month.grid.dataset$NACount <- rowSums(is.na(month.grid.dataset))
+month.grid.dataset <- month.grid.dataset %>%
+  filter(NACount < 82)
+month.grid.dataset <- month.grid.dataset %>%
+  dplyr::select(-NACount)
+
+month.grid.dataset$ave.value <- rowMeans(month.grid.dataset[,2:83], na.rm = T)
+month.grid.dataset.mean <- month.grid.dataset %>%
+  dplyr::select("id", "ave.value")
+
+xy <- coordinates(coords)
+id.xy <- cbind(coords@data, xy) 
+id.xy <- id.xy %>% dplyr::select(id, X, Y)
+id.xy <- left_join(id.xy, month.grid.dataset.mean, by = 'id')
+test.mean.grid.sp <- SpatialPointsDataFrame(coords = xy, data = id.xy, proj4string = CRS(proj))
+test.mean.grid.raster <- as(test.mean.grid.sp, 'SpatialPixelsDataFrame')
+test.mean.grid.raster <- as(test.mean.grid.raster, "SpatialGridDataFrame")
+test.mean.grid.raster.output <- test.mean.grid.raster
+test.mean.grid.raster.output@data <- test.mean.grid.raster.output@data %>% dplyr::select("ave.value")
+test.mean.grid.raster.output <- raster(test.mean.grid.raster.output)
+
+mol_g = 6.022140857 * 10^23  # mol
+test.mean.grid.raster.output.ug <- test.mean.grid.raster.output / mol_g * 46.0055 # convert mol to g
+test.mean.grid.raster.output.ug <- test.mean.grid.raster.output.ug * 10000 * 1000000 # conver /cm2 to /m2 and g to ug
+
+plot(test.mean.grid.raster.output.ug)
+
+save(test.mean.grid.raster.output.ug, file = "04_Results/meanOfTrCA.RData")
