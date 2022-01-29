@@ -114,6 +114,10 @@ cityLocation <- cityLocation %>%
   mutate(City = ifelse(City == "Washington, D.C.", "Washington D.C.", City))
 cityNameCode <- usedDataset %>% dplyr::select(CityCode, City, Country) %>% distinct()
 cityLocation <- left_join(cityNameCode, cityLocation, by = c("City", "Country"))
+cityLocation.out <- cityLocation[order(cityLocation$Country, cityLocation$City),]
+cityLocation.out %>%
+  readr::write_csv(
+    file = "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/08_Tables/cityLocationTable.csv")
 rm(cityNameCode)
 
 proj <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" 
