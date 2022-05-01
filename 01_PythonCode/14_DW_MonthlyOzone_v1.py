@@ -3,6 +3,8 @@
 for OMI/Aura Ozone (O3) Total Column Daily L2 Global Gridded 0.25 degree x 0.25 degree V3 (OMTO3G)
 
 Band: 
+    
+Unit: DU
 
 Resolution: 0.25 arc degree
 
