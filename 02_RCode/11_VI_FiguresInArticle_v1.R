@@ -224,49 +224,50 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    cor.coef = F, cor.method = "pearson",
                    xlab = "OMI TrCA NO2", ylab = "Ground-level NO2",           
                    add.params = list(color = "blue", fill = "lightskyblue1"),
-                   color = "grey76", shape = 21
+                   color = "grey76", shape = 21, ylim = c(0, 150)
 ) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
+
 
 (plot2 <- ggscatter(usedDataset, x = "ter_pressure", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
                    xlab = "Terrain Atmospheric Pressure", ylab = "Ground-level NO2",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
-                   color = "grey76", shape = 21) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
+                   color = "grey76", shape = 21, ylim = c(0, 150)) +
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
 
 (plot3 <- ggscatter(usedDataset, x = "temp", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
                    xlab = "Temperature", ylab = "Ground-level NO2",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
-                   color = "grey76", shape = 21) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
+                   color = "grey76", shape = 21, ylim = c(0, 150)) +
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
 
 (plot4 <- ggscatter(usedDataset, x = "ndvi", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
                    xlab = "NDVI", ylab = "Ground-level NO2",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
-                   color = "grey76", shape = 21) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
+                   color = "grey76", shape = 21, ylim = c(0, 150)) +
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
 
 (plot5 <- ggscatter(usedDataset, x = "precipitation", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
                    xlab = "Precipitation", ylab = "Ground-level NO2",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
-                   color = "grey76", shape = 21) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
+                   color = "grey76", shape = 21, ylim = c(0, 150)) +
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
 
 (plot6 <- ggscatter(usedDataset, x = "PBLH", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
                    xlab = "PBLH", ylab = "Ground-level NO2",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
-                   color = "grey76", shape = 21) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01))
+                   color = "grey76", shape = 21, ylim = c(0, 150)) +
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
 
 jpeg(file="07_Figure/cor_line1.jpeg", width = 297, height = 210, units = "mm", quality = 300, res = 300)
 grid.arrange(plot1, plot2, plot3, 
