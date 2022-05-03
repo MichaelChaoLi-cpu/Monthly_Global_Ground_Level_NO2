@@ -51,7 +51,7 @@ Mean <- round(mean(usedDataset.tranformed$ug_m2_troposphere_no2_t), 2)
 SD <- round(sd(usedDataset.tranformed$ug_m2_troposphere_no2_t), 2)
 N = nrow(usedDataset.tranformed)
 grob <- grobTree(textGrob(paste0("Mean = ", Mean, "\nStd.dev = ", SD,"\nN = ", N),
-                          x = 0.75,  y = 0.90, hjust = 0,
+                          x = 0.72,  y = 0.90, hjust = 0,
                           gp = gpar(col = "black", fontsize = 8)))
 grob_add <- grobTree(textGrob("b",
                               x = 0.02,  y = 0.95, hjust = 0,
@@ -69,7 +69,7 @@ Mean <- round(mean(usedDataset.tranformed$ter_pressure_t), 2)
 SD <- round(sd(usedDataset.tranformed$ter_pressure_t), 2)
 N = nrow(usedDataset.tranformed)
 grob <- grobTree(textGrob(paste0("Mean = ", Mean, "\nStd.dev = ", SD,"\nN = ", N),
-                          x = 0.61,  y = 0.90, hjust = 0,
+                          x = 0.75,  y = 0.90, hjust = 0,
                           gp = gpar(col = "black", fontsize = 8)))
 grob_add <- grobTree(textGrob("c",
                               x = 0.02,  y = 0.95, hjust = 0,
@@ -171,7 +171,9 @@ dev.off()
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21, ylim = c(-25, 50), xlim = c(-10000, 25000)
 ) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = 0.03, label.y.npc = 0.17))
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = 0.03, label.y.npc = 0.17) +
+  annotate("text", x = 23000, y = 46, label = 'bold("a")', parse = TRUE)
+)
 
 
 (plot2 <- ggscatter(usedDataset.tranformed, x = "ter_pressure_t", y = "no2_measured_ug.m3_t", size = 1,
@@ -180,7 +182,9 @@ dev.off()
                     xlab = "Terrain Atmospheric Pressure", ylab = "Ground-level NO2",
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21, ylim = c(-50, 50), xlim = c(-15, 15)) +
-    stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = 0.23, label.y.npc = 0.17))
+    stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = 0.23, label.y.npc = 0.17) +
+    annotate("text", x = 13, y = 46, label = 'bold("b")', parse = TRUE)
+  )
 
 (plot3 <- ggscatter(usedDataset.tranformed, x = "temp_t", y = "no2_measured_ug.m3_t", size = 1,
                     add = "reg.line", conf.int = TRUE,
@@ -188,7 +192,9 @@ dev.off()
                     xlab = "Temperature", ylab = "Ground-level NO2",
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21,ylim = c(-50, 50)) +
-    stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17))
+    stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17) +
+    annotate("text", x = 21, y = 46, label = 'bold("c")', parse = TRUE)
+  )
 
 (plot4 <- ggscatter(usedDataset.tranformed, x = "ndvi_t", y = "no2_measured_ug.m3_t", size = 1,
                     add = "reg.line", conf.int = TRUE,
@@ -196,7 +202,9 @@ dev.off()
                     xlab = "NDVI", ylab = "Ground-level NO2",
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21, ylim = c(-50, 50)) +
-    stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17))
+    stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17) +
+    annotate("text", x = 0.4, y = 46, label = 'bold("d")', parse = TRUE)
+  )
 
 (plot5 <- ggscatter(usedDataset.tranformed, x = "precipitation_t", y = "no2_measured_ug.m3_t", size = 1,
                     add = "reg.line", conf.int = TRUE,
@@ -204,7 +212,9 @@ dev.off()
                     xlab = "Precipitation", ylab = "Ground-level NO2",
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21, ylim = c(-50, 50)) +
-    stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17))
+    stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17) +
+    annotate("text", x = 0.75, y = 46, label = 'bold("e")', parse = TRUE)
+  )
 
 (plot6 <- ggscatter(usedDataset.tranformed, x = "PBLH_t", y = "no2_measured_ug.m3_t", size = 1,
                     add = "reg.line", conf.int = TRUE,
@@ -212,7 +222,9 @@ dev.off()
                     xlab = "PBLH", ylab = "Ground-level NO2",
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21, ylim = c(-50, 50)) +
-    stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17))
+    stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17) +
+    annotate("text", x = 1200, y = 46, label = 'bold("f")', parse = TRUE)
+  )
 
 jpeg(file="07_Figure/cor_line1_transform.jpeg", width = 297, height = 210, units = "mm", quality = 300, res = 300)
 grid.arrange(plot1, plot2, plot3, 

@@ -226,7 +226,9 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)
 ) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
+  annotate("text", x = 65000, y = 146, label = 'bold("a")', parse = TRUE)
+)
 
 
 (plot2 <- ggscatter(usedDataset, x = "ter_pressure", y = "no2_measured_ug.m3", size = 1,
@@ -235,7 +237,9 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    xlab = "Terrain Atmospheric Pressure", ylab = "Ground-level NO2",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
+    annotate("text", x = 1000, y = 146, label = 'bold("b")', parse = TRUE)
+  )
 
 (plot3 <- ggscatter(usedDataset, x = "temp", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
@@ -243,7 +247,9 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    xlab = "Temperature", ylab = "Ground-level NO2",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
+  annotate("text", x = 40, y = 146, label = 'bold("c")', parse = TRUE)
+  )
 
 (plot4 <- ggscatter(usedDataset, x = "ndvi", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
@@ -251,7 +257,9 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    xlab = "NDVI", ylab = "Ground-level NO2",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
+  annotate("text", x = 0.8, y = 146, label = 'bold("d")', parse = TRUE)
+  )
 
 (plot5 <- ggscatter(usedDataset, x = "precipitation", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
@@ -259,7 +267,9 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    xlab = "Precipitation", ylab = "Ground-level NO2",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
+    annotate("text", x = 1.1, y = 146, label = 'bold("e")', parse = TRUE)
+  )
 
 (plot6 <- ggscatter(usedDataset, x = "PBLH", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
@@ -267,7 +277,9 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    xlab = "PBLH", ylab = "Ground-level NO2",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
-  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22))
+  stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
+  annotate("text", x = 3100, y = 146, label = 'bold("e")', parse = TRUE)
+  )
 
 jpeg(file="07_Figure/cor_line1.jpeg", width = 297, height = 210, units = "mm", quality = 300, res = 300)
 grid.arrange(plot1, plot2, plot3, 
@@ -369,7 +381,7 @@ margin = 0
 slope.tmap <-   
   tm_shape(test.coeff.grid.raster.output) +
   tm_raster("month.slope", palette = pal(11), breaks = brks, 
-            style = 'cont', legend.is.portrait = F, title = "The Slope of Monthly Chage\n[ *0.01 ug/(m3 * month)]",
+            style = 'cont', legend.is.portrait = F, title = "The Slope of Monthly Change\n[ *0.01 ug/(m3 * month)]",
             labels = labels_brks) +
   tm_shape(world) +
   tm_borders(col = 'black', lwd = 0.5, alpha = 0.8) +
