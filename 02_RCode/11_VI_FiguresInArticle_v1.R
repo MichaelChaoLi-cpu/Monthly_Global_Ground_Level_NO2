@@ -89,9 +89,13 @@ grob_add <- grobTree(textGrob("a",
 (a <- ggplot(usedDataset) +
   aes(x = no2_measured_ug.m3) +
   xlim(0, 100) +
-  geom_histogram(colour = "black", fill = "white") +
+  geom_histogram(aes(y = ..density..), colour = "black", fill = "white") +
+  stat_function(fun = dnorm, 
+                  args = list(mean = mean(usedDataset$no2_measured_ug.m3),
+                              sd = sd(usedDataset$no2_measured_ug.m3)),
+                  col = 'red', size = 2) +
   xlab("Ground-level NO2 (ug/m3)") + 
-  ylab("Frequency") +
+  ylab("Density") +
   annotation_custom(grob) +
   annotation_custom(grob_add))
 
@@ -106,10 +110,14 @@ grob_add <- grobTree(textGrob("b",
                               gp = gpar(col = "black", fontsize = 18)))
 (b <- ggplot(usedDataset) +
   aes(x = ug_m2_troposphere_no2) +
-  geom_histogram(colour = "black", fill = "white") +
+  geom_histogram(aes(y = ..density..), colour = "black", fill = "white") +
+  stat_function(fun = dnorm, 
+                  args = list(mean = mean(usedDataset$ug_m2_troposphere_no2),
+                              sd = sd(usedDataset$ug_m2_troposphere_no2)),
+                  col = 'red', size = 2) +
   xlim(0, 10000) +
   xlab("OMI TrCA NO2 (ug/m2)") + 
-  ylab("Frequency") +
+  ylab("Density") +
   annotation_custom(grob) +
   annotation_custom(grob_add))
 
@@ -124,10 +132,14 @@ grob_add <- grobTree(textGrob("c",
                               gp = gpar(col = "black", fontsize = 18)))
 (c <- ggplot(usedDataset) +
     aes(x = ter_pressure) +
-    geom_histogram(colour = "black", fill = "white") +
+    geom_histogram(aes(y = ..density..), colour = "black", fill = "white") +
+    stat_function(fun = dnorm, 
+                  args = list(mean = mean(usedDataset$ter_pressure),
+                              sd = sd(usedDataset$ter_pressure)),
+                  col = 'red', size = 2) +
     #xlim(0, 20) +
     xlab("Terrain Atmospheric Pressure (hPa)") + 
-    ylab("Frequency") +
+    ylab("Density") +
     annotation_custom(grob) +
     annotation_custom(grob_add))
 
@@ -142,10 +154,14 @@ grob_add <- grobTree(textGrob("d",
                               gp = gpar(col = "black", fontsize = 18)))
 (d <- ggplot(usedDataset) +
     aes(x = temp) +
-    geom_histogram(colour = "black", fill = "white") +
+    geom_histogram(aes(y = ..density..), colour = "black", fill = "white") +
+    stat_function(fun = dnorm, 
+                  args = list(mean = mean(usedDataset$temp),
+                              sd = sd(usedDataset$temp)),
+                  col = 'red', size = 2) +
     #xlim(0, 20) +
     xlab("Temperature (Celsius Degree)") + 
-    ylab("Frequency") +
+    ylab("Density") +
     annotation_custom(grob) +
     annotation_custom(grob_add))
 
@@ -160,10 +176,14 @@ grob_add <- grobTree(textGrob("e",
                               gp = gpar(col = "black", fontsize = 18)))
 (e <- ggplot(usedDataset) +
     aes(x = ndvi) +
-    geom_histogram(colour = "black", fill = "white") +
+    geom_histogram(aes(y = ..density..), colour = "black", fill = "white") +
+    stat_function(fun = dnorm, 
+                  args = list(mean = mean(usedDataset$ndvi),
+                              sd = sd(usedDataset$ndvi)),
+                  col = 'red', size = 2) +
     #xlim(0, 20) +
     xlab("NDVI") + 
-    ylab("Frequency") +
+    ylab("Density") +
     annotation_custom(grob) +
     annotation_custom(grob_add))
 
@@ -178,10 +198,14 @@ grob_add <- grobTree(textGrob("f",
                               gp = gpar(col = "black", fontsize = 18)))
 (f <- ggplot(usedDataset) +
     aes(x = precipitation) +
-    geom_histogram(colour = "black", fill = "white") +
+    geom_histogram(aes(y = ..density..), colour = "black", fill = "white") +
+    stat_function(fun = dnorm, 
+                  args = list(mean = mean(usedDataset$precipitation),
+                              sd = sd(usedDataset$precipitation)),
+                  col = 'red', size = 2) +
     xlim(0, 0.8) +
     xlab("Precipitation kg/(m2*h)") + 
-    ylab("Frequency") +
+    ylab("Density") +
     annotation_custom(grob) +
     annotation_custom(grob_add))
 
@@ -196,10 +220,14 @@ grob_add <- grobTree(textGrob("g",
                               gp = gpar(col = "black", fontsize = 18)))
 (g <- ggplot(usedDataset) +
     aes(x = PBLH) +
-    geom_histogram(colour = "black", fill = "white") +
+    geom_histogram(aes(y = ..density..), colour = "black", fill = "white") +
+    stat_function(fun = dnorm, 
+                  args = list(mean = mean(usedDataset$PBLH),
+                              sd = sd(usedDataset$PBLH)),
+                  col = 'red', size = 2) +
     xlim(0, 2500) +
     xlab("PBLH (m)") + 
-    ylab("Frequency") +
+    ylab("Density") +
     annotation_custom(grob) +
     annotation_custom(grob_add))
 
@@ -209,6 +237,7 @@ grid.arrange(a, b, c,
              g,
              nrow = 3)
 dev.off()
+#-------------descriptive statistics--------------
 
 formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 + 
   ter_pressure + 
@@ -227,7 +256,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    color = "grey76", shape = 21, ylim = c(0, 150)
 ) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
-  annotate("text", x = 65000, y = 146, label = 'bold("a")', parse = TRUE)
+  annotate("text", x = 65000, y = 146, label = 'bold("a")', parse = TRUE, size = 5)
 )
 
 
@@ -238,7 +267,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
-    annotate("text", x = 1000, y = 146, label = 'bold("b")', parse = TRUE)
+    annotate("text", x = 1000, y = 146, label = 'bold("b")', parse = TRUE, size = 5)
   )
 
 (plot3 <- ggscatter(usedDataset, x = "temp", y = "no2_measured_ug.m3", size = 1,
@@ -248,7 +277,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
-  annotate("text", x = 40, y = 146, label = 'bold("c")', parse = TRUE)
+  annotate("text", x = 40, y = 146, label = 'bold("c")', parse = TRUE, size = 5)
   )
 
 (plot4 <- ggscatter(usedDataset, x = "ndvi", y = "no2_measured_ug.m3", size = 1,
@@ -258,7 +287,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
-  annotate("text", x = 0.8, y = 146, label = 'bold("d")', parse = TRUE)
+  annotate("text", x = 0.8, y = 146, label = 'bold("d")', parse = TRUE, size = 5)
   )
 
 (plot5 <- ggscatter(usedDataset, x = "precipitation", y = "no2_measured_ug.m3", size = 1,
@@ -268,7 +297,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
-    annotate("text", x = 1.1, y = 146, label = 'bold("e")', parse = TRUE)
+    annotate("text", x = 1.1, y = 146, label = 'bold("e")', parse = TRUE, size = 5)
   )
 
 (plot6 <- ggscatter(usedDataset, x = "PBLH", y = "no2_measured_ug.m3", size = 1,
@@ -278,7 +307,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
-  annotate("text", x = 3100, y = 146, label = 'bold("e")', parse = TRUE)
+  annotate("text", x = 3100, y = 146, label = 'bold("f")', parse = TRUE, size = 5)
   )
 
 jpeg(file="07_Figure/cor_line1.jpeg", width = 297, height = 210, units = "mm", quality = 300, res = 300)
