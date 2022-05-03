@@ -193,17 +193,31 @@ dev.off()
 #-------------descriptive statistics--------------
 
 #### check skewness
+
 skewness(usedDataset.tranformed$no2_measured_ug.m3_t)
 skewness(usedDataset.tranformed$ug_m2_troposphere_no2_t)
-skewness(usedDataset.tranformed$ter_pressure)
+skewness(usedDataset.tranformed$ter_pressure_t)
 skewness(usedDataset.tranformed$temp_t)
 skewness(usedDataset.tranformed$ndvi_t)
 skewness(usedDataset.tranformed$precipitation_t)
 skewness(usedDataset.tranformed$PBLH_t)
 
+test.dataset <- usedDataset.tranformed %>% 
+  filter(no2_measured_ug.m3_t < 10.6 * 10)
+skewness(test.dataset$no2_measured_ug.m3_t)
+test.dataset <- usedDataset.tranformed %>% 
+  filter(no2_measured_ug.m3_t > 10.6 * 10)
+test.dataset
+
+test.dataset <- usedDataset.tranformed %>% 
+  filter(ug_m2_troposphere_no2_t < 2751.1 * 10)
+skewness(test.dataset$ug_m2_troposphere_no2_t)
+test.dataset <- usedDataset.tranformed %>% 
+  filter(ug_m2_troposphere_no2_t > 2751.1 * 7)
+
 kurtosis(usedDataset.tranformed$no2_measured_ug.m3_t)
 kurtosis(usedDataset.tranformed$ug_m2_troposphere_no2_t)
-kurtosis(usedDataset.tranformed$ter_pressure)
+kurtosis(usedDataset.tranformed$ter_pressure_t)
 kurtosis(usedDataset.tranformed$temp_t)
 kurtosis(usedDataset.tranformed$ndvi_t)
 kurtosis(usedDataset.tranformed$precipitation_t)
