@@ -205,10 +205,10 @@ skewness(usedDataset.tranformed$PBLH_t)
 test.dataset <- usedDataset.tranformed %>% 
   filter(no2_measured_ug.m3_t < 10.6 * 10)
 skewness(test.dataset$no2_measured_ug.m3_t)
+kurtosis(test.dataset$no2_measured_ug.m3_t)
 test.dataset <- usedDataset.tranformed %>% 
   filter(no2_measured_ug.m3_t > 10.6 * 10)
 test.dataset
-
 test.dataset <- usedDataset.tranformed %>% 
   filter(ug_m2_troposphere_no2_t < 2751.1 * 10)
 skewness(test.dataset$ug_m2_troposphere_no2_t)
