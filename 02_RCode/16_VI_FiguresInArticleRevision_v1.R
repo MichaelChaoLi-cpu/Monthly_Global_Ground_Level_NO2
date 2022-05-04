@@ -295,3 +295,80 @@ grid.arrange(plot1, plot2, plot3,
              nrow = 2)
 dev.off()
 #-------------trends of XY------------------------
+
+#-------------change to line plot of monthlymean--------------
+# time series of data
+load("04_Results/GWPR_FEM_CV_A_result.Rdata")
+residual.GWPR <- GWPR.FEM.CV.A.result$GWPR.residuals 
+
+load("03_Rawdata/usedDataset.RData")
+merge.tropono2 <- usedDataset %>% dplyr::select(ug_m2_troposphere_no2,
+                                                CityCode, period, year, month) %>%
+  rename("id" = "CityCode")
+residual.GWPR <- left_join(residual.GWPR, merge.tropono2, by = c("id", "period"))
+residual.GWPR$ug_m2_troposphere_no2 <- residual.GWPR$ug_m2_troposphere_no2/160
+monthly.GWPR <- aggregate(residual.GWPR %>% dplyr::select(y, yhat, ug_m2_troposphere_no2), 
+                          list(residual.GWPR$period), FUN = mean)
+monthly.GWPR$Group.2 <- monthly.GWPR$Group.1 %>% as.factor()
+monthly.pre <- monthly.GWPR %>% dplyr::select(-Group.1 )
+monthly.pre <- monthly.pre %>% pivot_longer(cols = c("y", "yhat", "ug_m2_troposphere_no2"))
+monthly.GWPR.stderr <- aggregate(residual.GWPR %>% dplyr::select(y, yhat, ug_m2_troposphere_no2), 
+                                 list(residual.GWPR$period), FUN = std.error)
+monthly.GWPR.stderr$Group.2 <- monthly.GWPR.stderr$Group.1 %>% as.factor()
+monthly.pre.stderr <- monthly.GWPR.stderr %>% dplyr::select(-Group.1 )
+monthly.pre.stderr <- monthly.pre.stderr %>% pivot_longer(cols = c("y", "yhat", "ug_m2_troposphere_no2"))
+monthly.pre.stderr <- monthly.pre.stderr %>% rename("SE" = "value")
+monthly.pre <- left_join(monthly.pre, monthly.pre.stderr, by = c("Group.2", "name"))
+
+(p3.point <- ggplot(monthly.pre) +
+    #geom_line(aes(x = Group.2, y = value, group = name, color = name),  stat = "identity",
+    #          size = 1) +
+    geom_errorbar(aes(x = Group.2, ymin = value - SE * 1.96, ymax = value + SE * 1.96), color = "gray88",
+                  width = 0, size = 3, alpha = 0.8) +
+    geom_point(aes(x = Group.2, y = value, group = name, color = name),  stat = "identity",
+               size = 2, alpha = 0.8)+
+    geom_errorbar(aes(x = Group.2, ymin = value - SE * 1.96, ymax = value + SE * 1.96, color = name), 
+                  width = 0, size = 0.8, alpha = 0.6) +
+    scale_y_continuous(name = "Ground-Level NO2 Concentration",
+                       sec.axis = sec_axis(~.*160, name="Tropospheric NO2 Concentration")) +
+    scale_color_manual(values = c("red", "blue", "gold1"), name =NULL, 
+                       labels = c("Tropospheric NO2 Concentration", 
+                                  "Measured Ground-Level NO2 Concentration",
+                                  "Predicted Ground-Level NO2 Concentration")) +
+    #scale_color_manual(values = c("red4", "blue3", "salmon4")) +
+    scale_x_discrete(name = NULL)+ 
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+          legend.position = c(0.85, 0.88))
+)
+jpeg(file="07_Figure/monthlymean_point_only.jpeg", width = 297, height = 180, units = "mm", quality = 300, res = 300)
+p3.point
+dev.off()
+
+(p3.line <- ggplot(monthly.pre) +
+    geom_line(aes(x = Group.2, y = value, group = name, color = name),  stat = "identity",
+              size = 0.4) +
+    geom_errorbar(aes(x = Group.2, ymin = value - SE * 1.96, ymax = value + SE * 1.96), color = "gray88",
+                  width = 0, size = 3, alpha = 0.8) +
+    geom_point(aes(x = Group.2, y = value, group = name, color = name),  stat = "identity",
+               size = 2, alpha = 0.8)+
+    geom_errorbar(aes(x = Group.2, ymin = value - SE * 1.96, ymax = value + SE * 1.96, color = name), 
+                  width = 0, size = 0.8, alpha = 0.6) +
+    scale_y_continuous(name = "Ground-Level NO2 Concentration",
+                       sec.axis = sec_axis(~.*160, name="Tropospheric NO2 Concentration")) +
+    scale_color_manual(values = c("red", "blue", "gold1"), name =NULL, 
+                       labels = c("Tropospheric NO2 Concentration", 
+                                  "Measured Ground-Level NO2 Concentration",
+                                  "Predicted Ground-Level NO2 Concentration")) +
+    #scale_color_manual(values = c("red4", "blue3", "salmon4")) +
+    scale_x_discrete(name = NULL)+ 
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+          legend.position = c(0.85, 0.88))
+)
+jpeg(file="07_Figure/monthlymean_line.jpeg", width = 297, height = 180, units = "mm", quality = 300, res = 300)
+p3.line
+dev.off()
+#-------------change to line plot of monthlymean--------------
+
+
