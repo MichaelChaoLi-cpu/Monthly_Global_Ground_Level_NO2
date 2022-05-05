@@ -5,6 +5,7 @@
 library(dplyr)
 library(tidyverse)
 library(moments)
+library(raster)
 
 load("03_Rawdata/usedDataset.RData")
 formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 + 
@@ -351,7 +352,7 @@ dev.off()
     geom_errorbar(aes(x = Group.2, ymin = value - SE * 1.96, ymax = value + SE * 1.96), color = "gray88",
                   width = 0, size = 3, alpha = 0.8) +
     geom_point(aes(x = Group.2, y = value, group = name, color = name),  stat = "identity",
-               size = 2, alpha = 0.8)+
+               size = 2, alpha = 0.8) +
     geom_errorbar(aes(x = Group.2, ymin = value - SE * 1.96, ymax = value + SE * 1.96, color = name), 
                   width = 0, size = 0.8, alpha = 0.6) +
     scale_y_continuous(name = "Ground-Level NO2 Concentration",
@@ -371,4 +372,56 @@ p3.line
 dev.off()
 #-------------change to line plot of monthlymean--------------
 
+#### month trend raster and city global
+rasterFolder <- "C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/10_DataArchive/"
+rasterFileList <- list.files(rasterFolder)
+mean_value_df <- data.frame(
+  Doubles=double(),Ints=integer(), Factors=factor(), Logicals=logical(),
+  Characters=character(), stringsAsFactors=FALSE)
+for (rasterFile in rasterFileList){
+  test_tiff <- raster::raster(paste0(rasterFolder, rasterFile))
+  mean_value <- cellStats(test_tiff, stat='mean', na.rm = T)
+  date <- rasterFile %>% substr(1, 6) %>% as.numeric()
+  line <- c(mean_value, date)
+  mean_value_df <- rbind(mean_value_df, line)
+}
 
+colnames(mean_value_df) <- c("mean_tiff", "date")
+mean_value_df <- mean_value_df %>% arrange(date)
+
+yhat_df <- monthly.pre %>% filter(name == 'yhat') %>%
+  dplyr::select(Group.2, value)
+yhat_df$Group.2 <- yhat_df$Group.2 %>% as.character() %>% as.numeric()
+colnames(yhat_df) <- c("date", "mean_city")
+
+mean_value_df <- left_join(mean_value_df, yhat_df, by = "date")
+mean_value_df$month_order <- 1:82
+date_vector <- mean_value_df$date
+mean_value_df <- mean_value_df %>% 
+  dplyr::select(-date)
+mean_value_df <- mean_value_df %>% 
+  pivot_longer(!month_order, names_to = "data_source", values_to = "value")
+mean_value_df <- mean_value_df %>% na.omit()
+
+(p4 <- ggplot(mean_value_df) +
+    geom_point(aes(x = month_order, y = value, group = data_source, color = data_source),  stat = "identity",
+               size = 2, alpha = 0.8) +
+    geom_smooth(aes(x = month_order, y = value, group = data_source, color = data_source), method = lm) +
+    scale_color_manual(values = c("red", "blue", "gold1"), name =NULL, 
+                       labels = c("Mean of Predictions of the Cities", 
+                                  "Mean of Predictions of All the Grids")) +
+    scale_y_continuous(name = "NO2 Concentration") +
+    scale_x_continuous(name = "Date", breaks = seq(1, 82, by = 1), labels = date_vector,
+                       minor_breaks = NULL) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+          legend.position = c(0.85, 0.88))
+  )
+jpeg(file="07_Figure/meantiff_city_trend.jpeg", width = 297, height = 180, units = "mm", quality = 300, res = 300)
+p4
+dev.off()
+
+lm(value ~ month_order, data = mean_value_df %>% filter(data_source == "mean_city")) %>%
+  summary()
+lm(value ~ month_order, data = mean_value_df %>% filter(data_source == "mean_tiff")) %>%
+  summary()
