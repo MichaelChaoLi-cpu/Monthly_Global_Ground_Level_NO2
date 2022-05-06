@@ -134,3 +134,11 @@ R2_ug_m2_troposphere_no2 <- 1 - sum((differenceTestDataset$ug_m2_troposphere_no2
   sum((differenceTestDataset$ug_m2_troposphere_no2 - mean(differenceTestDataset$ug_m2_troposphere_no2))^2)
 cor.test(differenceTestDataset$ug_m2_troposphere_no2, differenceTestDataset$ug_m2_troposphere_no2_overlap)
 ## r 0.9618
+
+### check Puebla 2021 sept 
+Pueble.daily <- totalAirPollutionDataset %>%
+  filter(Country == 'MX', 
+         City == "Puebla",
+         year == 2021) %>%
+  filter(Specie == "no2")
+ 

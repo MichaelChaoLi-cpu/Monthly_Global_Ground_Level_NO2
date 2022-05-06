@@ -68,3 +68,10 @@ judgement.score <- rbind(line.2015, line.2016, line.2017, line.2018,
                          line.2019, line.2020, line.2021, line.total)
 colnames(judgement.score) <- c("Year", "N", "R2", "RMSE", "MAE", "r", "Slope", "Intercept")
 write.csv(judgement.score, file = "08_Tables/judgement.score.csv")
+
+residual.GWPR.2021.test <- residual.GWPR.2021 %>% 
+  filter(!(id == 484 & period == 202109))
+line.2021.test <- year.judgement.score(residual.GWPR.2021.test)
+line.2021.test
+
+### Puebla
