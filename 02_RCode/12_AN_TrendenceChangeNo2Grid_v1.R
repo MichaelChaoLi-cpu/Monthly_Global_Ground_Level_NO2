@@ -118,6 +118,7 @@ save(test.coeff.grid.raster.output, file = "04_Results/trendenceMonthGroundLevel
 month.grid.dataset$ave.value <- rowMeans(month.grid.dataset[,2:83], na.rm = T)
 month.grid.dataset.mean <- month.grid.dataset %>%
   dplyr::select("id", "ave.value")
+month.grid.dataset.mean.prediction.check.corr <- month.grid.dataset.mean 
 
 xy <- coordinates(coords)
 id.xy <- cbind(coords@data, xy) 
@@ -157,6 +158,7 @@ month.grid.dataset <- month.grid.dataset %>%
 month.grid.dataset$ave.value <- rowMeans(month.grid.dataset[,2:83], na.rm = T)
 month.grid.dataset.mean <- month.grid.dataset %>%
   dplyr::select("id", "ave.value")
+month.grid.dataset.mean.TrCA.check.corr <- month.grid.dataset.mean
 
 xy <- coordinates(coords)
 id.xy <- cbind(coords@data, xy) 
@@ -176,3 +178,10 @@ test.mean.grid.raster.output.ug <- test.mean.grid.raster.output.ug * 10000 * 100
 plot(test.mean.grid.raster.output.ug)
 
 save(test.mean.grid.raster.output.ug, file = "04_Results/meanOfTrCA.RData")
+
+comparedTrCAPredictionDataset <-
+  left_join(month.grid.dataset.mean.prediction.check.corr, month.grid.dataset.mean.TrCA.check.corr,
+            by = "id")
+comparedTrCAPredictionDataset <- comparedTrCAPredictionDataset %>%
+  arrange(ave.value.x)
+cor.test(comparedTrCAPredictionDataset$ave.value.x, comparedTrCAPredictionDataset$ave.value.y)

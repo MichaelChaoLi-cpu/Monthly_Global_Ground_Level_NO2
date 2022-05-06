@@ -64,6 +64,7 @@ library(tmap)
 library(sp)
 library(doParallel)
 library(foreach)
+library(rgdal)
 
 load("C:/Users/li.chao.987@s.kyushu-u.ac.jp/OneDrive - Kyushu University/10_Article/08_GitHub/03_Rawdata/mergedDataset.Rdata")
 
@@ -170,6 +171,8 @@ plot(cityLocationSpatialPoint)
 # get the city points 
 save(usedDataset, file = "03_Rawdata/usedDataset.RData")
 save(cityLocationSpatialPoint, file = "03_Rawdata/cityLocationSpatialPoint.Rdata")
+writeOGR(cityLocationSpatialPoint, "03_Rawdata", "cityLocationSpatialPointToGISRevise",
+         driver = "ESRI Shapefile")
 
 na.test <- usedDataset %>% na.omit()
 na.test$count <- 1
