@@ -204,7 +204,7 @@ grob_add <- grobTree(textGrob("f",
                               sd = sd(usedDataset$precipitation)),
                   col = 'red', size = 2) +
     xlim(0, 0.8) +
-    xlab("Precipitation kg/(m2*h)") + 
+    xlab("Precipitation (kg/(m2*h))") + 
     ylab("Density") +
     annotation_custom(grob) +
     annotation_custom(grob_add))
@@ -251,7 +251,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
 (plot1 <- ggscatter(usedDataset %>% data.frame(), x = "ug_m2_troposphere_no2", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
-                   xlab = "OMI TrCA NO2", ylab = "Ground-level NO2",           
+                   xlab = "OMI TrCA NO2 (ug/m2)", ylab = "Ground-level NO2 (ug/m3)",           
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)
 ) +
@@ -263,7 +263,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
 (plot2 <- ggscatter(usedDataset, x = "ter_pressure", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
-                   xlab = "Terrain Atmospheric Pressure", ylab = "Ground-level NO2",
+                   xlab = "Terrain Atmospheric Pressure (hPa)", ylab = "Ground-level NO2 (ug/m3)",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
@@ -273,7 +273,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
 (plot3 <- ggscatter(usedDataset, x = "temp", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
-                   xlab = "Temperature", ylab = "Ground-level NO2",
+                   xlab = "Temperature (Celsius Degree)", ylab = "Ground-level NO2 (ug/m3)",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
@@ -283,7 +283,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
 (plot4 <- ggscatter(usedDataset, x = "ndvi", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
-                   xlab = "NDVI", ylab = "Ground-level NO2",
+                   xlab = "NDVI", ylab = "Ground-level NO2 (ug/m3)",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
@@ -293,7 +293,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
 (plot5 <- ggscatter(usedDataset, x = "precipitation", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
-                   xlab = "Precipitation", ylab = "Ground-level NO2",
+                   xlab = "Precipitation (kg/(m2*h))", ylab = "Ground-level NO2 (ug/m3)",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +
@@ -303,7 +303,7 @@ formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 +
 (plot6 <- ggscatter(usedDataset, x = "PBLH", y = "no2_measured_ug.m3", size = 1,
                    add = "reg.line", conf.int = TRUE,
                    cor.coef = F, cor.method = "pearson",
-                   xlab = "PBLH", ylab = "Ground-level NO2",
+                   xlab = "PBLH (m)", ylab = "Ground-level NO2 (ug/m3)",
                    add.params = list(color = "blue", fill = "lightskyblue1"),
                    color = "grey76", shape = 21, ylim = c(0, 150)) +
   stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.22) +

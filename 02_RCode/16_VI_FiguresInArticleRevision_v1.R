@@ -6,6 +6,7 @@ library(dplyr)
 library(tidyverse)
 library(moments)
 library(raster)
+library(ggplot2)
 
 load("03_Rawdata/usedDataset.RData")
 formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 + 
@@ -158,7 +159,7 @@ grob_add <- grobTree(textGrob("f",
                               sd = sd(usedDataset.tranformed$precipitation_t)),
                   col = 'red', size = 2) +
     xlim(-0.4, 0.4) +
-    xlab("Precipitation kg/(m2*h)") + 
+    xlab("Precipitation (kg/(m2*h))") + 
     ylab("Denisty") +
     annotation_custom(grob) +
     annotation_custom(grob_add))
@@ -231,7 +232,7 @@ write.csv(usedDataset.tranformed, file = "03_Rawdata/00_transformed_total_datase
 (plot1 <- ggscatter(usedDataset.tranformed, x = "ug_m2_troposphere_no2_t", y = "no2_measured_ug.m3_t", size = 1,
                     add = "reg.line", conf.int = TRUE,
                     cor.coef = F, cor.method = "pearson",
-                    xlab = "OMI TrCA NO2", ylab = "Ground-level NO2",           
+                    xlab = "OMI TrCA NO2 (ug/m2)", ylab = "Ground-level NO2 (ug/m3)",           
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21, ylim = c(-25, 50), xlim = c(-10000, 25000)
 ) +
@@ -243,7 +244,7 @@ write.csv(usedDataset.tranformed, file = "03_Rawdata/00_transformed_total_datase
 (plot2 <- ggscatter(usedDataset.tranformed, x = "ter_pressure_t", y = "no2_measured_ug.m3_t", size = 1,
                     add = "reg.line", conf.int = TRUE,
                     cor.coef = F, cor.method = "pearson",
-                    xlab = "Terrain Atmospheric Pressure", ylab = "Ground-level NO2",
+                    xlab = "Terrain Atmospheric Pressure (hPa)", ylab = "Ground-level NO2 (ug/m3)",
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21, ylim = c(-50, 50), xlim = c(-15, 15)) +
     stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = 0.23, label.y.npc = 0.17) +
@@ -253,7 +254,7 @@ write.csv(usedDataset.tranformed, file = "03_Rawdata/00_transformed_total_datase
 (plot3 <- ggscatter(usedDataset.tranformed, x = "temp_t", y = "no2_measured_ug.m3_t", size = 1,
                     add = "reg.line", conf.int = TRUE,
                     cor.coef = F, cor.method = "pearson",
-                    xlab = "Temperature", ylab = "Ground-level NO2",
+                    xlab = "Temperature (Celsius Degree)", ylab = "Ground-level NO2 (ug/m3)",
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21,ylim = c(-50, 50)) +
     stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17) +
@@ -263,7 +264,7 @@ write.csv(usedDataset.tranformed, file = "03_Rawdata/00_transformed_total_datase
 (plot4 <- ggscatter(usedDataset.tranformed, x = "ndvi_t", y = "no2_measured_ug.m3_t", size = 1,
                     add = "reg.line", conf.int = TRUE,
                     cor.coef = F, cor.method = "pearson",
-                    xlab = "NDVI", ylab = "Ground-level NO2",
+                    xlab = "NDVI", ylab = "Ground-level NO2 (ug/m3)",
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21, ylim = c(-50, 50)) +
     stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17) +
@@ -273,7 +274,7 @@ write.csv(usedDataset.tranformed, file = "03_Rawdata/00_transformed_total_datase
 (plot5 <- ggscatter(usedDataset.tranformed, x = "precipitation_t", y = "no2_measured_ug.m3_t", size = 1,
                     add = "reg.line", conf.int = TRUE,
                     cor.coef = F, cor.method = "pearson",
-                    xlab = "Precipitation", ylab = "Ground-level NO2",
+                    xlab = "Precipitation (kg/(m2*h))", ylab = "Ground-level NO2 (ug/m3)",
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21, ylim = c(-50, 50)) +
     stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17) +
@@ -283,7 +284,7 @@ write.csv(usedDataset.tranformed, file = "03_Rawdata/00_transformed_total_datase
 (plot6 <- ggscatter(usedDataset.tranformed, x = "PBLH_t", y = "no2_measured_ug.m3_t", size = 1,
                     add = "reg.line", conf.int = TRUE,
                     cor.coef = F, cor.method = "pearson",
-                    xlab = "PBLH", ylab = "Ground-level NO2",
+                    xlab = "PBLH (m)", ylab = "Ground-level NO2 (ug/m3)",
                     add.params = list(color = "blue", fill = "lightskyblue1"),
                     color = "grey76", shape = 21, ylim = c(-50, 50)) +
     stat_cor( p.accuracy = 0.01, r.accuracy = 0.01, label.x.npc = "left", label.y.npc = 0.17) +
