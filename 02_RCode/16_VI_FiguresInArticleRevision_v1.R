@@ -7,6 +7,16 @@ library(tidyverse)
 library(moments)
 library(raster)
 library(ggplot2)
+library(tmap)
+library(rgdal)
+library("rnaturalearth")
+
+world <- ne_countries(scale = "medium", returnclass = "sp")
+# tm set
+title_size = .0001
+legend_title_size = 1
+margin = 0
+tmap_mode('plot')
 
 load("03_Rawdata/usedDataset.RData")
 formula <- no2_measured_ug.m3 ~ ug_m2_troposphere_no2 + 
@@ -426,3 +436,60 @@ lm(value ~ month_order, data = mean_value_df %>% filter(data_source == "mean_cit
   summary()
 lm(value ~ month_order, data = mean_value_df %>% filter(data_source == "mean_tiff")) %>%
   summary()
+
+
+####-------------------- add point to mean Raster ------------------------
+point.110.represent <- readOGR(dsn = "03_Rawdata",
+                               layer = "cityLocationSpatialPointToGISRevise110City")
+point.110.represent@data <- point.110.represent@data %>%
+  mutate(City = ifelse(CityCode == 279, "San Paulo", City),
+         City = ifelse(CityCode == 31, "Bogota", City),
+         City = ifelse(CityCode == 132, "Hue", City),
+         City = ifelse(CityCode == 366, "Xi\'an", City),
+         City = ifelse(CityCode == 349, "Urumqi", City),
+         City = ifelse(CityCode == 407, "Reykjavik", City),
+         City = ifelse(CityCode == 434, "Merida", City),
+         City = ifelse(CityCode == 528, "Vitoria", City),
+         City = ifelse(CityCode == 532, "Hawalli", City))
+point.110.represent@data <- point.110.represent@data %>%
+  dplyr::select(CityCode, City)
+load("03_Rawdata/usedDataset.RData")
+usedDataset.to.110.point <- usedDataset %>%
+  dplyr::select(no2_measured_ug.m3, CityCode)
+usedDataset.to.110.point <- usedDataset.to.110.point %>%
+  aggregate(by = list(usedDataset.to.110.point$CityCode), FUN = "mean")
+usedDataset.to.110.point <- usedDataset.to.110.point %>%
+  dplyr::select(no2_measured_ug.m3, CityCode)
+point.110.represent@data <- 
+  left_join(point.110.represent@data, usedDataset.to.110.point)
+
+pal <- colorRampPalette(c("blue","green","yellow","red"))
+load("04_Results/meanOfRasterNo2.RData")
+#test.mean.grid.raster.output %>% plot()
+brks = c(0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60)
+#brks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120)
+labels_brks = brks %>% as.character()
+mean.tmap <- 
+  tm_shape(test.mean.grid.raster.output) +
+  tm_raster("ave.value", palette = pal(13), breaks = brks, 
+            style = 'cont', legend.is.portrait = F, title = "The Mean of Monthly Concentration (ug/m3)",
+            labels = labels_brks) +
+  tm_shape(world) +
+  tm_borders(col = 'black', lwd = 0.5, alpha = 0.8) +
+  tm_grid(alpha = .25) + 
+  tm_shape(point.110.represent) +
+  tm_dots("no2_measured_ug.m3", palette = pal(13), breaks = brks, size = 0.15, 
+           legend.show = F, shape = 21, border.lwd = 1.5) +
+  tm_text("City", size = 0.7, auto.placement = T, remove.overlap = T, shadow = T) +
+  tm_layout(
+    inner.margins = c(margin, margin, margin, margin),
+    title.size = title_size, 
+    legend.position = c("left", "bottom"),
+    legend.title.size = legend_title_size,
+    legend.text.size = legend_title_size * 0.75
+  ) + 
+  tm_scale_bar()
+mean.tmap
+mean.tmap %>%
+  tmap_save(filename = "07_Figure/meanConcentrationWithPoint_110point.jpg", width = 300, height = 140, units = 'mm', dpi = 1000)
+####-------------------- add point to mean Raster ------------------------

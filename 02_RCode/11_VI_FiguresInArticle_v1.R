@@ -103,7 +103,7 @@ Mean <- round(mean(usedDataset$ug_m2_troposphere_no2), 2)
 SD <- round(sd(usedDataset$ug_m2_troposphere_no2), 2)
 N = nrow(usedDataset)
 grob <- grobTree(textGrob(paste0("Mean = ", Mean, "\nStd.dev = ", SD,"\nN = ", N),
-                          x = 0.75,  y = 0.90, hjust = 0,
+                          x = 0.71,  y = 0.90, hjust = 0,
                           gp = gpar(col = "black", fontsize = 8)))
 grob_add <- grobTree(textGrob("b",
                               x = 0.02,  y = 0.95, hjust = 0,
