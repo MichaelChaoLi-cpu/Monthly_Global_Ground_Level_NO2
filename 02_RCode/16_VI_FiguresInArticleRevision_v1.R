@@ -361,7 +361,7 @@ dev.off()
     geom_line(aes(x = Group.2, y = value, group = name, color = name),  stat = "identity",
               size = 0.4) +
     geom_errorbar(aes(x = Group.2, ymin = value - SE * 1.96, ymax = value + SE * 1.96), color = "gray88",
-                  width = 0, size = 3, alpha = 0.8) +
+                  width = 0, size = 3, alpha = 0.8, show.legend = T) +
     geom_point(aes(x = Group.2, y = value, group = name, color = name),  stat = "identity",
                size = 2, alpha = 0.8) +
     geom_errorbar(aes(x = Group.2, ymin = value - SE * 1.96, ymax = value + SE * 1.96, color = name), 
@@ -373,7 +373,8 @@ dev.off()
                                   "Measured Ground-Level NO2 Concentration",
                                   "Predicted Ground-Level NO2 Concentration")) +
     #scale_color_manual(values = c("red4", "blue3", "salmon4")) +
-    scale_x_discrete(name = NULL)+ 
+    scale_x_discrete(name = NULL) + 
+    annotate("text", label = "Note: Gray Bar is 95% CI", size = 3.5, y = 43, x = 52) + 
     theme_bw() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
           legend.position = c(0.85, 0.88))
@@ -414,6 +415,16 @@ mean_value_df <- mean_value_df %>%
   pivot_longer(!month_order, names_to = "data_source", values_to = "value")
 mean_value_df <- mean_value_df %>% na.omit()
 
+date_vector_season <- c(
+  "2015.01", "", "", "2015.04", "", "", "2015.07", "", "", "2015.10", "", "",
+  "2016.01", "", "", "2016.04", "", "", "2016.07", "", "", "2016.10", "", "",
+  "2017.01", "", "", "2017.04", "", "", "2017.07", "", "", "2017.10", "", "",
+  "2018.01", "", "", "2018.04", "", "", "2018.07", "", "", "2018.10", "", "",
+  "2019.01", "", "", "2019.04", "", "", "2019.07", "", "", "2019.10", "", "",
+  "2020.01", "", "", "2020.04", "", "", "2020.07", "", "", "2020.10", "", "",
+  "2021.01", "", "", "2021.04", "", "", "2021.07", "", "", "2021.10"
+  )
+
 (p4 <- ggplot(mean_value_df) +
     geom_point(aes(x = month_order, y = value, group = data_source, color = data_source),  stat = "identity",
                size = 2, alpha = 0.8) +
@@ -422,11 +433,11 @@ mean_value_df <- mean_value_df %>% na.omit()
                        labels = c("Mean of Predictions of the Cities", 
                                   "Mean of Predictions of All the Grids")) +
     scale_y_continuous(name = "NO2 Concentration") +
-    scale_x_continuous(name = "Date", breaks = seq(1, 82, by = 1), labels = date_vector,
+    scale_x_continuous(name = NULL, breaks = seq(1, 82, by = 1), labels = date_vector_season,
                        minor_breaks = NULL) +
     theme_bw() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-          legend.position = c(0.85, 0.88))
+          legend.position = c(0.85, 0.92))
   )
 jpeg(file="07_Figure/meantiff_city_trend.jpeg", width = 297, height = 180, units = "mm", quality = 300, res = 300)
 p4
