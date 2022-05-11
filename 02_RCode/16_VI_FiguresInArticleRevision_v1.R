@@ -445,9 +445,12 @@ dev.off()
 
 lm(value ~ month_order, data = mean_value_df %>% filter(data_source == "mean_city")) %>%
   summary()
+-0.09653 - 1.96 * 0.02217
+-0.09653 + 1.96 * 0.02217
 lm(value ~ month_order, data = mean_value_df %>% filter(data_source == "mean_tiff")) %>%
   summary()
-
+-0.06597 - 1.96 * 0.01675
+-0.06597 + 1.96 * 0.01675
 
 ####-------------------- add point to mean Raster ------------------------
 point.110.represent <- readOGR(dsn = "03_Rawdata",
