@@ -4,11 +4,14 @@ Predicting long-term ground-level nitrogen dioxide (NO2) is important globally t
 ## Author  
 Chao Li, Shunsuke Managi
 
+## Cite Our Article:
+Li C, Managi S. Estimating monthly global ground-level NO2 concentrations using geographically weighted panel regression. Remote Sensing of Environment 2022; 280: 113152.    
+    
 ## Result: Monthly NO2 Concentration  
 ![](06_Animate/ani.gif)
   
 ## Maunscript  
-[Estimating Monthly Global Ground-Level NO2 Concentrations Using Geographically Weighted Panel Regression](09_Manuscript/ManuscriptDP10.v2.pdf)  
+[Estimating Monthly Global Ground-Level NO2 Concentrations Using Geographically Weighted Panel Regression](09_Manuscript/ManuscriptDP10.v3.pdf)  
 [Supplementary Materials](09_Manuscript/SupplementaryMaterials.pdf)  
 
 ## Data Archive
